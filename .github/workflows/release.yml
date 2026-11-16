@@ -1,0 +1,27 @@
+# Builds DadMode.zip and publishes it when a version tag is pushed, for example v1.22.0.
+# The zip goes to a GitHub release, and to CurseForge when the CF_API_KEY secret is set
+# and DadMode.toc has an X-Curse-Project-ID line.
+name: Package and release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    env:
+      CF_API_KEY: ${{ secrets.CF_API_KEY }}
+      GITHUB_OAUTH: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Get the code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Package and upload
+        uses: BigWigsMods/packager@v2
