@@ -1,5 +1,16 @@
 # DadMode changes
 
+## 1.32.0
+
+- **A small quest list for doing things together.** It shows his progress on the quests you both have, next to yours, and it follows along by itself: he loots something and the number changes a moment later.
+- **In a dungeon it shows his quests for that dungeon**, and nothing else.
+- **Track** on a row in the Quests tab puts one of his own quests on the list, for when you help him with something you do not have.
+- Chat says when he finishes a quest on the list, with where to hand it in. Coming out of a dungeon, it says what he still needs from it.
+- When you are done and he is not, his numbers turn yellow.
+- **"Ready to go in?"** on the Dungeon tab: his gear, bag space and food, before it is too late to fix.
+- `/dadmode tracker` switches the list off and on.
+- He needs 1.32.0 too for the list to follow along by itself.
+
 ## 1.31.1
 
 - Clearer words. The window no longer talks about "whispers", which is how the addon works inside and not something you need to know. When you are not in a party it now says what to do: open the window once while you are in a party with the one you guide.

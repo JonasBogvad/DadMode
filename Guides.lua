@@ -251,7 +251,8 @@ function DadMode_Gate(text, sender)
     if ns.db.helper and m and lock[m.name] then
         local h3 = text:sub(1, 3)
         if text == "QE" or h3 == "QS:" or h3 == "ST:" or h3 == "QD:" or h3 == "BG:" or h3 == "GR:" or h3 == "GL:"
-            or h3 == "SS:" or h3 == "CN:" or text:sub(1, 2) == "Q:" or text:sub(1, 4) == "BGS:" then
+            or h3 == "SS:" or h3 == "CN:" or text:sub(1, 2) == "Q:" or text:sub(1, 4) == "BGS:"
+            or h3 == "QU:" or h3 == "QX:" or h3 == "TT:" or h3 == "TL:" or h3 == "TE:" then
             return true
         end
     end

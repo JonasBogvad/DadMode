@@ -45,7 +45,7 @@ end
 -- What a guide may ask for without being in the party
 local function IsRequest(text)
     return text == "QREQ" or text:sub(1, 5) == "QREQ:" or text:sub(1, 3) == "QC:" or text:sub(1, 5) == "WEAR:"
-        or text == "TREQ" or text:sub(1, 6) == "TPICK:"
+        or text == "TREQ" or text:sub(1, 6) == "TPICK:" or text == "QW"
 end
 
 -- What the one being guided sends back
@@ -54,7 +54,7 @@ local function IsAnswer(text)
     return text == "QE" or h3 == "QS:" or h3 == "ST:" or h3 == "QD:" or h3 == "BG:" or h3 == "GR:" or h3 == "GL:"
         or h3 == "SS:" or h3 == "CN:" or text:sub(1, 2) == "Q:" or text:sub(1, 4) == "BGS:" or text:sub(1, 5) == "PERM:"
         or text:match("^WEAR%u+:%d+$") ~= nil
-        or h3 == "TT:" or h3 == "TL:" or h3 == "TE:" or text:sub(1, 5) == "TPOK:"
+        or h3 == "TT:" or h3 == "TL:" or h3 == "TE:" or text:sub(1, 5) == "TPOK:" or h3 == "QU:" or h3 == "QX:"
 end
 
 -- Every addon message passes through here first. Returns "drop" for a whisper from outside

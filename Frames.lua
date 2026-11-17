@@ -61,6 +61,7 @@ function DadMode_CreateBar()
         if DadMode_ExtrasTick then pcall(DadMode_ExtrasTick) end
         if DadMode_WearTick then pcall(DadMode_WearTick) end
         if DadMode_PrivateTick then pcall(DadMode_PrivateTick) end
+        if DadMode_TrackTick then pcall(DadMode_TrackTick) end
         if ns.AutoRefreshDue() then pcall(DadMode_AskQuests) end
         local ok, err = pcall(ns.UpdateArrows)
         if not ok and not ns.bar.errorShown then

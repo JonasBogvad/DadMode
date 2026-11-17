@@ -46,6 +46,8 @@ SlashCmdList["DADMODE"] = function(msg)
         end
     elseif msg:sub(1, 7) == "forget " then
         DadMode_Forget(msg:sub(8))
+    elseif msg == "tracker" then
+        DadMode_ToggleTracker()
     elseif msg == "minimap" then
         ns.ToggleMinimapButton()
     elseif msg == "quests" then

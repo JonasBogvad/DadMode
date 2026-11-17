@@ -460,7 +460,18 @@ local function RenderQuests()
                 if nextName then
                     sub[#sub + 1] = "|cff6fb1e8then: " .. nextName .. (nextLevel and (" [" .. nextLevel .. "]") or "") .. "|r"
                 end
-                lines[#lines + 1] = QuestRow(q, chips, sub)
+                local row = QuestRow(q, chips, sub)
+                -- which quests the small list on the screen follows
+                if ns.db.helper and DadMode_IsPinned then
+                    if mine then
+                        row.button = { text = "Followed", kind = "done" }
+                    elseif DadMode_IsPinned(name, q.id) then
+                        row.button = { text = "Stop following", kind = "wait", onClick = function() DadMode_TogglePin(name, q.id) end }
+                    else
+                        row.button = { text = "Track", kind = "action", onClick = function() DadMode_TogglePin(name, q.id) end }
+                    end
+                end
+                lines[#lines + 1] = row
             end
             lines[#lines + 1] = " "
         end
@@ -842,6 +853,7 @@ ns.BAD = BAD
 ns.GOOD = GOOD
 ns.GREY = GREY
 ns.Matches = Matches
+ns.MyQuests = MyQuests
 ns.QUALITY = QUALITY
 ns.SLOTS = SLOTS
 ns.WARN = WARN

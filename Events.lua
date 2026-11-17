@@ -121,10 +121,12 @@ handlers.CHAT_MSG_ADDON = function(prefix, text, channel, sender)
         if not key or not okMe or ns.Key(me) ~= key then return end
         text = inner
     end
+    if DadMode_TrackHeard then pcall(DadMode_TrackHeard, text, sender) end
     if DadMode_Gate and DadMode_Gate(text, sender) then return end
     if DadMode_ExtraMessage and DadMode_ExtraMessage(text, sender) then return end
     if DadMode_WearMessage and DadMode_WearMessage(text, sender) then return end
     if DadMode_TalentMessage and DadMode_TalentMessage(text, sender) then return end
+    if DadMode_TrackMessage and DadMode_TrackMessage(text, sender) then return end
     local body = text:match("^PING:(.*)$")
     if body then
         ns.ReceivePing(sender, body)

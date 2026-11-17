@@ -1300,5 +1300,126 @@ do
   W.SetView("overview")
   UnitCharacterPoints=keepPts; GetNumTalentTabs,GetTalentTabInfo,GetNumTalents,GetTalentInfo=nil,nil,nil,nil
 end
+-- ===== doing quests together: the small list that follows his progress =====
+do
+  local function since(n) local t={}; for i=n+1,#sent do t[#t+1]=sent[i] end; return t end
+  local B="Bro Bearfang-CAMWOW EU5 Realm 4 PvP"
+  local W=DadModeQuests
+  local saveLog,saveObj,saveComplete,saveQL=qlog,C_QuestLog.GetQuestObjectives,C_QuestLog.IsComplete,QuestieLoader
+  local prog={ [801]="3/8 Boar Tusk", [802]="0/1 Golden Idol" }; local doneQ={}
+  qlog={ {title="Boar Hunt",questID=801,level=30}, {title="The Idol",questID=802,level=31} }
+  C_QuestLog.GetQuestObjectives=function(id) return prog[id] and {{text=prog[id],finished=false}} or {} end
+  C_QuestLog.IsComplete=function(id) return doneQ[id]==true end
+  local function step() fire("QUEST_LOG_UPDATE"); clock=clock+3; DadMode_TrackTick() end
+
+  -- his side: a guide who asked is told the moment a quest changes
+  DadMode_SetRole(false); DadModeDB.guides=DadModeDB.guides or {}; DadModeDB.guides["bro bearfang"]={name="Bro Bearfang",state="yes"}; DadModeDB.perm={}
+  clock=clock+400; fire("CHAT_MSG_ADDON","DADMODE","QW","PARTY",B)
+  step()
+  local n=#sent; step(); assert(#sent==n, "nothing changed: nothing sent")
+  prog[801]="4/8 Boar Tusk"; step()
+  assert(#sent==n+1 and sent[#sent][2]=="QU:801~30~0~Boar Hunt~-4/8 Boar Tusk" and sent[#sent][3]=="WHISPER" and sent[#sent][4]==B, sent[#sent][2])
+  prog[801]="5/8 Boar Tusk"; fire("QUEST_LOG_UPDATE"); DadMode_TrackTick(); assert(#sent==n+1, "not more often than every two seconds")
+  clock=clock+3; DadMode_TrackTick(); assert(#sent==n+2 and sent[#sent][2]:find("5/8",1,true))
+  -- a quest leaves his log
+  n=#sent; qlog={ {title="Boar Hunt",questID=801,level=30} }; step(); assert(#sent==n+1 and sent[#sent][2]=="QX:802")
+  -- the game refuses messages (a fight, a dungeon): it is tried again
+  local real=C_ChatInfo.SendAddonMessage; local refuse=true
+  C_ChatInfo.SendAddonMessage=function(p,t,c,to) if refuse then return 11 end; return real(p,t,c,to) end
+  prog[801]="6/8 Boar Tusk"; n=#sent; step(); assert(#sent==n, "held back")
+  refuse=false; clock=clock+3; DadMode_TrackTick(); assert(#sent==n+1 and sent[#sent][2]:find("6/8",1,true), "sent when the game allows it again")
+  C_ChatInfo.SendAddonMessage=real
+  -- he does not share his quests
+  DadModeDB.perm.quests=false; prog[801]="7/8 Boar Tusk"; n=#sent; step(); assert(#sent==n); DadModeDB.perm={}
+  -- somebody he has not approved is never told
+  fire("CHAT_MSG_ADDON","DADMODE","QW","PARTY","Saqu Off-CAMWOW EU5 Realm 4 PvP")
+  local toSaqu=false; prog[801]="7/8 Boar Tusk "; n=#sent; step(); for _,m in ipairs(since(n)) do if m[4] and m[4]:find("Saqu",1,true) then toSaqu=true end end
+  assert(not toSaqu or DadModeDB.guides["saqu off"], "only approved guides")
+  -- a guide who stopped asking is no longer told
+  clock=clock+400; prog[801]="8/8 Boar Tusk"; n=#sent; step(); assert(#sent==n)
+
+  -- the guide's side
+  DadMode_SetRole(true); clock=clock+400; DadModeDB.pinned=nil; DadModeDB.tracker=nil; DadModeDB.aim="bro"
+  qlog={ {title="Boar Hunt",questID=801,level=30} }; prog[801]="5/8 Boar Tusk"
+  fire("CHAT_MSG_ADDON","DADMODE","ST:lv=38~dead=0","PARTY",B); fire("CHAT_MSG_ADDON","DADMODE","HI:1.32.0:d","PARTY",B)
+  fire("CHAT_MSG_ADDON","DADMODE","QS:3","PARTY",B)
+  fire("CHAT_MSG_ADDON","DADMODE","Q:801~30~0~Boar Hunt~-2/8 Boar Tusk^802~31~0~The Idol~-0/1 Golden Idol^803~32~0~Far Errand~-1/4 Crate","PARTY",B)
+  fire("CHAT_MSG_ADDON","DADMODE","QE","PARTY",B)
+  clock=clock+3
+  local title,lines,foot=DadMode_TrackerLines()
+  assert(title=="Bro's quests" and #lines==1 and lines[1].left=="Boar Hunt", tostring(title).." "..#lines)
+  assert(lines[1].right:find("2/8",1,true) and lines[1].right:find("you 5/8",1,true) and foot==nil, "the quest we both have, his progress and mine: "..lines[1].right)
+  DadMode_DrawTracker(); local TR=DadModeTracker
+  assert(TR and TR.shown and TR.title.txt:find("Bro's quests",1,true) and TR.rows[1].shown and TR.rows[1].left.txt=="Boar Hunt", "on the screen")
+  -- it follows along
+  fire("CHAT_MSG_ADDON","DADMODE","QU:801~30~0~Boar Hunt~-3/8 Boar Tusk","WHISPER",B); DadMode_DrawTracker()
+  assert(TR.rows[1].right.txt:find("3/8",1,true), TR.rows[1].right.txt)
+  -- pin one of his own quests from the Quests tab
+  SlashCmdList.DADMODE("quests"); W.SetView("quests")
+  local r,sp=ROW("The Idol"); assert(sp.button.text=="Track" and r.btn.shown); r.btn.onOnClick(r.btn)
+  assert(DadModeDB.pinned.bro[802]==true); r,sp=ROW("The Idol"); assert(sp.button.text=="Stop following")
+  local _,sb=ROW("Boar Hunt"); assert(sb.button.text=="Followed" and not sb.button.onClick, "a quest we share is followed by itself")
+  title,lines=DadMode_TrackerLines(); assert(#lines==2 and lines[2].left=="The Idol" and not lines[2].right:find("you",1,true), "pinned: on the list, without me")
+  -- he finishes one that is followed: one line in chat. One that is not followed: nothing.
+  local said={}; local rp=print; print=function(x) said[#said+1]=tostring(x) end
+  fire("CHAT_MSG_ADDON","DADMODE","QU:802~31~1~The Idol~+1/1 Golden Idol","WHISPER",B)
+  fire("CHAT_MSG_ADDON","DADMODE","QU:802~31~1~The Idol~+1/1 Golden Idol","WHISPER",B)
+  fire("CHAT_MSG_ADDON","DADMODE","QU:803~32~1~Far Errand~+4/4 Crate","WHISPER",B); print=rp
+  local c,far=0,false; for _,l in ipairs(said) do if l:find("Bro finished The Idol",1,true) then c=c+1 end; if l:find("Far Errand",1,true) then far=true end end
+  assert(c==1 and not far, "said once, and only for what is followed: "..table.concat(said," || "))
+  title,lines=DadMode_TrackerLines(); assert(lines[1].left=="Boar Hunt" and lines[2].right:find("ready to hand in",1,true), "what is ready goes last")
+  -- I am done and he is not: his line turns yellow, so I do not run off
+  doneQ[801]=true; clock=clock+3; title,lines=DadMode_TrackerLines(); assert(lines[1].right:sub(1,10)=="|cffe8c36a" and lines[1].right:find("you ready",1,true), lines[1].right); doneQ[801]=nil; clock=clock+3
+  -- a quest that leaves his log leaves the list
+  fire("CHAT_MSG_ADDON","DADMODE","QX:802","WHISPER",B); title,lines=DadMode_TrackerLines(); assert(#lines==1)
+  -- unpin
+  DadMode_TogglePin("Bro",802); assert(DadModeDB.pinned.bro[802]==nil)
+  -- click a line: the window opens on that quest
+  DadMode_DrawTracker(); TR.rows[1].onOnClick(TR.rows[1]); assert(W.view=="quests" and W.filter=="boar hunt", tostring(W.filter)); W.ApplySearch("")
+  -- close it, and bring it back
+  TR.close.onOnClick(TR.close); assert(DadModeDB.tracker==false and not TR.shown); DadMode_DrawTracker(); assert(not TR.shown)
+  SlashCmdList.DADMODE("tracker"); assert(DadModeDB.tracker==true and TR.shown)
+  -- an older DadMode on his side: it says so
+  fire("CHAT_MSG_ADDON","DADMODE","HI:1.31.0:d","PARTY",B); title,lines,foot=DadMode_TrackerLines(); assert(foot and foot:find("needs DadMode 1.32",1,true), tostring(foot))
+  fire("CHAT_MSG_ADDON","DADMODE","HI:1.32.0:d","PARTY",B)
+  -- nothing in common and nothing pinned: no list
+  qlog={}; clock=clock+3; DadMode_DrawTracker(); assert(not TR.shown, "nothing to follow"); qlog={ {title="Boar Hunt",questID=801,level=30} }; clock=clock+3
+
+  -- in a dungeon: his quests for that dungeon, by itself
+  local dq={ [601]={name="Into the Deep",questLevel=38,zoneOrSort=5000}, [602]={name="The Drowned King",questLevel=40,zoneOrSort=5001},
+             [603]={name="Lost Tablets",questLevel=37,zoneOrSort=5000}, [604]={name="Old Business",questLevel=36,zoneOrSort=5000} }
+  QuestieLoader={ImportModule=function(self,name)
+    if name=="QuestieDB" then return { QueryQuestSingle=function(id,f) return dq[id] and dq[id][f] end, QueryNPCSingle=function() end, QueryObjectSingle=function() end }
+    elseif name=="ZoneDB" then return { GetDungeons=function() return {[5000]={"The Drowned City",{5001},33,{}}} end, GetLocalizedDungeonName=function(self,id) return "The Drowned City" end }
+    elseif name=="QuestieJourney" then return {zoneMap={[5000]={[601]=true,[603]=true,[604]=true},[5001]={[602]=true}}} end
+  end}
+  fire("CHAT_MSG_ADDON","DADMODE","QS:2","PARTY",B)
+  fire("CHAT_MSG_ADDON","DADMODE","Q:601~38~0~Into the Deep~-2/5 Deep Pearl^801~30~0~Boar Hunt~-3/8 Boar Tusk","PARTY",B); fire("CHAT_MSG_ADDON","DADMODE","QE","PARTY",B)
+  IsInInstance=function() return true,"party" end; GetInstanceInfo=function() return "The Drowned City" end
+  clock=clock+4; DadMode_TrackTick(); title,lines,foot=DadMode_TrackerLines()
+  assert(title=="Bro in The Drowned City" and #lines==1 and lines[1].left=="Into the Deep" and lines[1].right:find("2/5",1,true), tostring(title).." "..lines[1].left)
+  assert(foot==nil and TR.shown and TR.title.txt:find("Bro in The Drowned City",1,true))
+  -- the game holds messages back in there: the list says how old its numbers are
+  clock=clock+200; title,lines,foot=DadMode_TrackerLines(); assert(foot and foot:find("3 min ago",1,true), tostring(foot))
+  fire("CHAT_MSG_ADDON","DADMODE","QU:601~38~0~Into the Deep~-3/5 Deep Pearl","WHISPER",B); title,lines,foot=DadMode_TrackerLines(); assert(foot==nil and lines[1].right:find("3/5",1,true))
+  -- none of his quests are for this dungeon
+  fire("CHAT_MSG_ADDON","DADMODE","QX:601","WHISPER",B); title,lines=DadMode_TrackerLines(); assert(#lines==1 and lines[1].left:find("None of his quests are for this dungeon",1,true))
+  fire("CHAT_MSG_ADDON","DADMODE","QU:601~38~0~Into the Deep~-3/5 Deep Pearl","WHISPER",B)
+  -- coming out: what he still needs from it
+  said={}; print=function(x) said[#said+1]=tostring(x) end
+  IsInInstance=function() return false,"none" end; clock=clock+4; DadMode_TrackTick(); clock=clock+4; DadMode_TrackTick(); print=rp
+  c=0; for _,l in ipairs(said) do if l:find("Bro still needs from The Drowned City:",1,true) and l:find("Into the Deep (3/5)",1,true) then c=c+1 end end
+  assert(c==1, "said once on the way out: "..table.concat(said," || "))
+  title=DadMode_TrackerLines(); assert(title=="Bro's quests", "back to the quests we share")
+
+  -- the Dungeon tab says if he is ready to go in
+  fire("CHAT_MSG_ADDON","DADMODE","ST:lv=38~dead=0~dur=18~brk=0~bf=3~bt=64~fd=0","PARTY",B)
+  W.dungeon=5000; W.SetView("dungeon"); local T=PG()
+  assert(T:find("Ready to go in?",1,true) and T:find("Gear: worst piece 18%, repair first",1,true) and T:find("Bags: 3 free, tight",1,true) and T:find("Food and drink: 0",1,true), T)
+  W.dungeon=false; W.SetView("overview")
+  IsInInstance,GetInstanceInfo=nil,nil; QuestieLoader=saveQL
+  qlog,C_QuestLog.GetQuestObjectives,C_QuestLog.IsComplete=saveLog,saveObj,saveComplete
+  DadModeDB.aim=nil; DadModeDB.pinned=nil; DadModeDB.tracker=nil
+end
 print("OPTIONS_TESTS_PASSED")
 ''')

@@ -87,6 +87,8 @@ local function Dungeons()
 end
 DadMode_Dungeons = Dungeons
 
+function DadMode_QuestsOfDungeon(id) return QuestsFor(id) end
+
 function DadMode_DungeonQuestIds()
     local id = ns.questWin and ns.questWin.dungeon
     if not id then return {} end
@@ -170,6 +172,25 @@ function DadMode_DungeonLines(name, d, list, has, myQuests, filter, lines, progr
         { label = "Not picked up", value = tostring(notTaken), kind = (notTaken > 0) and "bad" or nil },
         { label = "Already done", value = tostring(finished) },
     } }
+    -- is he ready to go in? The things that are too late to fix once inside.
+    local st = d.st
+    if st then
+        local ready = {}
+        if st.dur then
+            local broken = (st.brk or 0) > 0
+            ready[#ready + 1] = { label = "Gear", value = broken and (st.brk .. " broken, repair first") or ("worst piece " .. st.dur .. "%" .. (st.dur < 25 and ", repair first" or "")),
+                kind = (broken or st.dur < 25) and "bad" or (st.dur <= 40 and "warn") or "good", wide = broken or st.dur < 25 }
+        end
+        if st.bf and st.bt then
+            ready[#ready + 1] = { label = "Bags", value = (st.bf == 0) and "FULL" or (st.bf .. " free" .. (st.bf <= 6 and ", tight" or "")),
+                kind = (st.bf <= 2 and "bad") or (st.bf <= 6 and "warn") or "good" }
+        end
+        if st.fd then ready[#ready + 1] = { label = "Food and drink", value = tostring(st.fd), kind = (st.fd == 0) and "bad" or nil } end
+        if #ready > 0 then
+            lines[#lines + 1] = GREY .. "Ready to go in?|r"
+            lines[#lines + 1] = { tiles = ready }
+        end
+    end
     lines[#lines + 1] = { bar = true, items = { { text = "Other dungeon", onClick = function() DadMode_OpenDungeon(0) end } } }
     if filter and filter ~= "" then lines[#lines + 1] = GREY .. #rows .. " match the search|r" end
     local waited = GetTime() - (d.checkAsked or GetTime())

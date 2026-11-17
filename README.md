@@ -9,7 +9,7 @@ Version 1.25.0. Game interface 16001 (WoW Forever 1.60).
 
 ## Install
 
-1. Unzip. You get a folder called `DadMode`. Inside are `DadMode.toc`, 26 `.lua` files, `Arrow.tga`, `Logo.tga` and `README.md`.
+1. Unzip. You get a folder called `DadMode`. Inside are `DadMode.toc`, 27 `.lua` files, `Arrow.tga`, `Logo.tga` and `README.md`.
    - **Downloaded from GitHub with Code, Download ZIP?** Then the folder is called `DadMode-main`. Rename it to `DadMode`, or the game will not load it. The zip under Releases has the right name already.
    - **Downloaded from GitHub with Code, Download ZIP?** Then the folder is called `DadMode-main`. Rename it to `DadMode`, or the game will not load it.
 2. Put the folder in `World of Warcraft\_forever_\Interface\AddOns\`.
@@ -283,6 +283,44 @@ To record an exact spot, a guide stands on the dock and types `/dadmode stop NAM
 
 Limits: the arrow cannot point up, so climbing the tower is text only. An addon cannot see which zeppelin is docked or when it leaves. Which side of the tower is taken from the classic game; if Forever differs, go by the zeppelin master's name.
 
+### Doing a quest or a dungeon together
+
+For "we are doing this right now" there is a small list on the guide's screen, like the game's own quest tracker, but with **his** progress:
+
+```
+Olaf's quests
+Bloodscalp Ears        6/15   you 9/15
+The Idol               0/1
+Into the Deep          ready to hand in
+```
+
+It follows along by itself: when he loots something for a quest, the number changes a moment later. Nothing to refresh.
+
+**What is on it, without you choosing anything**
+
+| Where you are | What it shows |
+|---|---|
+| Out in the world | Every quest both of you have, his progress next to yours |
+| In a dungeon | His quests for that dungeon, and nothing else. The heading says **Olaf in Zul'Farrak** |
+
+**A quest of his that you do not have.** Open the **Quests** tab and click **Track** on its row. It stays on the list until you click **Stop following**. Quests you share say **Followed**.
+
+**While you play**
+
+- When he finishes a quest on the list, chat says **Olaf finished Bloodscalp Ears. Hand in: Kin'weelay, Stranglethorn Vale.**
+- When you are done with a quest and he is not, his numbers turn yellow, so you do not run off.
+- Hold the mouse over a line for his objectives, yours, and where it is handed in. Click it to open that quest in the window.
+- At most six lines. Drag the list to move it. The **x** closes it; `/dadmode tracker` brings it back.
+- With nothing in common and nothing pinned, the list is not there at all.
+
+**Before a dungeon.** Pick the dungeon on the **Dungeon** tab. Above the quests it says **Ready to go in?** with his gear, bag space and food, and says **repair first** when his gear is worn. Under that are the dungeon's quests he has not picked up, with who gives them. Inside it is too late for both.
+
+**Coming out.** Chat says what he still needs: **Olaf still needs from Zul'Farrak: Scarab Shells (3/5)**.
+
+**In a dungeon the game can hold messages back**, in fights for certain and maybe the whole time. His addon keeps trying, so the list catches up as soon as the game allows. When its numbers are more than a minute and a half old it says so: **from 3 min ago**.
+
+He needs DadMode 1.32 or newer for the list to follow along by itself. The dungeon part needs Questie on the guide's computer.
+
 ### His talents
 
 The **Talents** tab draws his talent trees the way his own talent window shows them: every talent is a picture in the same row and column, with its rank under it (**3/5**). Taken talents are bright, the rest are dimmed. The name of each tree has its points next to it, so **Enhancement 31** tells you his build at a glance, and with that which stats to click under **What counts for him** on the Gear tab.
@@ -432,6 +470,7 @@ The version is shown in the top right corner of the **Who do you want to find?**
 | `/dadmode travel` | List the zeppelin platforms this computer knows, and the route to the current marker |
 | `/dadmode waypoint` | Send dad a waypoint: your map pin if you have one, otherwise where you stand |
 | `/dadmode quests` | Open the "How is <name> doing" window |
+| `/dadmode tracker` | Guides: the small quest list on or off |
 | `/dadmode forget NAME` | Guides: stop asking this person how he is doing when he is not in your party |
 | `/dadmode debug` | Print the names the game reports and what the last incoming call looked like. For troubleshooting |
 | `/dadmode status` | Show your role, whether you show calls, and who is in the party |
@@ -493,6 +532,7 @@ A guide outside his party can ask too, but only one he has already said yes to. 
   | `Private.lua` | The guide's safety net for whispers |
   | `Remote.lua` | Guiding somebody who is not in the party, by whisper |
   | `Talents.lua` | His talents: reading them, sending them, pointing at one |
+  | `Tracker.lua` | The small quest list that follows his progress, and telling the guides when a quest changes |
 
 - **How the files share things.** The game gives every file of an addon the same table (`local ADDON, ns = ...`). A function or table that other files need stays a normal `local` in its own file and is copied into the table at the bottom of that file ("used by other files"). Other files read it as `ns.<name>`. Anything that changes while playing (saved settings `ns.db`, the windows, a few counters) lives in the table only, so every file sees the same value. Some features also offer global functions named `DadMode_<Name>`.
 - **Events.** A file may add to `ns.handlers`. All events in that table are registered when DadMode's own `ADDON_LOADED` arrives, which is after every file has loaded.
