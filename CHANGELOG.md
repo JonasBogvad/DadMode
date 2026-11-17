@@ -8,6 +8,10 @@ For guides:
 - A new line on the guide bar shows who you are guiding.
 - With two or more people to guide in the party, click that line to choose one. Calls and waypoints then go only to that person. "Everyone" sends to all.
 
+Other:
+
+- `/dadmode testbox` shows the Yes / No box with a made-up guide, so you can look at it without a second player.
+
 ## 1.22.0
 
 The one being guided now decides who may guide them.

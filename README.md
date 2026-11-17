@@ -348,6 +348,7 @@ The version is shown in the top right corner of the **Who do you want to find?**
 | `/dadmode` | Open the window to pick people. It also has Move arrows and the far warning switch |
 | `/dadmode settings` | Open the DadMode page in the game options |
 | `/dadmode resetsize` | Put every window back to its normal size |
+| `/dadmode testbox` | Show the Yes / No box with a made-up guide, to look at it alone |
 | `/dadmode guides` | Open the My guides page, and list guides and permissions in chat |
 | `/dadmode role` | Reopen the question: being guided, or a guide |
 | `/dadmode on`, `/dadmode off` | Show or hide the arrows |

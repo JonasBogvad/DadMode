@@ -4177,7 +4177,10 @@ do
         if who then
             db.guides = db.guides or {}
             db.guides[who.id] = { name = who.shown, state = yes and "yes" or "no" }
-            if yes then
+            if who.test then
+                Print("Test: \"" .. who.shown .. "\" is now " .. (yes and "approved" or "refused")
+                    .. ". Look at the options, under DadMode, My guides, and remove it there.")
+            elseif yes then
                 local key = Key(who.shown)
                 if key then
                     db.marked[key] = true            -- an approved guide is somebody to find as well
@@ -4185,7 +4188,7 @@ do
                 end
                 Print("|cff6fcf97" .. who.shown .. " is now your guide.|r You can change that in the options, under DadMode, My guides.")
                 if RefreshPicker then pcall(RefreshPicker) end
-            else
+            elseif not who.test then
                 Print(who.shown .. " will not be asked about again. You can change that in the options, under DadMode, My guides.")
             end
         end
@@ -4238,6 +4241,19 @@ do
             Beep("far")
             ShowNext()
         end
+    end
+
+    -- Shows the box without anybody else: for looking at it alone (/dadmode testbox)
+    function DadMode_TestBox()
+        for _, who in ipairs(waiting) do
+            if who.test then return end
+        end
+        waiting[#waiting + 1] = { shown = "Test Guide", id = "test guide", test = true }
+        if #waiting == 1 then
+            Beep("far", true)
+            ShowNext()
+        end
+        Print("Test: this is the box somebody gets the first time a guide calls them.")
     end
 
     -- What the one being guided sends back: first what he shares, then only that
@@ -4746,6 +4762,8 @@ SlashCmdList["DADMODE"] = function(msg)
         ResetSizes()
     elseif msg == "settings" or msg == "options" then
         DadMode_OpenSettings()
+    elseif msg == "testbox" then
+        if DadMode_TestBox then DadMode_TestBox() end
     elseif msg == "guides" then
         if DadMode_OpenGuides then DadMode_OpenGuides(true) end
     elseif msg == "role" then
