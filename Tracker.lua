@@ -285,7 +285,7 @@ function DadMode_TrackMessage(text, sender)
     d.liveAt = GetTime()
     if q and q.done and not (old and old.done) and Tracked(m.name, id) then
         local who, zone = DadMode_TurnIn(id)
-        ns.Print("|cff6fcf97" .. m.name .. " finished " .. q.title .. ".|r"
+        ns.Print("|cff1aff1a" .. m.name .. " finished " .. q.title .. ".|r"
             .. (who and (" Hand in: " .. who .. (zone and (", " .. zone) or "") .. ".") or ""))
     end
     if ns.questWin and ns.questWin:IsShown() then DadMode_RenderQuests() end
@@ -389,7 +389,7 @@ local function Draw()
         if frame:IsShown() then frame:Hide() end
         return
     end
-    frame.title:SetText("|cffe8c36a" .. title .. "|r")
+    frame.title:SetText("|cffffd100" .. title .. "|r")
     for i, l in ipairs(lines) do
         local r = Row(i)
         r.left:SetText(l.left)
@@ -443,9 +443,9 @@ local function AfterDungeon(dg)
             end
         end
         if #left > 0 then
-            ns.Print("|cffe8c36a" .. name .. " still needs from " .. dg.name .. ":|r " .. table.concat(left, ", "))
+            ns.Print("|cffffd100" .. name .. " still needs from " .. dg.name .. ":|r " .. table.concat(left, ", "))
         elseif had then
-            ns.Print("|cff6fcf97" .. name .. " has everything he needs from " .. dg.name .. ".|r")
+            ns.Print("|cff1aff1a" .. name .. " has everything he needs from " .. dg.name .. ".|r")
         end
     end
 end

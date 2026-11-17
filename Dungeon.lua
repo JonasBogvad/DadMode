@@ -119,7 +119,7 @@ end
 function DadMode_DungeonLines(name, d, list, has, myQuests, filter, lines, progress)
     local QDB = Modules()
     if not QDB then
-        lines[#lines + 1] = "|cffe8c36aDungeon quests|r"
+        lines[#lines + 1] = "|cffffd100Dungeon quests|r"
         lines[#lines + 1] = GREY .. "This tab needs the Questie addon on this computer.|r"
         return
     end
@@ -127,7 +127,7 @@ function DadMode_DungeonLines(name, d, list, has, myQuests, filter, lines, progr
     if not chosen then
         -- the list of dungeons to pick from. The one he stands in comes first.
         local all = Dungeons() or {}
-        lines[#lines + 1] = "|cffe8c36aPick a dungeon|r"
+        lines[#lines + 1] = "|cffffd100Pick a dungeon|r"
         if #all == 0 then
             lines[#lines + 1] = GREY .. "Questie has no dungeon quests ready yet. Try again in a moment.|r"
             return
@@ -166,7 +166,7 @@ function DadMode_DungeonLines(name, d, list, has, myQuests, filter, lines, progr
         if a.level ~= b.level then return a.level < b.level end
         return a.title < b.title
     end)
-    lines[#lines + 1] = "|cffe8c36a" .. name .. " in " .. title .. "|r  " .. GREY .. #ids .. " quests|r" .. progress
+    lines[#lines + 1] = "|cffffd100" .. name .. " in " .. title .. "|r  " .. GREY .. #ids .. " quests|r" .. progress
     lines[#lines + 1] = { tiles = {
         { label = "In his log", value = tostring(inLog), kind = "good" },
         { label = "Not picked up", value = tostring(notTaken), kind = (notTaken > 0) and "bad" or nil },
@@ -204,7 +204,7 @@ function DadMode_DungeonLines(name, d, list, has, myQuests, filter, lines, progr
             if myQuests[q.id] then chips[#chips + 1] = { text = "you have it too", kind = "plain" } end
             for _, o in ipairs(his.objs) do
                 local done = o:sub(1, 1) == "+"
-                sub[#sub + 1] = (done and "|cff6fcf97" or "|cff9aa0a6") .. o:sub(2) .. "|r"
+                sub[#sub + 1] = (done and "|cff1aff1a" or "|cff9aa0a6") .. o:sub(2) .. "|r"
             end
         elseif state == true then
             chips[#chips + 1] = { text = "already done", kind = "dim" }
@@ -212,7 +212,7 @@ function DadMode_DungeonLines(name, d, list, has, myQuests, filter, lines, progr
             chips[#chips + 1] = { text = "not picked up", kind = "bad" }
             if myQuests[q.id] then chips[#chips + 1] = { text = "you have it", kind = "plain" } end
             local from = StartsAt(QDB, q.id)
-            if from then sub[#sub + 1] = "|cffe8c36astarts at: " .. from .. "|r" end
+            if from then sub[#sub + 1] = "|cffffd100starts at: " .. from .. "|r" end
             local need = tonumber(Field(QDB, q.id, "requiredLevel"))
             if need and level and need > level then
                 sub[#sub + 1] = WARN .. "needs level " .. need .. ", he is " .. level .. "|r"

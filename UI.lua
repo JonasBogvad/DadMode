@@ -15,6 +15,11 @@ function ns.FontSize(text, size)
 end
 
 
+-- Where a message goes, the same rule everywhere:
+--   the one being guided   anything he should see or act on is the big text on the screen
+--                          (ns.ShowAlert). Chat only answers something he typed or switched himself.
+--   a guide                a line in chat (ns.Print), or the strip on the guide bar. Never the big text.
+--
 -- The look of the game's own windows: a warm dark background, a gold edge, dark red buttons
 -- with gold text. Every window and button of DadMode takes its colours from here.
 ns.LOOK = {

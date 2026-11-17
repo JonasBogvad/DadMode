@@ -5,12 +5,16 @@ local ADDON, ns = ...
 function DadMode_Coins(copper)
     local g, sv, c = math.floor(copper / 10000), math.floor(copper % 10000 / 100), copper % 100
     local out = ""
-    if g > 0 then out = out .. "|cffe8c36a" .. g .. "g|r " end
+    if g > 0 then out = out .. "|cffffd100" .. g .. "g|r " end
     if g > 0 or sv > 0 then out = out .. "|cffc8cdd3" .. sv .. "s|r " end
     return out .. "|cffd99a6c" .. c .. "c|r"
 end
 
-local GOOD, WARN, BAD, GREY = "|cff6fcf97", "|cffe8c36a", "|cffeb7a7a", "|cff9aa0a6"
+-- The colours of text, the same everywhere in DadMode:
+--   gold   |cffffd100  names and headings        grey  |cff9aa0a6  less important
+--   green  GOOD        fine, done, a gain         red   BAD         urgent, missing, a loss
+--   orange WARN        needs attention soon
+local GOOD, WARN, BAD, GREY = "|cff1aff1a", "|cffffa033", "|cffff4d4d", "|cff9aa0a6"
 
 -- The tiles at the top of the Overview: how he is doing right now
 function DadMode_StatusTiles(st)
@@ -163,7 +167,7 @@ function DadMode_ConsumableLines(cons, lines)
                 parts[#parts + 1] = c.count .. "x " .. (name or "loading...")
             end
         end
-        lines[#lines + 1] = "|cffe8c36a" .. g[2] .. "|r"
+        lines[#lines + 1] = "|cffffd100" .. g[2] .. "|r"
         if #parts == 0 then
             lines[#lines + 1] = "  " .. GREY .. "none|r"
         else
@@ -291,9 +295,9 @@ local function RenderQuests()
             if type(st.cl) == "string" then about[#about + 1] = ClassName(st.cl) end
             if st.lv then about[#about + 1] = "level " .. st.lv end
             if st.z then about[#about + 1] = st.z end
-            ns.questWin.title:SetText("|cffe8c36a" .. only .. "|r" .. (#about > 0 and ("  " .. GREY .. table.concat(about, ", ") .. "|r") or ""))
+            ns.questWin.title:SetText("|cffffd100" .. only .. "|r" .. (#about > 0 and ("  " .. GREY .. table.concat(about, ", ") .. "|r") or ""))
         else
-            ns.questWin.title:SetText("|cffe8c36aHow are they doing|r")
+            ns.questWin.title:SetText("|cffffd100How are they doing|r")
         end
     end
     local now = GetTime()
@@ -340,12 +344,12 @@ local function RenderQuests()
             or (view == "gear" and perm.gear == false and "gear")
             or (view == "talents" and perm.talents == false and "talents")
         if hidden then
-            lines[#lines + 1] = "|cffe8c36a" .. name .. "|r"
+            lines[#lines + 1] = "|cffffd100" .. name .. "|r"
             lines[#lines + 1] = GREY .. name .. " does not share his " .. hidden .. " with guides.|r"
             lines[#lines + 1] = " "
         elseif view == "overview" then
             local age = math.floor(now - (d.at or now))
-            if people > 1 then lines[#lines + 1] = "|cffe8c36a" .. name .. "|r" end
+            if people > 1 then lines[#lines + 1] = "|cffffd100" .. name .. "|r" end
             local tiles = (d.st and next(d.st)) and DadMode_StatusTiles(d.st) or {}
             tiles[#tiles + 1] = { label = "Quests", wide = true,
                 value = #list .. (ready > 0 and (GOOD .. ", " .. ready .. " ready to hand in|r") or "") .. progress }
@@ -361,17 +365,17 @@ local function RenderQuests()
             lines[#lines + 1] = " "
 
         elseif view == "gear" then
-            if people > 1 then lines[#lines + 1] = "|cffe8c36a" .. name .. "|r" end
+            if people > 1 then lines[#lines + 1] = "|cffffd100" .. name .. "|r" end
             -- first what can be acted on: the things in his bags
             if DadMode_BagRows then
                 DadMode_BagRows(name, d, lines)
                 lines[#lines + 1] = " "
             end
             if d.stats and next(d.stats) then
-                lines[#lines + 1] = "|cffe8c36aStats|r"
+                lines[#lines + 1] = "|cffffd100Stats|r"
                 lines[#lines + 1] = { tiles = DadMode_StatTiles(d.stats) }
             end
-            lines[#lines + 1] = "|cffe8c36aWearing|r  " .. GREY .. "hold the mouse over an item to see its stats|r"
+            lines[#lines + 1] = "|cffffd100Wearing|r  " .. GREY .. "hold the mouse over an item to see its stats|r"
             if d.gear then
                 DadMode_GearLines(d.gear, lines)
             else
@@ -384,7 +388,7 @@ local function RenderQuests()
             end
 
         elseif view == "talents" then
-            if people > 1 then lines[#lines + 1] = "|cffe8c36a" .. name .. "|r" end
+            if people > 1 then lines[#lines + 1] = "|cffffd100" .. name .. "|r" end
             DadMode_TalentBlocks(name, d, lines, now)
             lines[#lines + 1] = " "
 
@@ -394,7 +398,7 @@ local function RenderQuests()
             for _, q in ipairs(missing) do
                 if Matches(q, filter) then shown[#shown + 1] = q end
             end
-            lines[#lines + 1] = "|cffe8c36aYou have, " .. name .. " does not|r  |cff9aa0a6" .. #missing
+            lines[#lines + 1] = "|cffffd100You have, " .. name .. " does not|r  |cff9aa0a6" .. #missing
                 .. ((filter and filter ~= "") and (", " .. #shown .. " match the search") or "") .. "|r" .. progress
             if not d.done then
                 lines[#lines + 1] = GREY .. "Waiting for his quest list...|r"
@@ -429,7 +433,7 @@ local function RenderQuests()
             for _, q in ipairs(list) do
                 if Matches(q, filter) then shown[#shown + 1] = q end
             end
-            lines[#lines + 1] = "|cffe8c36a" .. name .. "'s quests|r  |cff9aa0a6" .. #list
+            lines[#lines + 1] = "|cffffd100" .. name .. "'s quests|r  |cff9aa0a6" .. #list
                 .. ((filter and filter ~= "") and (", " .. #shown .. " match the search") or "") .. "|r" .. progress
             table.sort(shown, function(a, b)
                 if a.done ~= b.done then return a.done end
@@ -443,22 +447,22 @@ local function RenderQuests()
                 chips[#chips + 1] = mine and { text = "you have it too", kind = "plain" } or { text = "only " .. name, kind = "dim" }
                 for _, o in ipairs(q.objs) do
                     local finished = o:sub(1, 1) == "+"
-                    sub[#sub + 1] = (finished and "|cff6fcf97" or "|cff9aa0a6") .. o:sub(2) .. "|r"
+                    sub[#sub + 1] = (finished and "|cff1aff1a" or "|cff9aa0a6") .. o:sub(2) .. "|r"
                 end
                 if mine then
                     local parts = {}
                     for _, o in ipairs(mine.objs) do parts[#parts + 1] = o:sub(2) end
-                    sub[#sub + 1] = "|cff6fb1e8you: " .. (mine.done and "ready to hand in" or (#parts > 0 and table.concat(parts, ", ") or "not done")) .. "|r"
+                    sub[#sub + 1] = "|cffc8c8c8you: " .. (mine.done and "ready to hand in" or (#parts > 0 and table.concat(parts, ", ") or "not done")) .. "|r"
                 end
                 if q.done then
                     local who, zone = DadMode_TurnIn(q.id)
                     if who then
-                        sub[#sub + 1] = "|cffe8c36ahand in: " .. who .. (zone and (", " .. zone) or "") .. "|r"
+                        sub[#sub + 1] = "|cffffd100hand in: " .. who .. (zone and (", " .. zone) or "") .. "|r"
                     end
                 end
                 local nextName, nextLevel = DadMode_NextInChain(q.id)
                 if nextName then
-                    sub[#sub + 1] = "|cff6fb1e8then: " .. nextName .. (nextLevel and (" [" .. nextLevel .. "]") or "") .. "|r"
+                    sub[#sub + 1] = "|cffc8c8c8then: " .. nextName .. (nextLevel and (" [" .. nextLevel .. "]") or "") .. "|r"
                 end
                 local row = QuestRow(q, chips, sub)
                 -- which quests the small list on the screen follows
@@ -492,10 +496,10 @@ local function RenderQuests()
             lines[1] = "|cff9aa0a6Asking...|r"
         else
             if #ns.Party() == 0 then
-                lines[1] = "|cffe8c36aYou are not in a party.|r"
+                lines[1] = "|cffffd100You are not in a party.|r"
                 lines[2] = "|cff9aa0a6Open this window once while you are in a party with the one you guide. After that you can see here how he is doing, also when he is not in your party.|r"
             else
-                lines[1] = "|cffeb7a7aNo answer.|r"
+                lines[1] = "|cffff4d4dNo answer.|r"
                 lines[2] = "|cff9aa0a6The one you guide needs DadMode, and must be set up as the one being guided, not as a guide.|r"
             end
         end
@@ -503,7 +507,7 @@ local function RenderQuests()
     -- who runs which DadMode, at the bottom of the overview
     if view == "overview" and DadMode_VersionLines then
         lines[#lines + 1] = " "
-        lines[#lines + 1] = "|cffe8c36aDadMode in this party|r"
+        lines[#lines + 1] = "|cffffd100DadMode in this party|r"
         for _, line in ipairs(DadMode_VersionLines()) do lines[#lines + 1] = line end
     end
     DadMode_LayoutBlocks(lines)
@@ -527,7 +531,7 @@ local function AskQuests()
     if #ns.Party() > 0 then
         if DadMode_AskVersions then pcall(DadMode_AskVersions) end
         local ok, why = ns.Tell("QREQ")
-        if not ok then ns.Print("|cffeb7a7aCould not ask:|r " .. tostring(why)) end
+        if not ok then ns.Print("|cffff4d4dCould not ask:|r " .. tostring(why)) end
         if ok and DadMode_NoteAsk then pcall(DadMode_NoteAsk, false) end
     end
     -- and the people I guide who are not in my party, by whisper
@@ -689,7 +693,7 @@ function DadMode_CreateQuestWindow()
     title:SetPoint("TOPLEFT", 12, -10)
     title:SetJustifyH("LEFT")
     pcall(function() title:SetWordWrap(false) end)
-    title:SetText("|cffe8c36aHow are they doing|r")
+    title:SetText("|cffffd100How are they doing|r")
     ns.questWin.title = title
 
     local close = ns.BigButton(ns.questWin, 60, 22, function() ns.questWin:Hide() end)

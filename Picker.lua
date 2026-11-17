@@ -104,10 +104,10 @@ end
 function ns.RefreshPicker()
     if not ns.picker then return end
     if ns.db.helper then
-        ns.picker.title:SetText("|cffe8c36aDadMode settings|r")
+        ns.picker.title:SetText("|cffffd100DadMode settings|r")
         ns.picker.sub:SetText("|cff9aa0a6Want arrows yourself? Gold = arrow to them|r")
     else
-        ns.picker.title:SetText("|cffe8c36aWho do you want to find?|r")
+        ns.picker.title:SetText("|cffffd100Who do you want to find?|r")
         ns.picker.sub:SetText("|cff9aa0a6Gold = you get an arrow to them|r")
     end
     local list = ns.Party()

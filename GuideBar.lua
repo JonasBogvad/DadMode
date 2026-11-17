@@ -69,7 +69,7 @@ function DadMode_CreateHelper()
 
     local title = ns.helper:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     title:SetPoint("TOPLEFT", 10, -8)
-    title:SetText("|cffe8c36aDadMode guide|r  |cff9aa0a6" .. ns.VERSION .. "|r")
+    title:SetText("|cffffd100DadMode guide|r  |cff9aa0a6" .. ns.VERSION .. "|r")
     ns.helper.status = ns.helper:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
     ns.helper.status:SetPoint("TOPLEFT", 10, -26)
 
@@ -231,32 +231,32 @@ function ns.UpdateHelperStatus()
     if not (ns.helper and ns.helper:IsShown()) then return end
     -- the buttons carry the name of the one they are for
     local who, several = DadMode_TargetName()
-    ns.helper.callBtn.label:SetText((ns.call.state == "sent" or ns.call.state == "ack") and "|cffeb7a7aCancel my call|r"
+    ns.helper.callBtn.label:SetText((ns.call.state == "sent" or ns.call.state == "ack") and "|cffff4d4dCancel my call|r"
         or (who and ("Call " .. who)) or (several and "Call everyone") or "Call")
-    ns.helper.wpBtn.label:SetText(ns.wpOut and "|cffeb7a7aRemove the waypoint|r"
+    ns.helper.wpBtn.label:SetText(ns.wpOut and "|cffff4d4dRemove the waypoint|r"
         or (who and ("Waypoint for " .. who)) or (several and "Waypoint for all") or "Waypoint")
     ns.helper.howBtn.label:SetText(who and ("How is " .. who .. " doing") or "How are they doing")
     ns.helper.aimBtn.label:SetText(DadMode_TargetLine())
     local now, text = GetTime(), ""
     if ns.call.state == "sent" then
-        text = "|cffe8c36aCalling...|r"
+        text = "|cffffd100Calling...|r"
     elseif ns.call.state == "none" then
-        text = "|cffeb7a7aNo answer|r"
+        text = "|cffff4d4dNo answer|r"
         if now - ns.call.at > 12 then ns.call.state = nil end
     elseif ns.call.state == "muted" then
-        text = "|cffeb7a7a" .. tostring(ns.call.who) .. ": calls are off|r"
+        text = "|cffff4d4d" .. tostring(ns.call.who) .. ": calls are off|r"
         if now - ns.call.at > 12 then ns.call.state = nil end
     elseif ns.call.state == "locked" then
-        text = "|cffeb7a7a" .. tostring(ns.call.who) .. " has not approved you|r"
+        text = "|cffff4d4d" .. tostring(ns.call.who) .. " has not approved you|r"
         if now - ns.call.at > 12 then ns.call.state = nil end
     elseif ns.call.state == "denied" then
-        text = "|cffeb7a7a" .. tostring(ns.call.who) .. " takes no calls from guides|r"
+        text = "|cffff4d4d" .. tostring(ns.call.who) .. " takes no calls from guides|r"
         if now - ns.call.at > 12 then ns.call.state = nil end
     elseif ns.call.state == "here" then
-        text = "|cff6fcf97" .. tostring(ns.call.who) .. " is with you|r"
+        text = "|cff1aff1a" .. tostring(ns.call.who) .. " is with you|r"
         if now - ns.call.at > 10 then ns.call.state = nil end
     elseif ns.call.state == "ack" then
-        text = "|cff6fcf97" .. tostring(ns.call.who) .. " got it|r"
+        text = "|cff1aff1a" .. tostring(ns.call.who) .. " got it|r"
         for _, m in ipairs(ns.Party()) do
             if m.name == ns.call.who then
                 local dist = ns.Locate(m.unit)
@@ -329,7 +329,7 @@ function DadMode_CreateRoleWindow()
     ns.WindowLook(ns.roleWin)
     local title = ns.roleWin:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     title:SetPoint("TOP", 0, -14)
-    title:SetText("|cffe8c36aWho is using DadMode on this computer?|r")
+    title:SetText("|cffffd100Who is using DadMode on this computer?|r")
 
     ns.roleWin.dad = ns.BigButton(ns.roleWin, 300, 36, function()
         if SetRole(false) then ns.roleWin:Hide() end

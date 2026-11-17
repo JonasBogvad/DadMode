@@ -50,7 +50,7 @@ local function ReceivePing(sender, text)
             line = line .. "\n|cff9aa0a6" .. sender .. " is far away, not in sight.|r"
         end
     end
-    ns.ShowAlert("|cffe8c36a" .. sender .. "|r " .. line, ns.PING_SECONDS)
+    ns.ShowAlert("|cffffd100" .. sender .. "|r " .. line, ns.PING_SECONDS)
     ns.alertFrame.from = sender
     ns.Tell("VER:" .. ns.VERSION)
     ns.Tell("ACK")
@@ -63,12 +63,12 @@ local function TestCall()
         local who = list[1].name
         ns.pings[who] = GetTime() + ns.PING_ARROW
         ns.Beep()
-        ns.ShowAlert("|cffe8c36a" .. who .. "|r wants you. Follow the white arrow  |cff9aa0a6(test)|r", ns.PING_SECONDS)
+        ns.ShowAlert("|cffffd100" .. who .. "|r wants you. Follow the white arrow  |cff9aa0a6(test)|r", ns.PING_SECONDS)
         ns.alertFrame.from = who
         ns.Print("Test: this is what the one you guide sees when " .. who .. " calls. If you stand next to them it ends right away with \"You found " .. who .. "\".")
     else
         ns.Beep()
-        ns.ShowAlert("|cffe8c36aTest|r wants you. Follow the white arrow  |cff9aa0a6(test)|r", 5)
+        ns.ShowAlert("|cffffd100Test|r wants you. Follow the white arrow  |cff9aa0a6(test)|r", 5)
         ns.Print("Test: text and sound only. Join a party to also see the arrow.")
     end
 end
@@ -96,10 +96,10 @@ function DadMode_ReceiveReply(sender, kind)
         ns.Print(sender .. " has DadMode, but calls are switched off there. On that computer type /dadmode alerts")
     elseif kind == "ACK" then
         ns.answered = true
-        ns.Print("|cff6fcf97" .. sender .. " got your call.|r"
+        ns.Print("|cff1aff1a" .. sender .. " got your call.|r"
             .. (ns.peerVersion[sender] and (" |cff9aa0a6(their DadMode " .. ns.peerVersion[sender] .. ")|r") or ""))
     elseif kind == "HERE" then
-        ns.Print("|cff6fcf97" .. sender .. " is with you.|r")
+        ns.Print("|cff1aff1a" .. sender .. " is with you.|r")
         ns.lastSent = 0
     end
 end
@@ -122,12 +122,12 @@ local function SendPing(text)
             C_Timer.After(3, function()
                 if not ns.answered and ns.lastSent == stamp then
                     ns.call.state, ns.call.at = "none", GetTime()
-                    ns.Print("|cffeb7a7aNobody answered.|r Nobody else in the party has DadMode running. Check it is installed and ticked on their AddOns list.")
+                    ns.Print("|cffff4d4dNobody answered.|r Nobody else in the party has DadMode running. Check it is installed and ticked on their AddOns list.")
                 end
             end)
         end
     else
-        ns.Print("|cffeb7a7aCall not sent:|r " .. tostring(why) .. ". Type !dad in party chat instead.")
+        ns.Print("|cffff4d4dCall not sent:|r " .. tostring(why) .. ". Type !dad in party chat instead.")
     end
 end
 

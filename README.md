@@ -152,11 +152,11 @@ To see what dad sees when he is called, use **Test a call** in the settings, or 
 | Shows | When |
 |---|---|
 | **DEAD** (red) | He is dead |
-| **bags full** (red), or **2 bag slots left** (yellow) | 2 free slots or fewer |
+| **bags full** (red), or **2 bag slots left** (orange) | 2 free slots or fewer |
 | **2 broken** (red) | Broken gear |
-| **gear 18%** (yellow) | His most worn piece is under 25%, before it breaks |
-| **no food** (yellow) | No food or drink in his bags |
-| **1 talent point** (yellow) | Unspent talent points |
+| **gear 18%** (orange) | His most worn piece is under 25%, before it breaks |
+| **no food** (orange) | No food or drink in his bags |
+| **1 talent point** (orange) | Unspent talent points |
 | **has DadMode 1.27.0, you have 1.30.0** | His version is not the same as yours |
 
 With several people to guide and "everyone" chosen, each gets one line. With nobody to guide the strip is gone and the bar is shorter. The bar only changes size outside a fight.
@@ -308,7 +308,7 @@ It follows along by itself: when he loots something for a quest, the number chan
 **While you play**
 
 - When he finishes a quest on the list, chat says **Olaf finished Bloodscalp Ears. Hand in: Kin'weelay, Stranglethorn Vale.**
-- When you are done with a quest and he is not, his numbers turn yellow, so you do not run off.
+- When you are done with a quest and he is not, his numbers turn orange, so you do not run off.
 - Hold the mouse over a line for his objectives, yours, and where it is handed in. Click it to open that quest in the window.
 - At most six lines. Drag the list to move it. The **x** closes it; `/dadmode tracker` brings it back.
 - With nothing in common and nothing pinned, the list is not there at all.
@@ -363,6 +363,8 @@ The window has six tabs:
 | **Gear** | What is in his bags against what he wears, his total stats, what he wears, and his potions, food and bandages |
 | **Talents** | His talent trees, drawn like his own talent window. See below |
 
+Colours mean the same thing everywhere: **gold** is a name or a heading, **green** is fine, done, or a gain, **orange** needs attention soon, **red** is urgent, missing, or a loss, and grey is less important.
+
 Every list is built the same way: one row for each thing, a label on the left, the name, small coloured boxes for the state (green is good or done, red is missing or lost, grey is a plain fact), and a button on the right when there is something to do. The colours and the gold edge are the game's own, and every DadMode window and button has them: the guide bar, the window to pick people, the Yes / No box, the follow button.
 
 The Overview tab's boxes:
@@ -371,8 +373,8 @@ The Overview tab's boxes:
 - **Right now**: DEAD, in a fight, or away from keyboard, when that applies.
 - **Where**: zone and area. Works across zones, where the arrow gives up.
 - **Looking at**: his target.
-- **Bags**: free slots. Yellow at 6 or fewer, red at 2 or fewer, FULL at 0.
-- **Gear**: his most worn piece in percent, and how many pieces are broken. Yellow at 40%, red at 20% or when something is broken.
+- **Bags**: free slots. Orange at 6 or fewer, red at 2 or fewer, FULL at 0.
+- **Gear**: his most worn piece in percent, and how many pieces are broken. Orange at 40%, red at 20% or when something is broken.
 - **Food and drink**, **Bandages** and **Potions** in his bags.
 - **Hearthstone**: where it is set and whether it is ready.
 - **Talent points**, when he has unspent ones and the game reports them.

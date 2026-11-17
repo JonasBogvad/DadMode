@@ -95,7 +95,7 @@ local function Pointed(m, tab, index)
         elseif okT and Usable(b, "string") and b ~= "" then tree = b end
     end
     ns.Beep("call")
-    ns.ShowAlert("|cffe8c36a" .. m.name .. "|r says: put your talent point in\n|cff6fcf97" .. tname .. "|r\n"
+    ns.ShowAlert("|cffffd100" .. m.name .. "|r says: put your talent point in\n|cff1aff1a" .. tname .. "|r\n"
         .. tree .. (Usable(tier, "number") and (", row " .. tier .. " from the top") or ""), 15)
     DadMode_Reply(m, "TPOK:" .. tab .. ":" .. index)
 end
@@ -125,7 +125,7 @@ function DadMode_PointAtTalent(name, tab, index, tname)
     local ok, why = DadMode_TellPerson(name, "TPICK:" .. tab .. ":" .. index, true)
     local d = ns.questData[name]
     if d and d.talents then d.talents.pointed = ok and { tab = tab, index = index, state = "asked" } or nil end
-    if not ok then ns.Print("|cffeb7a7aCould not tell him:|r " .. tostring(why)) end
+    if not ok then ns.Print("|cffff4d4dCould not tell him:|r " .. tostring(why)) end
     DadMode_RenderQuests()
 end
 
@@ -196,7 +196,7 @@ function DadMode_TalentBlocks(name, d, lines, now)
         elseif asked and now - asked < 6 then
             lines[#lines + 1] = ns.GREY .. "Asking for his talents...|r"
         else
-            lines[#lines + 1] = "|cffeb7a7aNo answer.|r"
+            lines[#lines + 1] = "|cffff4d4dNo answer.|r"
             lines[#lines + 1] = ns.GREY .. name .. " needs DadMode 1.31 or newer to show his talents.|r"
         end
         return

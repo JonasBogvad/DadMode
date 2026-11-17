@@ -32,7 +32,7 @@ local function SendWaypoint()
         end
     end
     if not mapID then
-        ns.Print("|cffeb7a7aNo position to send.|r That happens in dungeons. Outdoors it works.")
+        ns.Print("|cffff4d4dNo position to send.|r That happens in dungeons. Outdoors it works.")
         return
     end
     local ok, why = ns.Tell(DadMode_Aim(("WP:%d:%.4f:%.4f"):format(mapID, x, y)))
@@ -44,7 +44,7 @@ local function SendWaypoint()
         for _, body in ipairs(DadMode_PackStops()) do ns.Queue(body) end
         ns.PumpOutbox()
     else
-        ns.Print("|cffeb7a7aWaypoint not sent:|r " .. tostring(why))
+        ns.Print("|cffff4d4dWaypoint not sent:|r " .. tostring(why))
     end
 end
 
@@ -93,7 +93,7 @@ function DadMode_ReceiveWaypoint(sender, text)
         ns.db.waypoint = { map = mapID, x = x, y = y, n = wn, w = ww, cont = wcont, from = m.name }
         ns.travel.key, ns.travel.at, ns.travel.onPlatform = nil, GetTime() - 1, false     -- route is worked out a second later
         ns.Beep("call")
-        ns.ShowAlert("|cffe8c36a" .. m.name .. "|r put a marker on your map\n|cffff5a5aFollow the red arrow|r", 8)
+        ns.ShowAlert("|cffffd100" .. m.name .. "|r put a marker on your map\n|cffff4d4dFollow the red arrow|r", 8)
         ns.alertFrame.from = m.name
         ns.Tell("WPOK")
     else

@@ -52,7 +52,7 @@ ns.moving = false
 ---------------------------------------------------------------------------
 
 local function Print(msg)
-    print("|cffe8c36aDadMode|r: " .. msg)
+    print("|cffffd100DadMode|r: " .. msg)
 end
 
 local function Secret(v)

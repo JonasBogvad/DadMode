@@ -154,18 +154,18 @@ local function RecordStop(key)
         for _, k in ipairs(STOP_ORDER) do
             local p = ns.db.stops and ns.db.stops[k]
             ns.Print("  " .. k .. "  (" .. Ride(STOPS[k]) .. " from " .. STOPS[k].at .. " to " .. STOPS[k].to .. ")  "
-                .. (p and ((p.approx and "|cffe8c36arough|r") or "|cff6fcf97known|r") or "|cffeb7a7aunknown|r"))
+                .. (p and ((p.approx and "|cffffd100rough|r") or "|cff1aff1aknown|r") or "|cffff4d4dunknown|r"))
         end
         return
     end
     local n, w, cont = ns.WorldPos("player")
     if not n then
-        ns.Print("|cffeb7a7aNo position here.|r That happens in dungeons.")
+        ns.Print("|cffff4d4dNo position here.|r That happens in dungeons.")
         return
     end
     ns.db.stops = ns.db.stops or {}
     ns.db.stops[key] = { cont = cont, n = math.floor(n + 0.5), w = math.floor(w + 0.5), manual = true }
-    ns.Print("|cff6fcf97Saved:|r the " .. Ride(STOPS[key]) .. " from " .. STOPS[key].at .. " to " .. STOPS[key].to
+    ns.Print("|cff1aff1aSaved:|r the " .. Ride(STOPS[key]) .. " from " .. STOPS[key].at .. " to " .. STOPS[key].to
         .. " leaves from where you stand. It is sent along with your next waypoint.")
 end
 DadMode_RecordStop = RecordStop
@@ -215,16 +215,16 @@ function DadMode_CurrentStep(wp, now)
             if stop then
                 ns.Beep("call")
                 if stop.boat then
-                    ns.ShowAlert("|cffff5a5aTake the boat to " .. stop.to .. "|r\nIt leaves from the dock at " .. stop.at .. ".", 12)
+                    ns.ShowAlert("|cffff4d4dTake the boat to " .. stop.to .. "|r\nIt leaves from the dock at " .. stop.at .. ".", 12)
                 else
-                    ns.ShowAlert("|cffff5a5aTake the zeppelin to " .. stop.to .. "|r\nGo up the tower at " .. stop.at .. ", "
+                    ns.ShowAlert("|cffff4d4dTake the zeppelin to " .. stop.to .. "|r\nGo up the tower at " .. stop.at .. ", "
                         .. stop.side .. ".\n|cff9aa0a6Zeppelin master " .. stop.who .. " stands on the right platform.|r", 12)
                 end
             elseif key == "unknown" then
-                ns.ShowAlert("|cffff5a5aThe marker is on another continent|r\nTake a zeppelin or a boat. Ask your guide which one.", 10)
+                ns.ShowAlert("|cffff4d4dThe marker is on another continent|r\nTake a zeppelin or a boat. Ask your guide which one.", 10)
             elseif before and before ~= "unknown" then
-                ns.ShowAlert("|cff6fcf97You took the " .. ((STOPS[before] and STOPS[before].boat) and "boat" or "zeppelin")
-                    .. ".|r\n|cffff5a5aNow follow the red arrow|r", 8)
+                ns.ShowAlert("|cff1aff1aYou took the " .. ((STOPS[before] and STOPS[before].boat) and "boat" or "zeppelin")
+                    .. ".|r\n|cffff4d4dNow follow the red arrow|r", 8)
             end
         end
     end
@@ -261,7 +261,7 @@ local function FlightHint()
     end
     -- only worth it when flying gets him clearly closer than he already is
     if best and (not here or bestDist < here * 0.7) then
-        ns.ShowAlert("|cffff5a5aFly to: " .. best .. "|r\n|cff9aa0a6That is the flight point closest to where you have to go.|r", 12)
+        ns.ShowAlert("|cffff4d4dFly to: " .. best .. "|r\n|cff9aa0a6That is the flight point closest to where you have to go.|r", 12)
         ns.Print("Fly to: " .. best)
     end
 end

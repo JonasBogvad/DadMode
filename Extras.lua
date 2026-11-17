@@ -104,7 +104,7 @@ function DadMode_Notes()
     end
     local lines, top = {}, nil
     for _, p in ipairs(people) do
-        local head = "|cffe8c36a" .. p.name .. "|r"
+        local head = "|cffffd100" .. p.name .. "|r"
         if p.st then
             if p.st.lv then head = head .. "  " .. p.st.lv end
             if p.st.z then head = head .. "  " .. p.st.z end
@@ -141,9 +141,9 @@ local toldNewer = false
 local function Newer(v)
     if toldNewer or not v or Num(v) <= Num(VERSION) then return end
     toldNewer = true
-    ns.Print("|cffe8c36aDadMode " .. v .. " is out.|r You have " .. VERSION .. ". Update it in the CurseForge app, then restart the game.")
+    ns.Print("|cffffd100DadMode " .. v .. " is out.|r You have " .. VERSION .. ". Update it in the CurseForge app, then restart the game.")
     if not ns.db.helper and ns.ShowAlert then
-        ns.ShowAlert("|cffe8c36aDadMode has a new version|r\nUpdate it in the CurseForge app", 8)
+        ns.ShowAlert("|cffffd100DadMode has a new version|r\nUpdate it in the CurseForge app", 8)
     end
 end
 

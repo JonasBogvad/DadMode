@@ -95,7 +95,9 @@ local function Decide(yes)
                 ns.db.marked[key] = true            -- an approved guide is somebody to find as well
                 Tell("UNLOCK:" .. key)
             end
-            Print("|cff6fcf97" .. who.shown .. " is now your guide.|r You can change that in the options, under DadMode, My guides.")
+            Print("|cff1aff1a" .. who.shown .. " is now your guide.|r You can change that in the options, under DadMode, My guides.")
+            -- the one being guided may not read chat: what he just decided is also said on the screen
+            if not who.test and ns.ShowAlert then ns.ShowAlert("|cff1aff1a" .. who.shown .. " is now your guide|r", 4) end
             if RefreshPicker then pcall(RefreshPicker) end
         elseif not who.test then
             Print(who.shown .. " will not be asked about again. You can change that in the options, under DadMode, My guides.")
@@ -136,7 +138,7 @@ function ShowNext()
         box:Hide()
         return
     end
-    box.text:SetText("|cffe8c36a" .. who.shown .. "|r wants to be your guide.")
+    box.text:SetText("|cffffd100" .. who.shown .. "|r wants to be your guide.")
     box:Show()
 end
 
@@ -223,16 +225,16 @@ function DadMode_Gate(text, sender)
             DadMode_RenderQuests()
         elseif kind == "UNLOCK" then
             lock[m.name] = nil
-            Print("|cff6fcf97" .. m.name .. " approved you as a guide.|r")
+            Print("|cff1aff1a" .. m.name .. " approved you as a guide.|r")
             if ns.questWin and ns.questWin:IsShown() then pcall(DadMode_AskQuests) end
         elseif a == "call" then
             if call.state == "sent" then call.state, call.who, call.at = "denied", m.name, GetTime() end
         elseif a == "waypoint" then
-            Print("|cffeb7a7a" .. m.name .. " does not take waypoints from guides.|r")
+            Print("|cffff4d4d" .. m.name .. " does not take waypoints from guides.|r")
         elseif a == "wear" then
-            Print("|cffeb7a7a" .. m.name .. " does not take \"put it on\" from guides.|r")
+            Print("|cffff4d4d" .. m.name .. " does not take \"put it on\" from guides.|r")
         elseif a == "talents" then
-            Print("|cffeb7a7a" .. m.name .. " does not share his talents with guides.|r")
+            Print("|cffff4d4d" .. m.name .. " does not share his talents with guides.|r")
         end
         return true
     end
@@ -300,11 +302,11 @@ function DadMode_LockLines()
     for _, m in ipairs(Party()) do
         local state = lock[m.name]
         if state == "ask" then
-            lines[#lines + 1] = "|cffe8c36a" .. m.name .. "|r has not approved you as a guide yet."
+            lines[#lines + 1] = "|cffffd100" .. m.name .. "|r has not approved you as a guide yet."
             lines[#lines + 1] = GREY .. "He has a Yes / No box on his screen. Ask him to click Yes.|r"
             lines[#lines + 1] = " "
         elseif state == "no" then
-            lines[#lines + 1] = "|cffe8c36a" .. m.name .. "|r said no to you as a guide."
+            lines[#lines + 1] = "|cffffd100" .. m.name .. "|r said no to you as a guide."
             lines[#lines + 1] = GREY .. "He can change that in his options, under DadMode, My guides.|r"
             lines[#lines + 1] = " "
         end

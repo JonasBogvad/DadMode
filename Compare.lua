@@ -167,12 +167,12 @@ local function TooltipLines(link)
             if res.cannot then
                 lines[#lines + 1] = GREY .. m.name .. " " .. res.cannot .. "|r"
             elseif res.same then
-                lines[#lines + 1] = "|cffe8c36a" .. m.name .. "|r wears this"
+                lines[#lines + 1] = "|cffffd100" .. m.name .. "|r wears this"
             else
                 if res.empty then
-                    lines[#lines + 1] = "|cffe8c36a" .. m.name .. "|r has " .. BAD .. "nothing|r in that slot (" .. SLOTS[res.slot] .. ")"
+                    lines[#lines + 1] = "|cffffd100" .. m.name .. "|r has " .. BAD .. "nothing|r in that slot (" .. SLOTS[res.slot] .. ")"
                 else
-                    lines[#lines + 1] = "|cffe8c36a" .. m.name .. "|r wears " .. Coloured(res.wornName, res.wornQuality)
+                    lines[#lines + 1] = "|cffffd100" .. m.name .. "|r wears " .. Coloured(res.wornName, res.wornQuality)
                         .. (res.wornLevel and (GREY .. "  item level " .. res.wornLevel .. "|r") or "")
                 end
                 if res.level and res.gap then
@@ -312,7 +312,7 @@ end
 -- The "In his bags" part of the Gear tab: a heading, the stats that count for him, how the list
 -- is sorted, then one row for each thing he could wear
 function DadMode_BagRows(name, d, lines)
-    lines[#lines + 1] = "|cffe8c36aIn his bags|r  " .. GREY .. "what changes if he puts it on|r"
+    lines[#lines + 1] = "|cffffd100In his bags|r  " .. GREY .. "what changes if he puts it on|r"
     if not d.bagGear then
         lines[#lines + 1] = GREY .. "Not known. " .. name .. " needs DadMode 1.21 or newer.|r"
         return
@@ -386,7 +386,7 @@ function DadMode_TellWear(name, item)
     local ok, why = DadMode_TellPerson(name, "WEAR:" .. item, true)
     d.wearTold = d.wearTold or {}
     d.wearTold[item] = ok and "asked" or "fail"
-    if not ok then Print("|cffeb7a7aCould not tell him:|r " .. tostring(why)) end
+    if not ok then Print("|cffff4d4dCould not tell him:|r " .. tostring(why)) end
     DadMode_RenderQuests()
 end
 
@@ -416,7 +416,7 @@ local function CreateWearButton()
     wearBtn = BigButton(UIParent, 420, 54, function()
         if not wearItem then return end
         if InFight() then
-            ShowAlert("|cffe8c36aNot during a fight.|r\nClick the button again after the fight.", 5)
+            ShowAlert("|cffffd100Not during a fight.|r\nClick the button again after the fight.", 5)
             return
         end
         local id = tonumber(wearItem:match("item:(%d+)"))
@@ -427,10 +427,10 @@ local function CreateWearButton()
             if id and WornNow(id) then
                 wearBtn:Hide()
                 wearItem = nil
-                ShowAlert("|cff6fcf97You put it on.|r", 4)
+                ShowAlert("|cff1aff1aYou put it on.|r", 4)
                 DadMode_Reply(wearFrom, "WEAROK:" .. id)
             else
-                ShowAlert("|cffe8c36aThat did not work by itself.|r\nOpen your bags and right-click " .. (wearBtn.name or "the item") .. ".", 10)
+                ShowAlert("|cffffd100That did not work by itself.|r\nOpen your bags and right-click " .. (wearBtn.name or "the item") .. ".", 10)
                 DadMode_Reply(wearFrom, "WEARNO:" .. (id or 0))
             end
         end
@@ -471,7 +471,7 @@ local function ReceiveWear(m, item)
     wearBtn.label:SetText("CLICK TO PUT ON: " .. (name or "the new item"))
     wearBtn:Show()
     Beep("call")
-    ShowAlert("|cffe8c36a" .. m.name .. "|r says: put on |cff6fcf97" .. (name or "the new item") .. "|r\nClick the gold button.", 10)
+    ShowAlert("|cffffd100" .. m.name .. "|r says: put on |cff1aff1a" .. (name or "the new item") .. "|r\nClick the gold button.", 10)
     DadMode_Reply(m, "WEARSEEN:" .. id)
 end
 
@@ -500,9 +500,9 @@ function DadMode_WearMessage(text, sender)
         if item:match("item:(%d+)") == id then d.wearTold[item] = note end
     end
     -- a link he was not told about through this window still gets a chat line
-    if kind == "WEAROK" then Print("|cff6fcf97" .. m.name .. " put it on.|r") end
-    if kind == "WEARNO" then Print("|cffe8c36a" .. m.name .. " clicked, but the item did not go on. He has to right-click it in his bags.|r") end
-    if kind == "WEARGONE" then Print("|cffeb7a7a" .. m.name .. " does not have that item in his bags any more.|r") end
+    if kind == "WEAROK" then Print("|cff1aff1a" .. m.name .. " put it on.|r") end
+    if kind == "WEARNO" then Print("|cffffd100" .. m.name .. " clicked, but the item did not go on. He has to right-click it in his bags.|r") end
+    if kind == "WEARGONE" then Print("|cffff4d4d" .. m.name .. " does not have that item in his bags any more.|r") end
     DadMode_RenderQuests()
     return true
 end
@@ -525,7 +525,7 @@ local function Dropped(link)
             local change = {}
             if res.gains and #res.gains > 0 then change[#change + 1] = GOOD .. table.concat(res.gains, ", ") .. "|r" end
             if res.loses and #res.loses > 0 then change[#change + 1] = BAD .. table.concat(res.loses, ", ") .. "|r" end
-            Print("|cffe8c36a" .. m.name .. " can wear|r " .. link
+            Print("|cffffd100" .. m.name .. " can wear|r " .. link
                 .. (res.level and (" item level " .. res.level) or "") .. ". "
                 .. (res.empty and ("His " .. SLOTS[res.slot]:lower() .. " slot is empty.")
                     or ("He wears " .. Coloured(res.wornName, res.wornQuality) .. (res.wornLevel and (" item level " .. res.wornLevel) or "") .. "."))

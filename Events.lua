@@ -138,14 +138,14 @@ handlers.CHAT_MSG_ADDON = function(prefix, text, channel, sender)
         local m = (not ns.IsMe(sender)) and ns.Member(sender) or nil
         if m then
             ns.wpOut = false
-            ns.Print("|cff6fcf97" .. m.name .. " reached your marker.|r")
+            ns.Print("|cff1aff1a" .. m.name .. " reached your marker.|r")
         end
     elseif text == "WPOK" or text == "WPNO" then
         local m = (not ns.IsMe(sender)) and ns.Member(sender) or nil
         if m and GetTime() - ns.lastSent < 30 then
             ns.wpOut = (text == "WPOK")
-            ns.Print(text == "WPOK" and ("|cff6fcf97" .. m.name .. " has your waypoint on the map.|r")
-                or ("|cffeb7a7a" .. m.name .. " could not get the waypoint.|r Not possible in dungeons, or the map does not allow pins."))
+            ns.Print(text == "WPOK" and ("|cff1aff1a" .. m.name .. " has your waypoint on the map.|r")
+                or ("|cffff4d4d" .. m.name .. " could not get the waypoint.|r Not possible in dungeons, or the map does not allow pins."))
         end
     elseif text:sub(1, 3) == "TS:" then
         local m = (not ns.IsMe(sender)) and ns.Member(sender) or nil

@@ -34,9 +34,9 @@ end
 function DadMode_TargetLine()
     local list = DadMode_Candidates()
     if #list == 0 then return "|cff9aa0a6Guiding: nobody with DadMode in the party|r" end
-    if #list == 1 then return "Guiding: |cffe8c36a" .. list[1].name .. "|r" end
+    if #list == 1 then return "Guiding: |cffffd100" .. list[1].name .. "|r" end
     local who = DadMode_TargetName()
-    return "Guiding: |cffe8c36a" .. (who or "everyone") .. "|r  |cff9aa0a6(click to change)|r"
+    return "Guiding: |cffffd100" .. (who or "everyone") .. "|r  |cff9aa0a6(click to change)|r"
 end
 
 -- everyone -> first -> second -> ... -> everyone

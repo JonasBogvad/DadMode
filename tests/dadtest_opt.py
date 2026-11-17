@@ -490,7 +490,7 @@ fire("CHAT_MSG_ADDON","DADMODE","ST:lv=35~dead=1~cb=0~bf=0~bt=64~brk=2~tp=1","PA
 fire("CHAT_MSG_ADDON","DADMODE","ST:v=1.0.2","PARTY",BRO); fire("CHAT_MSG_ADDON","DADMODE","HI:1.0.2","PARTY",BRO)
 tk2(); local nt=HB2.note.txt
 -- the strip: who, level and distance on one line, what needs attention on the next
-assert(nt:find("|cffe8c36aBro|r  35",1,true) and nt:find(" yd|r\n",1,true), nt)
+assert(nt:find("|cffffd100Bro|r  35",1,true) and nt:find(" yd|r\n",1,true), nt)
 assert(nt:find("DEAD|r, ",1,true) and nt:find("bags full",1,true) and nt:find("2 broken",1,true) and nt:find("1 talent point",1,true), nt)
 assert(nt:find("has DadMode 1.0.2, you have",1,true), nt)
 assert(HB2.status.txt:find("Bro: ",1,true) and HB2.status.txt:find("bags full",1,true), "top line carries what matters most when no call is running")
@@ -669,7 +669,7 @@ assert(DadMode_Compare("item:8001","Bro").same==true)
 assert(DadMode_Compare(L(8009),"Bro").needs==42)
 -- tooltip lines
 local tl=table.concat(DadMode_TooltipLines(L(8002)),"\n")
-assert(tl:find("Bro|r wears |cff1eff00[Old Cloth Hood]",1,true) and tl:find("item level 31",1,true) and tl:find("This one: item level 38",1,true) and tl:find("(+7)",1,true) and tl:find("gains|r  |cff6fcf97+4 Intellect, +6 Stamina|r",1,true) and tl:find("loses|r  |cffeb7a7a-3 Spirit|r",1,true), tl)
+assert(tl:find("Bro|r wears |cff1eff00[Old Cloth Hood]",1,true) and tl:find("item level 31",1,true) and tl:find("This one: item level 38",1,true) and tl:find("(+7)",1,true) and tl:find("gains|r  |cff1aff1a+4 Intellect, +6 Stamina|r",1,true) and tl:find("loses|r  |cffff4d4d-3 Spirit|r",1,true), tl)
 assert(not tl:upper():find("BETTER",1,true) and not tl:upper():find("WORSE",1,true) and not tl:lower():find("upgrade",1,true), "no verdict in the tooltip")
 assert(table.concat(DadMode_TooltipLines(L(8003)),"\n"):find("Bro can not wear plate",1,true))
 assert(table.concat(DadMode_TooltipLines("item:8001"),"\n"):find("Bro|r wears this",1,true))
@@ -846,13 +846,13 @@ do
     -- the header: who, class, level and zone, on every tab
     local NS=DadModeNS; local keepBro=NS.questData.Bro; NS.questData.Bro=nil
     fire("CHAT_MSG_ADDON","DADMODE","ST:z=Stranglethorn Vale","PARTY",SAQ)
-    assert(QW.title.txt=="|cffe8c36aSaqu|r  |cff9aa0a6Shaman, level 40, Stranglethorn Vale|r", QW.title.txt)
-    assert(not PG():find("|cffe8c36aSaqu|r\n",1,true), "one person: the name is in the header, not repeated on the page")
+    assert(QW.title.txt=="|cffffd100Saqu|r  |cff9aa0a6Shaman, level 40, Stranglethorn Vale|r", QW.title.txt)
+    assert(not PG():find("|cffffd100Saqu|r\n",1,true), "one person: the name is in the header, not repeated on the page")
     -- the overview is a grid of tiles
     QW.SetView("overview")
     assert(QW.usedGrids==1 and QW.grids[1].shown and QW.grids[1].tiles[1].label.txt=="Level" and QW.grids[1].tiles[1].value.txt:find("40",1,true), "tiles")
     assert(QW.title.txt:find("Shaman, level 40",1,true) and QW.usedRows==0 and QW.usedBars==0 and not QW.bars[1].shown)
-    NS.questData.Bro=keepBro; DadMode_RenderQuests(); assert(QW.title.txt=="|cffe8c36aHow are they doing|r")
+    NS.questData.Bro=keepBro; DadMode_RenderQuests(); assert(QW.title.txt=="|cffffd100How are they doing|r")
     QW.SetView("gear")
     DadModeDB.focus=nil; DadModeDB.gearSort=nil; it[8204].stats=nil; it[8201].stats=nil; DadMode_RenderQuests()
   end
@@ -1369,7 +1369,7 @@ do
   assert(c==1 and not far, "said once, and only for what is followed: "..table.concat(said," || "))
   title,lines=DadMode_TrackerLines(); assert(lines[1].left=="Boar Hunt" and lines[2].right:find("ready to hand in",1,true), "what is ready goes last")
   -- I am done and he is not: his line turns yellow, so I do not run off
-  doneQ[801]=true; clock=clock+3; title,lines=DadMode_TrackerLines(); assert(lines[1].right:sub(1,10)=="|cffe8c36a" and lines[1].right:find("you ready",1,true), lines[1].right); doneQ[801]=nil; clock=clock+3
+  doneQ[801]=true; clock=clock+3; title,lines=DadMode_TrackerLines(); assert(lines[1].right:sub(1,10)=="|cffffa033" and lines[1].right:find("you ready",1,true), lines[1].right); doneQ[801]=nil; clock=clock+3
   -- a quest that leaves his log leaves the list
   fire("CHAT_MSG_ADDON","DADMODE","QX:802","WHISPER",B); title,lines=DadMode_TrackerLines(); assert(#lines==1)
   -- unpin

@@ -34,8 +34,8 @@ SlashCmdList["DADMODE"] = function(msg)
         for _, key in ipairs(ns.STOP_ORDER) do
             local stop, p = ns.STOPS[key], ns.db.stops and ns.db.stops[key]
             ns.Print("  " .. ns.Ride(stop) .. " " .. stop.at .. " to " .. stop.to .. (stop.who and (" (" .. stop.who .. ")") or "") .. ": "
-                .. (p and ((p.manual and "|cff6fcf97recorded by a guide|r" or p.approx and "|cffe8c36arough, the town only|r" or "|cff6fcf97known|r")
-                    .. "  continent " .. p.cont .. ", " .. p.n .. ", " .. p.w) or "|cffeb7a7aunknown|r"))
+                .. (p and ((p.manual and "|cff1aff1arecorded by a guide|r" or p.approx and "|cffffd100rough, the town only|r" or "|cff1aff1aknown|r")
+                    .. "  continent " .. p.cont .. ", " .. p.n .. ", " .. p.w) or "|cffff4d4dunknown|r"))
         end
         local pn, pw, pc = ns.WorldPos("player")
         ns.Print("You: " .. (pn and ("continent " .. pc .. ", " .. math.floor(pn) .. ", " .. math.floor(pw)) or "no position here"))

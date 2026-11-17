@@ -37,7 +37,7 @@ local CHIP = {
     dim     = { 0.12, 0.12, 0.11, 0.60, 0.58, 0.54 },
 }
 local VALUE = {           -- the colour of the value in a tile
-    good = { 0.10, 1.00, 0.10 }, warn = { 1.00, 0.82, 0.00 }, bad = { 1.00, 0.30, 0.30 }, plain = { 1, 1, 1 },
+    good = { 0.10, 1.00, 0.10 }, warn = { 1.00, 0.63, 0.20 }, bad = { 1.00, 0.30, 0.30 }, plain = { 1, 1, 1 },
 }
 
 local function Look(button, kind)
