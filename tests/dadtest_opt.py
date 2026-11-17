@@ -1383,7 +1383,24 @@ do
   fire("CHAT_MSG_ADDON","DADMODE","HI:1.31.0:d","PARTY",B); title,lines,foot=DadMode_TrackerLines(); assert(foot and foot:find("needs DadMode 1.32",1,true), tostring(foot))
   fire("CHAT_MSG_ADDON","DADMODE","HI:1.32.0:d","PARTY",B)
   -- nothing in common and nothing pinned: no list
-  qlog={}; clock=clock+3; DadMode_DrawTracker(); assert(not TR.shown, "nothing to follow"); qlog={ {title="Boar Hunt",questID=801,level=30} }; clock=clock+3
+  -- nothing in common and nothing pinned. Asked for with the button: it stays and says how it fills.
+  qlog={}; clock=clock+3; DadMode_DrawTracker()
+  assert(TR.shown and TR.rows[1].left.txt:find("Nothing to follow yet",1,true) and TR.rows[3].left.txt:find("Quests tab",1,true) and TR.rows[1].right.txt=="", "asked for: it explains itself")
+  -- not asked for: no list at all
+  DadModeDB.tracker=nil; DadMode_DrawTracker(); assert(not TR.shown, "nothing to follow")
+  -- the button on the guide bar shows it and puts it away
+  local LB=DadModeHelper.listBtn; assert(LB and LB.label.txt=="Quest list" and LB.shown, "a button on the guide bar")
+  LB.onOnClick(LB); assert(DadModeDB.tracker==true and TR.shown, "shown")
+  LB.onOnClick(LB); assert(DadModeDB.tracker==false and not TR.shown, "put away")
+  qlog={ {title="Boar Hunt",questID=801,level=30} }; clock=clock+3
+  DadMode_DrawTracker(); assert(not TR.shown, "put away stays put away, also with something to follow")
+  LB.onOnClick(LB); assert(TR.shown and TR.rows[1].left.txt=="Boar Hunt" and not TR.rows[2].shown, "and back, with the quest")
+  -- alone on its line, the ninth button takes the whole line
+  do local wid={}; for i,bn in ipairs(DadModeHelper.buttons) do rawset(bn,"SetSize",function(_,w) wid[i]=w end) end
+     DadModeDB.helperCols=nil; DadModeHelper.Layout(); assert(#DadModeHelper.buttons==9 and wid[9]==286 and wid[8]==140, tostring(wid[9]))
+     DadModeDB.helperCols=1; DadModeHelper.Layout(); assert(wid[9]==160, "one column: like the rest"); DadModeDB.helperCols=nil; DadModeHelper.Layout()
+     for _,bn in ipairs(DadModeHelper.buttons) do rawset(bn,"SetSize",nil) end end
+  DadModeDB.tracker=nil
 
   -- in a dungeon: his quests for that dungeon, by itself
   local dq={ [601]={name="Into the Deep",questLevel=38,zoneOrSort=5000}, [602]={name="The Drowned King",questLevel=40,zoneOrSort=5001},

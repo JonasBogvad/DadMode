@@ -129,7 +129,7 @@ To change role later, type `/dadmode role`. That reopens the same question. Ther
 
 ## For the guides
 
-Choose **I am a guide for someone** when DadMode asks at first start (or type `/dadmode role`). A compact bar with eight buttons appears. Drag it where you want it. The small **-** in its corner folds it up to just the title and the call status, and **+** opens it again. **Guide bar layout** in the settings switches between two columns and one narrow column.
+Choose **I am a guide for someone** when DadMode asks at first start (or type `/dadmode role`). A compact bar with nine buttons appears. Drag it where you want it. The small **-** in its corner folds it up to just the title and the call status, and **+** opens it again. **Guide bar layout** in the settings switches between two columns and one narrow column.
 
 Four buttons do two things each. Rest the mouse on a button to see what it does.
 
@@ -141,6 +141,7 @@ Four buttons do two things each. Rest the mouse on a button to see what it does.
 | Star on my head | **Left click** puts a target marker on you, so he can see which character is you. **Right click** switches to the next icon. Give each guide a different one |
 | Beam on the ground | **Left click**, then click the ground: a coloured beam marks the spot. **Right click** removes the beam |
 | How is <name> doing | Opens a window with dad's status and his quests. See below |
+| Quest list | Shows the small list that follows their quests, or puts it away. See "Doing a quest or a dungeon together" |
 
 To see what dad sees when he is called, use **Test a call** in the settings, or `/dadmode test`.
 
@@ -310,8 +311,9 @@ It follows along by itself: when he loots something for a quest, the number chan
 - When he finishes a quest on the list, chat says **Olaf finished Bloodscalp Ears. Hand in: Kin'weelay, Stranglethorn Vale.**
 - When you are done with a quest and he is not, his numbers turn orange, so you do not run off.
 - Hold the mouse over a line for his objectives, yours, and where it is handed in. Click it to open that quest in the window.
-- At most six lines. Drag the list to move it. The **x** closes it; `/dadmode tracker` brings it back.
-- With nothing in common and nothing pinned, the list is not there at all.
+- At most six lines. Drag the list to move it.
+- **The Quest list button on the guide bar** shows the list and puts it away. Shown with the button, it stays on the screen also when there is nothing to follow, and says how it fills. The **x** on the list puts it away too.
+- Left alone, the list comes by itself when there is something to follow, and is not there otherwise.
 
 **Before a dungeon.** Pick the dungeon on the **Dungeon** tab. Above the quests it says **Ready to go in?** with his gear, bag space and food, and says **repair first** when his gear is worn. Under that are the dungeon's quests he has not picked up, with who gives them. Inside it is too late for both.
 
@@ -474,7 +476,7 @@ The version is shown in the top right corner of the **Who do you want to find?**
 | `/dadmode travel` | List the zeppelin platforms this computer knows, and the route to the current marker |
 | `/dadmode waypoint` | Send dad a waypoint: your map pin if you have one, otherwise where you stand |
 | `/dadmode quests` | Open the "How is <name> doing" window |
-| `/dadmode tracker` | Guides: the small quest list on or off |
+| `/dadmode tracker` | Guides: show the small quest list or put it away, same as the Quest list button |
 | `/dadmode forget NAME` | Guides: stop asking this person how he is doing when he is not in your party |
 | `/dadmode debug` | Print the names the game reports and what the last incoming call looked like. For troubleshooting |
 | `/dadmode status` | Show your role, whether you show calls, and who is in the party |

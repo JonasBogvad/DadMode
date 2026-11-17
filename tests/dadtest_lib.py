@@ -254,7 +254,7 @@ SlashCmdList.DADPING("  over here "); assert(sent[#sent][2]=="PING:over here" an
 SlashCmdList.DADMODE("helper"); assert(DadModeDB.helper and DadModeHelper.shown and DadModeDB.alerts==false)
 local H=DadModeHelper
 assert(H.star.label.txt=="Star on my head")
-assert(#H.buttons==8 and H.buttons[1].shown,"8 buttons")
+assert(#H.buttons==9 and H.buttons[1].shown,"9 buttons")
 assert(H.star.attr.type1=="macro" and H.star.attr.macrotext1:find("/tm 1") and H.star.attr.type2==nil,"left click marks, right click is not a game action")
 assert(H.beam.attr.type1=="worldmarker" and H.beam.attr.action1=="set" and H.beam.attr.marker1==5 and H.beam.attr.type2=="worldmarker" and H.beam.attr.action2=="clear" and H.beam.attr.marker2==5,"beam: left places, right removes")
 H.fold.onOnClick(H.fold); assert(DadModeDB.helperFolded and not H.buttons[1].shown and H.fold.label.txt=="+","folded")

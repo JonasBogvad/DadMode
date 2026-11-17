@@ -165,6 +165,9 @@ function DadMode_CreateHelper()
     ns.helper.beam = Secure("Beam on the ground")
     Tip(ns.helper.beam, "Beam on the ground", "Left click, then click the ground.", "Right click: remove the beam.")
     ns.helper.howBtn = Plain("How are they doing", function() ns.OpenQuests() end)
+    -- The small quest list on the screen: this button shows it, or puts it away
+    ns.helper.listBtn = Plain("Quest list", function() DadMode_ToggleTracker() end)
+    Tip(ns.helper.listBtn, "Quest list", "Shows the small list that follows their quests.", "Click again to put it away.")
 
     -- Puts the buttons in one or two columns. Not possible during a fight.
     local function Layout()
@@ -174,7 +177,9 @@ function DadMode_CreateHelper()
         for i, b in ipairs(ns.helper.buttons) do
             local n = i - 1
             b:ClearAllPoints()
-            b:SetSize(width, 24)
+            -- a last button that is alone on its line takes the whole line
+            local alone = cols == 2 and i == #ns.helper.buttons and n % 2 == 0
+            b:SetSize(alone and (2 * width + 6) or width, 24)
             b:SetPoint("TOPLEFT", ns.helper, "TOPLEFT", 8 + (n % cols) * (width + 6), -72 - math.floor(n / cols) * ROW)
         end
         ns.helper.aimBtn:SetWidth(cols * width + (cols - 1) * 6)

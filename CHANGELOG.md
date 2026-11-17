@@ -1,5 +1,10 @@
 # DadMode changes
 
+## 1.34.0
+
+- **A Quest list button on the guide bar.** It shows the small quest list and puts it away again. Shown with the button, the list stays on the screen also when there is nothing to follow yet, and says how it fills.
+- `/dadmode tracker` does the same as the button.
+
 ## 1.33.0
 
 - **The Talents tab now works on WoW Forever.** It said "His game does not let an addon read talents". The game keeps talents in a newer way than the addon looked for. Now it reads that, with the three trees and their names.

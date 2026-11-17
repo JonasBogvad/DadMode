@@ -125,7 +125,7 @@ function DadMode_IsPinned(name, id) return Pinned(name)[id] == true end
 function DadMode_TogglePin(name, id)
     local pins = Pinned(name)
     pins[id] = (not pins[id]) or nil
-    ns.db.tracker = nil                 -- pinning something brings the list back if it was closed
+    if ns.db.tracker == false then ns.db.tracker = nil end      -- pinning something brings the list back if it was closed
     DadMode_RenderQuests()
 end
 
@@ -321,7 +321,7 @@ local function Create()
     frame.close = ns.BigButton(frame, 18, 16, function()
         ns.db.tracker = false
         frame:Hide()
-        ns.Print("The quest list is off. /dadmode tracker brings it back.")
+        ns.Print("The quest list is put away. The Quest list button on the guide bar brings it back.")
     end)
     frame.close:SetPoint("TOPRIGHT", -6, -6)
     frame.close.label:SetText("x")
@@ -386,14 +386,28 @@ local function Draw()
     local title, lines, foot = nil, {}, nil
     if ns.db.helper and ns.db.tracker ~= false then title, lines, foot = DadMode_TrackerLines() end
     if not title or #lines == 0 then
-        if frame:IsShown() then frame:Hide() end
-        return
+        -- asked for with the button, and nothing to follow yet: say how it fills
+        if ns.db.helper and ns.db.tracker == true then
+            foot = nil
+            if title then
+                lines = { { left = ns.GREY .. "Nothing to follow yet. It fills by itself when|r" },
+                          { left = ns.GREY .. "you both have the same quest. Or click Track|r" },
+                          { left = ns.GREY .. "on one of their quests in the Quests tab.|r" } }
+            else
+                title = "Quest list"
+                lines = { { left = ns.GREY .. "Nobody to guide in your party right now.|r" } }
+            end
+        else
+            if frame:IsShown() then frame:Hide() end
+            return
+        end
     end
     frame.title:SetText("|cffffd100" .. title .. "|r")
     for i, l in ipairs(lines) do
         local r = Row(i)
+        r.left:SetWidth(l.q and 150 or (WIDTH - 20))
         r.left:SetText(l.left)
-        r.right:SetText(l.right)
+        r.right:SetText(l.right or "")
         r.line = l
         r:Show()
     end
@@ -417,10 +431,11 @@ local function Draw()
 end
 DadMode_DrawTracker = Draw
 
+-- The button on the guide bar and /dadmode tracker: put the list away when it is showing, show
+-- it when it is not. Shown this way it stays, also with nothing to follow.
 function DadMode_ToggleTracker()
-    ns.db.tracker = (ns.db.tracker == false) and true or false
-    ns.Print(ns.db.tracker and "The quest list is on. It shows when you and the one you guide have a quest in common, when you pin one with Track, or in a dungeon."
-        or "The quest list is off.")
+    if not frame then Create() end
+    ns.db.tracker = not frame:IsShown()
     Draw()
 end
 
