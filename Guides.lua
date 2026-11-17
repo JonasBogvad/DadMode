@@ -252,27 +252,33 @@ function DadMode_Gate(text, sender)
 
     ---- guided side: is this person allowed to do this?
     if ns.db.helper then return false end
-    local what
+    local what, qflags
     local h3 = text:sub(1, 3)
     if text:sub(1, 5) == "PING:" or text == "CLEAR" then what = "call"
     elseif h3 == "WP:" or text == "WPC" or h3 == "TS:" then what = "waypoint"
     elseif text:sub(1, 5) == "WEAR:" then what = "wear"
-    elseif text == "QREQ" or text == "QREQ:a" or text == "SREQ" or h3 == "QC:" then what = "data"
-    else return false end
+    else
+        -- requests for his data. Letters after "QREQ:" : a = asked by the addon itself, not by a
+        -- click; p = answer on the party channel, because whispers did not arrive.
+        qflags = text:match("^QREQ:(%a+)$")
+        if text == "QREQ" or qflags or text == "SREQ" or text == "SREQ:p" or h3 == "QC:" then what = "data"
+        else return false end
+    end
     if not m then return true end
     local state = Trust(sender)
     if state ~= "yes" then
         Answer(sender, "LOCKED:" .. (state == "no" and "no" or "ask"))
         -- a box only for something the guide did on purpose, not for the addon's own polling
-        if state == "ask" and text ~= "SREQ" and text ~= "QREQ:a" then AskApproval(sender) end
+        local auto = text == "SREQ" or text == "SREQ:p" or (qflags and qflags:find("a") ~= nil)
+        if state == "ask" and not auto then AskApproval(sender) end
         return true
     end
     if what ~= "data" and not Allowed(what) then
         Answer(sender, "DENY:" .. what)
         return true
     end
-    if text == "QREQ:a" then
-        DadMode_SendQuests()
+    if qflags then
+        DadMode_SendQuests(sender, qflags:find("p") ~= nil)
         return true
     end
     return false
@@ -358,10 +364,7 @@ local function CreateGuidesPage()
             RefreshGuides()
         end)
         row.button:SetPoint("TOPLEFT", 340, y)
-        pcall(function()
-            local font, _, flags = row.button.label:GetFont()
-            if font then row.button.label:SetFont(font, 12, flags) end
-        end)
+        ns.FontSize(row.button.label, 12)
         p.people[i] = row
         y = y - 26
     end
@@ -385,10 +388,7 @@ local function CreateGuidesPage()
             RefreshGuides()
         end)
         row.button:SetPoint("TOPLEFT", 340, y)
-        pcall(function()
-            local font, _, flags = row.button.label:GetFont()
-            if font then row.button.label:SetFont(font, 12, flags) end
-        end)
+        ns.FontSize(row.button.label, 12)
         p.perms[#p.perms + 1] = row
         y = y - 26
     end

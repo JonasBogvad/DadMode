@@ -7,7 +7,7 @@ local Party, peerVersion, questData
     = ns.Party, ns.peerVersion, ns.questData
 
 -- The people in the party a guide can guide: everybody who runs DadMode and is not a guide
-local function Candidates()
+function DadMode_Candidates()
     local out = {}
     for _, m in ipairs(Party()) do
         local d = questData[m.name]
@@ -20,7 +20,7 @@ end
 
 -- The one chosen, or nil for "everyone". Second value: true when there are two or more to choose from.
 function DadMode_TargetName()
-    local list = Candidates()
+    local list = DadMode_Candidates()
     if #list == 1 then return list[1].name, false end
     if #list >= 2 then
         for _, m in ipairs(list) do
@@ -32,7 +32,7 @@ function DadMode_TargetName()
 end
 
 function DadMode_TargetLine()
-    local list = Candidates()
+    local list = DadMode_Candidates()
     if #list == 0 then return "|cff9aa0a6Guiding: nobody with DadMode in the party|r" end
     if #list == 1 then return "Guiding: |cffe8c36a" .. list[1].name .. "|r" end
     local who = DadMode_TargetName()
@@ -41,7 +41,7 @@ end
 
 -- everyone -> first -> second -> ... -> everyone
 function DadMode_NextTarget()
-    local list = Candidates()
+    local list = DadMode_Candidates()
     if #list < 2 then return end
     local at = 0
     for i, m in ipairs(list) do

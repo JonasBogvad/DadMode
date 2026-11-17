@@ -5,11 +5,11 @@
 A World of Warcraft: Forever addon for a player who keeps losing the party.
 One addon, two roles: the person who gets lost ("dad") and the people who look after him ("guides").
 
-Version 1.24.0. Game interface 16001 (WoW Forever 1.60).
+Version 1.25.0. Game interface 16001 (WoW Forever 1.60).
 
 ## Install
 
-1. Unzip. You get a folder called `DadMode`. Inside are `DadMode.toc`, six `.lua` files, `Arrow.tga`, `Logo.tga` and `README.md`.
+1. Unzip. You get a folder called `DadMode`. Inside are `DadMode.toc`, 23 `.lua` files, `Arrow.tga`, `Logo.tga` and `README.md`.
    - **Downloaded from GitHub with Code, Download ZIP?** Then the folder is called `DadMode-main`. Rename it to `DadMode`, or the game will not load it. The zip under Releases has the right name already.
    - **Downloaded from GitHub with Code, Download ZIP?** Then the folder is called `DadMode-main`. Rename it to `DadMode`, or the game will not load it.
 2. Put the folder in `World of Warcraft\_forever_\Interface\AddOns\`.
@@ -388,11 +388,40 @@ Anyone in dad's party who runs DadMode can ask for his status and quest list: le
 - The follow button is a `SecureActionButtonTemplate` button running the macro `/follow party1` (the unit, not the name).
 - Gear comparison: `Compare(link, d)` reads the slot from `C_Item.GetItemInfoInstant`, the level from `C_Item.GetDetailedItemLevelInfo`, and the difference from `C_Item.GetItemStats`. Tooltips are hooked with `TooltipDataProcessor.AddTooltipPostCall(Enum.TooltipDataType.Item, ...)`, or `OnTooltipSetItem` on older clients. Drops come from `START_LOOT_ROLL`, `LOOT_OPENED` and `CHAT_MSG_LOOT`. His class is the `cl` field in the second `ST:` message.
 - Bag gear: after the gear he sends `BGS:<count>` and `BG:<item string>~...` (at most 16). `WEAR:<item string>` from a guide shows the button on his side; it calls `C_Item.EquipItemByName` on his click and answers `WEARSEEN`, `WEAROK`, `WEARNO` or `WEARGONE` with the item id.
-- **Files (from 1.24).** `DadMode.lua` is the core: arrows, calls, the guide bar, the status window, waypoints and travel, settings, events and slash commands. Five more files hold one feature each and load after it, in the order of the `.toc`: `Dungeon.lua` (Dungeon tab), `Compare.lua` (gear comparison, gear in bags, put-it-on), `Target.lua` (who a guide's calls are for), `Guides.lua` (approval and permissions), `Extras.lua` (version check, warnings, polling).
-- **How the files share things.** The game gives every file of an addon the same table (`local ADDON, ns = ...`). The core puts what the others need into it at the end of the file (`ns.Party = Party`, and so on), and each feature file takes its share at the top. Saved settings and windows only exist after login, so the feature files read those as `ns.db`, `ns.questWin`, `ns.helper` and `ns.optionsCategory`; the core sets them where it creates them. Feature files talk to the core and to each other through global functions named `DadMode_<Name>`.
-- **Events.** A feature file may add to the core's `handlers` table. The core registers every event in that table when its own `ADDON_LOADED` arrives, which is after all files have loaded.
+- **Files.** One file per job, loaded in the order of the `.toc`:
+
+  | File | Job |
+  |---|---|
+  | `Core.lua` | Constants, small helpers, who is in the party, where everybody is, the big message |
+  | `Messages.lua` | Sending to the party or to one person at the pace the game allows. The list of every message type is at the top of this file |
+  | `UI.lua` | Buttons, backgrounds, text size, resize corners |
+  | `Travel.lua` | Zeppelin and boat steps, flight point hint |
+  | `Arrows.lua` | The arrows to picked people and to the marker |
+  | `Calls.lua` | Calls: sending, showing, answering |
+  | `Picker.lua` | The "Who do you want to find?" window |
+  | `GuideBar.lua` | The guide's bar and the role question |
+  | `Waypoints.lua` | Waypoints from a guide |
+  | `Report.lua` | What the one being guided reports: status, quests, gear, bags |
+  | `Window.lua` | The "How is <name> doing" window |
+  | `Follow.lua` | The green follow button |
+  | `Frames.lua` | The arrow bar, the big message frame, the timer that drives everything |
+  | `Minimap.lua` | The minimap button |
+  | `Options.lua` | The settings page |
+  | `Events.lua` | Game events and incoming messages |
+  | `Slash.lua` | `/dadmode` and `/dad` |
+  | `Dungeon.lua` | The Dungeon tab |
+  | `Compare.lua` | Gear comparison, gear in bags, put-it-on |
+  | `Target.lua` | Who a guide's calls are for |
+  | `Guides.lua` | Approval and permissions |
+  | `Extras.lua` | Version check, warnings on the guide bar, polling |
+  | `Private.lua` | The guide's safety net for whispers |
+
+- **How the files share things.** The game gives every file of an addon the same table (`local ADDON, ns = ...`). A function or table that other files need stays a normal `local` in its own file and is copied into the table at the bottom of that file ("used by other files"). Other files read it as `ns.<name>`. Anything that changes while playing (saved settings `ns.db`, the windows, a few counters) lives in the table only, so every file sees the same value. Some features also offer global functions named `DadMode_<Name>`.
+- **Events.** A file may add to `ns.handlers`. All events in that table are registered when DadMode's own `ADDON_LOADED` arrives, which is after every file has loaded.
+- **Private data (1.25).** The one being guided whispers his status, quests, gear and bag contents to the guide who asked (`SendAddonMessage` on the `WHISPER` channel, to the sender's name exactly as the game reported it). Calls, waypoints and the small signals stay on the party channel. If no answer arrives within 6 seconds the guide's `Private.lua` asks once more with `QREQ:p`, the answer then comes on the party channel, and that is remembered for that person until a whisper does get through. Two guides asking at the same time each get their own copy, one after the other.
+- **Tests.** The `tests` folder holds three scripts that run the addon against a stand-in for the game (about 900 checks). `python3 tests/dadtest_opt.py Core.lua` from the addon folder; they need the Python package `lupa`. They are not part of the zip.
 - The game allows at most 200 local names in one file, which the single file ran into at 1.21. Single-use helper functions in the core are therefore globals named `DadMode_<Name>`. The test run compiles every file with Lua 5.1 to catch that limit.
-- Guides and permissions (1.22): `db.guides[<full name, lower case>] = { name, state = "yes" or "no" }` and `db.perm[<what>] = false` for a switch that is off. `DadMode_Gate()` runs before every other handler. On the guided side it drops `PING`, `CLEAR`, `WP`, `WPC`, `TS`, `WEAR`, `QREQ`, `SREQ` and `QC` from anybody not approved and answers `LOCKED:ask:<their first name>` or `LOCKED:no:...`; a switched-off action answers `DENY:<what>:<name>`. After a Yes it sends `UNLOCK:<name>`. Every reply starts with `PERM:status=1~gold=1~...` and `DadMode_FilterReply()` leaves out what is not shared. `QREQ:a` is the automatic request and never opens the box. Messages still travel on the party channel: an unapproved guide's DadMode drops what it overhears, but a modified addon in the same party could read it.
+- Guides and permissions (1.22): `db.guides[<full name, lower case>] = { name, state = "yes" or "no" }` and `db.perm[<what>] = false` for a switch that is off. `DadMode_Gate()` runs before every other handler. On the guided side it drops `PING`, `CLEAR`, `WP`, `WPC`, `TS`, `WEAR`, `QREQ`, `SREQ` and `QC` from anybody not approved and answers `LOCKED:ask:<their first name>` or `LOCKED:no:...`; a switched-off action answers `DENY:<what>:<name>`. After a Yes it sends `UNLOCK:<name>`. Every reply starts with `PERM:status=1~gold=1~...` and `DadMode_FilterReply()` leaves out what is not shared. `QREQ:a` is the automatic request and never opens the box. From 1.25 the personal answers are whispered, see "Private data" above.
 - Aiming (1.23): a message for one person is wrapped as `TO:<first name, lower case>:<message>`; everyone else drops it. It is only used when two or more people can be guided and one is chosen, and only towards 1.23 or newer.
 - Small messages added in 1.19: `HI:<version>` when the party changes, `SREQ` (answered with the two `ST:` messages only), (`HELP:` and `HACK`, used by the help button in 1.19 to 1.21.0, were removed in 1.21.1). Dungeon quests come from Questie's `QuestieJourney.zoneMap[areaId]` for the areas in `ZoneDB:GetDungeons()`.
 - Travel: `STOPS` lists the six zeppelin platforms with the zeppelin master's NPC id and name. `ResolveStops()` reads the master's spawn from Questie (`QueryNPCSingle(id, "spawns")`, `ZoneDB:GetUiMapIdByAreaId`) and stores world coordinates in `db.stops`. The guide sends them as `TS:<KEY>=<continent>:<north>:<west>` after each `WP`. `TravelStep()` picks the platform when walk + ride + walk is under 60% of the direct distance, or when the marker is on another continent. The flight hint runs on `TAXIMAP_OPENED` with `C_TaxiMap.GetAllTaxiNodes(GetTaxiMapID())`.
@@ -439,5 +468,6 @@ Checked against the real WoW Forever client, as of version 1.10.1 (13 November 2
 - The Yes / No box for guides, the My guides page and the permission switches (1.22).
 - The names on the guide's buttons, the Guiding line and aiming at one person (1.23).
 - The split into six files (1.24). It changes nothing a player can see.
+- Whispers for personal data, and one file per job (1.25).
 
 The simulated tests are three scripts that run the addon against a stand-in for the game. They catch logic errors, not differences in how Forever behaves.

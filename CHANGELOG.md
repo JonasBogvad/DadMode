@@ -1,5 +1,12 @@
 # DadMode changes
 
+## 1.25.0
+
+- **Your status, quests, gear and bag contents are now private.** They are whispered to the guide who asked, so no other computer in the party receives them. Before, they went to the whole party and other DadMode users' addons simply ignored them.
+- If a whisper does not get through, the guide's addon notices after a few seconds and asks once more the old way, so the window never stays empty.
+- Two guides asking at the same moment each get their own answer.
+- Under the hood the addon is now one file per job (23 small files instead of a few large ones). Nothing you can see changes from that.
+
 ## 1.24.0
 
 Nothing you can see changes in this version.

@@ -112,12 +112,14 @@ function DadMode_ExtrasTick()
             -- "QREQ:a" = asked by the addon itself, not by a click. From 1.22 that never makes
             -- a Yes / No box appear for somebody who has not approved this guide.
             Tell(modern and "QREQ:a" or "QREQ")
+            if DadMode_NoteAsk then pcall(DadMode_NoteAsk, true) end
         end
     end
     -- a guide asks for the short status now and then, so the warnings stay fresh
     if ns.db.helper and inParty and ns.helper and ns.helper:IsShown() and now - lastPoll > 45 then
         lastPoll = now
         Tell("SREQ")
+        if DadMode_NoteStatusAsk then pcall(DadMode_NoteStatusAsk) end
     end
 end
 
@@ -140,7 +142,9 @@ function DadMode_ExtraMessage(text, sender)
             if not known then SayHi() end          -- somebody new: tell them mine too
         end
         return true
-    elseif text == "SREQ" then
+    elseif text == "SREQ" or text == "SREQ:p" then
+        -- whispered back to the guide who asked; ":p" = he wants it on the party channel
+        local to = (text == "SREQ") and sender or nil
         local m = (not IsMe(sender)) and Member(sender) or nil
         if m and not ns.db.helper and not outbox[1] and GetTime() - lastStatusReply > 20 then
             lastStatusReply = GetTime()
@@ -148,7 +152,7 @@ function DadMode_ExtraMessage(text, sender)
             if ok then
                 local out = { st1, st2 }
                 if DadMode_FilterReply then out = DadMode_FilterReply(out) end
-                for _, body in ipairs(out) do Queue(body) end
+                for _, body in ipairs(out) do Queue(body, to) end
                 PumpOutbox()
             end
         end
