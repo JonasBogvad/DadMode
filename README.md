@@ -363,7 +363,7 @@ The window has six tabs:
 | **Gear** | What is in his bags against what he wears, his total stats, what he wears, and his potions, food and bandages |
 | **Talents** | His talent trees, drawn like his own talent window. See below |
 
-Colours mean the same thing everywhere: **gold** is a name or a heading, **green** is fine, done, or a gain, **orange** needs attention soon, **red** is urgent, missing, or a loss, and grey is less important.
+Colours mean the same thing everywhere: **gold** is a name or a heading, **green** is fine, done, or a gain, **orange** needs attention soon, **red** is urgent, missing, or a loss, and grey is less important. On the screen of the one being guided, the big text and the arrows use calmer shades of the same colours, so nothing glares at him.
 
 Every list is built the same way: one row for each thing, a label on the left, the name, small coloured boxes for the state (green is good or done, red is missing or lost, grey is a plain fact), and a button on the right when there is something to do. The colours and the gold edge are the game's own, and every DadMode window and button has them: the guide bar, the window to pick people, the Yes / No box, the follow button.
 

@@ -1421,5 +1421,11 @@ do
   qlog,C_QuestLog.GetQuestObjectives,C_QuestLog.IsComplete=saveLog,saveObj,saveComplete
   DadModeDB.aim=nil; DadModeDB.pinned=nil; DadModeDB.tracker=nil
 end
+-- ===== the big text in front of the one being guided has calm shades =====
+do
+  local AL4; for _,f in ipairs(frames) do if rawget(f,"text") and rawget(f,"hint") and rawget(f,"onOnMouseDown") then AL4=f end end
+  DadModeNS.ShowAlert("|cffffd100Saqu|r says |cff1aff1ayes|r and |cffff4d4dno|r and |cffffa033soon|r and |cff9aa0a6grey|r", 5)
+  assert(AL4.text.txt=="|cffe8c36aSaqu|r says |cff6fcf97yes|r and |cffeb7a7ano|r and |cffe8c36asoon|r and |cff9aa0a6grey|r", AL4.text.txt)
+end
 print("OPTIONS_TESTS_PASSED")
 ''')

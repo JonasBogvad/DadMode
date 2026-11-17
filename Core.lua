@@ -194,9 +194,16 @@ DadMode_Locate = Locate              -- for testing
 -- Big message in the middle of the screen
 ---------------------------------------------------------------------------
 
+-- The big text sits right in front of the one being guided, so it gets calmer shades of the
+-- same colours: nothing that glares.
+local CALM = { ["|cffffd100"] = "|cffe8c36a", ["|cff1aff1a"] = "|cff6fcf97", ["|cffff4d4d"] = "|cffeb7a7a", ["|cffffa033"] = "|cffe8c36a" }
+local function Calm(text)
+    return (tostring(text):gsub("|cff%x%x%x%x%x%x", function(code) return CALM[code:lower()] or code end))
+end
+
 local function ShowAlert(text, seconds)
     if not ns.alertFrame then return end
-    ns.alertFrame.text:SetText(text)
+    ns.alertFrame.text:SetText(Calm(text))
     -- the clickable area is only as big as the text, so it does not block the rest of the screen
     local w = math.min(ns.alertFrame.text:GetStringWidth() or 600, 900)
     local h = ns.alertFrame.text:GetStringHeight() or 40

@@ -1,5 +1,9 @@
 # DadMode changes
 
+## 1.32.2
+
+- The big text and the arrows on the screen of the one being guided keep their calm colours. The brighter colours from 1.32.1 are only for the guide's windows.
+
 ## 1.32.1
 
 - **One set of colours everywhere.** Gold is a name or a heading. Green is fine, done or a gain. Orange needs attention soon. Red is urgent, missing or a loss. Before, headings and warnings had the same gold, and text had softer shades than the buttons and chips.

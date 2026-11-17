@@ -26,10 +26,10 @@ local function GetSlot(i)
     -- Used in dungeons, where there is no arrow: only "close by" or "too far"
     s.near = s:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
     s.near:SetPoint("TOP", s.name, "BOTTOM", 0, -2)
-    s.near:SetText("|cff1aff1aclose by|r")
+    s.near:SetText("|cff6fcf97close by|r")
     s.far = s:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
     s.far:SetPoint("TOP", s.name, "BOTTOM", 0, -2)
-    s.far:SetText("|cffff4d4dTOO FAR AWAY|r")
+    s.far:SetText("|cffeb7a7aTOO FAR AWAY|r")
     s.near:Hide()
     s.far:Hide()
     ns.slots[i] = s
@@ -119,7 +119,7 @@ local function UpdateArrows()
             ns.pings[m.name] = nil
             pinging = false
             if ns.alertFrame.from == m.name or not ns.alertFrame:IsShown() then
-                ns.ShowAlert("|cff1aff1aYou found " .. m.name .. "|r", 2)
+                ns.ShowAlert("|cff6fcf97You found " .. m.name .. "|r", 2)
             end
             ns.Tell("HERE")
         end
@@ -134,7 +134,7 @@ local function UpdateArrows()
                 s.dist:SetText("")
             else
                 s.dist:SetText(why == "dungeon" and "|cff9aa0a6no arrows in here|r"
-                    or why == "elsewhere" and "|cffff4d4dfar away|r" or "|cff9aa0a6?|r")
+                    or why == "elsewhere" and "|cffeb7a7afar away|r" or "|cff9aa0a6?|r")
             end
             ns.farSince[m.name] = nil
         else
@@ -183,28 +183,28 @@ local function UpdateArrows()
         local platform = stepKey and ns.db.stops[stepKey]
         local dist, angle
         if platform then
-            s.name:SetText(ns.STOPS[stepKey].boat and "|cffff4d4dBOAT|r" or "|cffff4d4dZEPPELIN|r")
+            s.name:SetText(ns.STOPS[stepKey].boat and "|cffff5a5aBOAT|r" or "|cffff5a5aZEPPELIN|r")
             dist, angle = ns.LocatePoint(platform.n, platform.w, platform.cont)
         else
-            s.name:SetText("|cffff4d4dMARKER|r")
+            s.name:SetText("|cffff5a5aMARKER|r")
             dist, angle = ns.LocatePoint(wp.n, wp.w, wp.cont)
         end
         if platform and platform.approx and dist and dist < 40 then
             -- a rough spot: he is in the right town, the dock he has to find himself
             s.arrow:Hide()
-            s.dist:SetText("|cff1aff1ago to the dock|r")
+            s.dist:SetText("|cff6fcf97go to the dock|r")
             if not ns.travel.onPlatform then
                 ns.travel.onPlatform = true
-                ns.ShowAlert("|cff1aff1aYou are in " .. ns.STOPS[stepKey].at .. ".|r\nGo to the dock and wait for the boat to " .. ns.STOPS[stepKey].to .. ".", 10)
+                ns.ShowAlert("|cff6fcf97You are in " .. ns.STOPS[stepKey].at .. ".|r\nGo to the dock and wait for the boat to " .. ns.STOPS[stepKey].to .. ".", 10)
             end
         elseif platform and dist and dist < 15 then
             -- on the platform: stay, and say so once
             s.arrow:Hide()
-            s.dist:SetText("|cff1aff1await here|r")
+            s.dist:SetText("|cff6fcf97wait here|r")
             if not ns.travel.onPlatform then
                 ns.travel.onPlatform = true
-                ns.ShowAlert(ns.STOPS[stepKey].boat and ("|cff1aff1aRight dock.|r\nWait here for the boat to " .. ns.STOPS[stepKey].to .. ".")
-                    or ("|cff1aff1aRight platform.|r\nWait here for the zeppelin to " .. ns.STOPS[stepKey].to .. "."), 8)
+                ns.ShowAlert(ns.STOPS[stepKey].boat and ("|cff6fcf97Right dock.|r\nWait here for the boat to " .. ns.STOPS[stepKey].to .. ".")
+                    or ("|cff6fcf97Right platform.|r\nWait here for the zeppelin to " .. ns.STOPS[stepKey].to .. "."), 8)
             end
         elseif platform and dist then
             ns.travel.onPlatform = false
@@ -221,7 +221,7 @@ local function UpdateArrows()
         elseif dist and dist < 15 then
             ns.db.waypoint = nil
             if C_Map and C_Map.ClearUserWaypoint then pcall(C_Map.ClearUserWaypoint) end
-            ns.ShowAlert("|cff1aff1aYou reached the marker|r", 3)
+            ns.ShowAlert("|cff6fcf97You reached the marker|r", 3)
             ns.Tell("WPHERE")
         elseif dist then
             if angle then
@@ -236,7 +236,7 @@ local function UpdateArrows()
             s.dist:SetTextColor(1, 0.35, 0.35)
         else
             s.arrow:Hide()
-            s.dist:SetText(angle == "elsewhere" and "|cffff4d4don another continent|r" or "|cffff4d4dopen your map|r")
+            s.dist:SetText(angle == "elsewhere" and "|cffff5a5aon another continent|r" or "|cffff5a5aopen your map|r")
         end
         s:Show()
     end
@@ -254,7 +254,7 @@ local function UpdateArrows()
     if worstFar and ns.db.farWarning and not calling and not ns.farBeeped[worstFar] then
         ns.farBeeped[worstFar] = true
         ns.Beep("far")
-        ns.ShowAlert("|cffff4d4dYou are far from " .. worstFar .. "|r\nFollow the arrow", 5)
+        ns.ShowAlert("|cffeb7a7aYou are far from " .. worstFar .. "|r\nFollow the arrow", 5)
     end
 end
 
