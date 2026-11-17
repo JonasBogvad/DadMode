@@ -84,7 +84,8 @@ function DadMode_CreateHelper()
 
     -- Warnings about the one being guided, and who runs an older DadMode. Always the same
     -- height, because the bar can not change size during a fight.
-    local NOTE_H = 44
+    local NOTE_H = 46            -- the strip at the bottom: who I guide, where he is, what needs attention
+    ns.helper.stripOn = false    -- only there when there is somebody to show
     ns.helper.note = ns.helper:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
     ns.helper.note:SetPoint("BOTTOMLEFT", 10, 6)
     ns.helper.note:SetHeight(NOTE_H - 6)
@@ -177,7 +178,7 @@ function DadMode_CreateHelper()
             b:SetPoint("TOPLEFT", ns.helper, "TOPLEFT", 8 + (n % cols) * (width + 6), -72 - math.floor(n / cols) * ROW)
         end
         ns.helper.aimBtn:SetWidth(cols * width + (cols - 1) * 6)
-        fullHeight = 72 + math.ceil(#ns.helper.buttons / cols) * ROW + 6 + NOTE_H
+        fullHeight = 72 + math.ceil(#ns.helper.buttons / cols) * ROW + 6 + (ns.helper.stripOn and NOTE_H or 2)
         ns.helper:SetWidth(8 + cols * width + (cols - 1) * 6 + 8)
         ns.helper.note:SetWidth(cols * width + (cols - 1) * 6 - 14)
         ns.helper:SetHeight(ns.db.helperFolded and 44 or fullHeight)
@@ -191,7 +192,7 @@ function DadMode_CreateHelper()
         for _, b in ipairs(ns.helper.buttons) do
             if ns.db.helperFolded then b:Hide() else b:Show() end
         end
-        if ns.db.helperFolded then ns.helper.note:Hide() else ns.helper.note:Show() end
+        if ns.db.helperFolded or not ns.helper.stripOn then ns.helper.note:Hide() else ns.helper.note:Show() end
         if ns.db.helperFolded then ns.helper.aimBtn:Hide() else ns.helper.aimBtn:Show() end
         ns.helper:SetHeight(ns.db.helperFolded and 44 or fullHeight)
         ns.helper.fold.label:SetText(ns.db.helperFolded and "+" or "-")
@@ -218,6 +219,7 @@ function DadMode_CreateHelper()
         return (cols == 1) and 176 or 302
     end)
 
+    ns.helper.ApplyFold = ApplyFold
     ApplyIcon()
     ApplyFold()
     if ns.db.helper and not ns.db.helperHidden then ns.helper:Show() else ns.helper:Hide() end
@@ -263,11 +265,20 @@ function ns.UpdateHelperStatus()
         end
         if now - ns.call.at > ns.PING_ARROW then ns.call.state = nil end
     end
-    -- no call going on: the top line carries the most important warning, the bottom shows all
-    local notes = DadMode_Notes and DadMode_Notes() or {}
-    if text == "" and notes[1] then text = notes[1] end
+    -- no call going on: the top line carries what matters most, the strip at the bottom shows it all
+    local notes, top = {}, nil
+    if DadMode_Notes then notes, top = DadMode_Notes() end
+    if text == "" and top then text = top end
     ns.helper.status:SetText(text)
     ns.helper.note:SetText(table.concat(notes, "\n"))
+    -- the strip comes and goes with having somebody to guide. The bar can not change size in a
+    -- fight, so then it waits until the fight is over.
+    local want = #notes > 0
+    if want ~= ns.helper.stripOn and not InFight() then
+        ns.helper.stripOn = want
+        ns.helper.Layout()
+        ns.helper.ApplyFold()
+    end
 end
 
 

@@ -1,5 +1,12 @@
 # DadMode changes
 
+## 1.30.0
+
+- **The bottom of the guide bar is a status strip now.** One line says who you guide, his level, his zone and how far away he is. The next says what needs attention: DEAD, bags full, broken gear, no food, unspent talent points, an older DadMode. Or "all good".
+- **Worn gear is said before it breaks**: "gear 18%" when his most worn piece is under 25%.
+- With nobody to guide, the strip is gone and the bar is shorter. No more empty space.
+- **"A new version is out."** When somebody in your party has a newer DadMode than you, yours says so once, with where to update. The one being guided also sees it as the big text on the screen.
+
 ## 1.29.0
 
 - **Everything has the game's own look now.** The guide bar, the window to pick people, the role question, the Yes / No box and the follow button got the gold edge, the warm dark background and dark red buttons with gold text that the "How is he doing" window already had.

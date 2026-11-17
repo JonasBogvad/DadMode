@@ -143,17 +143,30 @@ Four buttons do two things each. Rest the mouse on a button to see what it does.
 
 To see what dad sees when he is called, use **Test a call** in the settings, or `/dadmode test`.
 
-**Warnings on the bar.** The bottom of the guide bar shows, by itself, what needs attention with the one you guide:
+**The strip at the bottom of the bar.** When you are guiding somebody, the bottom of the guide bar shows two lines about him, by itself:
 
-- **DEAD**
-- **in a fight** (when you are not in one yourself)
-- **bags full**, or 1 or 2 bag slots left
-- **broken** gear
-- unspent **talent points**
+- **Who and where**: his name, level, zone, and how many yards away he is.
+- **What needs attention**, or **all good** in green when nothing does:
 
-When no call is running, the most important one is also on the top line, so it shows with the bar folded up. The guide's addon asks for this short status every 45 seconds. Dad needs DadMode 1.19 or newer to answer; with an older version the warnings only update while **How is <name> doing** is open.
+| Shows | When |
+|---|---|
+| **DEAD** (red) | He is dead |
+| **bags full** (red), or **2 bag slots left** (yellow) | 2 free slots or fewer |
+| **2 broken** (red) | Broken gear |
+| **gear 18%** (yellow) | His most worn piece is under 25%, before it breaks |
+| **no food** (yellow) | No food or drink in his bags |
+| **1 talent point** (yellow) | Unspent talent points |
+| **has DadMode 1.27.0, you have 1.30.0** | His version is not the same as yours |
+
+With several people to guide and "everyone" chosen, each gets one line. With nobody to guide the strip is gone and the bar is shorter. The bar only changes size outside a fight.
+
+Somebody who is not in your party but answered a whisper a moment ago is shown too, with **not in your party** in place of the distance.
+
+When no call is running, what matters most is also on the top line, so it shows with the bar folded up. The guide's addon asks for this short status every 45 seconds. Dad needs DadMode 1.19 or newer to answer; with an older version it only updates while **How is <name> doing** is open.
 
 **Version check.** The same area says when someone in the party runs another DadMode than you: "Dad has DadMode 1.14.2, you have 1.19.0". Most "it does not work" moments so far came from that. Addons tell each other their version when the party changes.
+
+**A new version is out.** An addon can not look on the internet. But when somebody in your party runs a newer DadMode than you, yours says so once: **DadMode 1.30.0 is out. You have 1.29.0. Update it in the CurseForge app.** The one being guided also gets it as the big text on the screen, since he may not read chat.
 
 ### What would this item change for him?
 

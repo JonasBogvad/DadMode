@@ -58,32 +58,93 @@ function DadMode_VersionLines()
     return lines
 end
 
--- Lines for the guide bar: what is wrong with the one being guided, and old versions
+-- What needs attention with one person, as short coloured pieces. Red is urgent, yellow is soon.
+local LOW_GEAR = 25         -- percent: below this his most worn piece is worth a word
+local function Problems(name, st)
+    local a = {}
+    if st then
+        if st.dead == 1 then a[#a + 1] = BAD .. "DEAD|r" end
+        if st.bf == 0 and st.bt then a[#a + 1] = BAD .. "bags full|r"
+        elseif st.bf and st.bt and st.bf <= 2 then a[#a + 1] = WARN .. st.bf .. " bag slots left|r" end
+        if (st.brk or 0) > 0 then a[#a + 1] = BAD .. st.brk .. " broken|r"
+        elseif st.dur and st.dur < LOW_GEAR then a[#a + 1] = WARN .. "gear " .. st.dur .. "%|r" end
+        if st.fd == 0 then a[#a + 1] = WARN .. "no food|r" end
+        if (st.tp or 0) > 0 then a[#a + 1] = WARN .. st.tp .. " talent point" .. (st.tp > 1 and "s" or "") .. "|r" end
+    end
+    local v = peerVersion[name] or (st and st.v)
+    if v and Num(v) > 0 and Num(v) < Num(VERSION) then
+        a[#a + 1] = GREY .. "has DadMode " .. v .. ", you have " .. VERSION .. "|r"
+    elseif v and Num(v) > Num(VERSION) then
+        a[#a + 1] = WARN .. "has DadMode " .. v .. ", newer than yours|r"
+    end
+    return a
+end
+
+-- The strip at the bottom of the guide bar: who I am guiding, where he is, and what needs
+-- attention. Returns the lines, and the one line that matters most for the top of the bar.
+-- No lines means there is nobody to show, and the bar leaves the strip out.
 function DadMode_Notes()
-    local warn, vers = {}, {}
     local now = GetTime()
-    for _, m in ipairs(Party()) do
-        local d = questData[m.name]
-        local st = d and d.st
-        if st and now - (d.at or 0) < 180 then
-            local a = {}
-            if st.dead == 1 then a[#a + 1] = BAD .. "DEAD|r" end
-            if st.cb == 1 and not InFight() then a[#a + 1] = WARN .. "in a fight|r" end
-            if st.bf == 0 and st.bt then a[#a + 1] = BAD .. "bags full|r"
-            elseif st.bf and st.bt and st.bf <= 2 then a[#a + 1] = WARN .. st.bf .. " bag slots left|r" end
-            if (st.brk or 0) > 0 then a[#a + 1] = BAD .. st.brk .. " broken|r" end
-            if (st.tp or 0) > 0 then a[#a + 1] = WARN .. st.tp .. " talent point" .. (st.tp > 1 and "s" or "") .. "|r" end
-            if #a > 0 then warn[#warn + 1] = m.name .. ": " .. table.concat(a, ", ") end
-        end
-        local v = peerVersion[m.name] or (st and st.v)
-        if v and Num(v) > 0 and Num(v) < Num(VERSION) then
-            vers[#vers + 1] = GREY .. m.name .. " has DadMode " .. v .. ", you have " .. VERSION .. "|r"
-        elseif v and Num(v) > Num(VERSION) then
-            vers[#vers + 1] = WARN .. m.name .. " has DadMode " .. v .. ", newer than yours|r"
+    local people = {}
+    local picked = DadMode_TargetName and DadMode_TargetName() or nil
+    for _, m in ipairs(DadMode_Candidates and DadMode_Candidates() or {}) do
+        if not picked or m.name == picked then
+            local d = questData[m.name]
+            local fresh = d and d.st and now - (d.at or 0) < 180
+            people[#people + 1] = { name = m.name, unit = m.unit, st = fresh and d.st or nil }
         end
     end
-    for _, line in ipairs(vers) do warn[#warn + 1] = line end
-    return warn
+    -- somebody outside the party who answered a whisper a moment ago
+    if #Party() == 0 and DadMode_RemoteState then
+        for name, d in pairs(questData) do
+            if d.st and now - (d.at or 0) < 180 and DadMode_RemoteState(name) == "ok" then
+                people[#people + 1] = { name = name, st = d.st }
+            end
+        end
+    end
+    local lines, top = {}, nil
+    for _, p in ipairs(people) do
+        local head = "|cffe8c36a" .. p.name .. "|r"
+        if p.st then
+            if p.st.lv then head = head .. "  " .. p.st.lv end
+            if p.st.z then head = head .. "  " .. p.st.z end
+        end
+        if p.unit then
+            local dist = ns.Locate(p.unit)
+            if dist then head = head .. "  " .. GREY .. math.floor(dist + 0.5) .. " yd|r" end
+        else
+            head = head .. "  " .. GREY .. "not in your party|r"
+        end
+        local wrong = Problems(p.name, p.st)
+        local state
+        if #wrong > 0 then
+            state = table.concat(wrong, ", ")
+            top = top or (p.name .. ": " .. state)
+        elseif p.st then
+            state = GOOD .. "all good|r"
+        else
+            state = GREY .. "no status yet|r"
+        end
+        if #people == 1 then
+            lines[#lines + 1] = head
+            lines[#lines + 1] = state
+        else
+            lines[#lines + 1] = head .. "  " .. state
+        end
+    end
+    return lines, top
+end
+
+-- Somebody in the party runs a newer DadMode than this computer: say so once.
+-- An addon can not look on the internet. Meeting somebody who has it is how it finds out.
+local toldNewer = false
+local function Newer(v)
+    if toldNewer or not v or Num(v) <= Num(VERSION) then return end
+    toldNewer = true
+    ns.Print("|cffe8c36aDadMode " .. v .. " is out.|r You have " .. VERSION .. ". Update it in the CurseForge app, then restart the game.")
+    if not ns.db.helper and ns.ShowAlert then
+        ns.ShowAlert("|cffe8c36aDadMode has a new version|r\nUpdate it in the CurseForge app", 8)
+    end
 end
 
 function DadMode_ExtrasTick()
@@ -137,6 +198,7 @@ function DadMode_ExtraMessage(text, sender)
             if v then
                 peerVersion[m.name] = v
                 if role == "g" or role == "d" then peerRole[m.name] = role end
+                Newer(v)
             end
             if not known then SayHi() end          -- somebody new: tell them mine too
         end

@@ -488,10 +488,35 @@ assert(sounds==sb2 and alertText()==before, "a help message from an older versio
 fire("CHAT_MSG_ADDON","DADMODE","ST:lv=35~dead=1~cb=0~bf=0~bt=64~brk=2~tp=1","PARTY",BRO)
 fire("CHAT_MSG_ADDON","DADMODE","ST:v=1.0.2","PARTY",BRO); fire("CHAT_MSG_ADDON","DADMODE","HI:1.0.2","PARTY",BRO)
 tk2(); local nt=HB2.note.txt
-assert(nt:find("Bro: ",1,true) and nt:find("DEAD",1,true) and nt:find("bags full",1,true) and nt:find("2 broken",1,true) and nt:find("1 talent point",1,true), nt)
-assert(nt:find("Bro has DadMode 1.0.2, you have",1,true), nt)
-assert(HB2.status.txt:find("DEAD",1,true), "top line carries the warning when no call is running")
-fire("CHAT_MSG_ADDON","DADMODE","HI:9.9.9","PARTY",BRO); tk2(); assert(HB2.note.txt:find("newer than yours",1,true))
+-- the strip: who, level and distance on one line, what needs attention on the next
+assert(nt:find("|cffe8c36aBro|r  35",1,true) and nt:find(" yd|r\n",1,true), nt)
+assert(nt:find("DEAD|r, ",1,true) and nt:find("bags full",1,true) and nt:find("2 broken",1,true) and nt:find("1 talent point",1,true), nt)
+assert(nt:find("has DadMode 1.0.2, you have",1,true), nt)
+assert(HB2.status.txt:find("Bro: ",1,true) and HB2.status.txt:find("bags full",1,true), "top line carries what matters most when no call is running")
+assert(HB2.stripOn==true and HB2.note.shown, "the strip is there when there is somebody to guide")
+-- gear that is getting worn is said before it breaks
+fire("CHAT_MSG_ADDON","DADMODE","ST:lv=35~dead=0~bf=20~bt=64~brk=0~dur=18~fd=0","PARTY",BRO); tk2(); nt=HB2.note.txt
+assert(nt:find("gear 18%",1,true) and nt:find("no food",1,true) and not nt:find("broken",1,true) and not nt:find("bags",1,true), nt)
+fire("CHAT_MSG_ADDON","DADMODE","ST:lv=35~dead=0~bf=20~bt=64~brk=0~dur=60~fd=3~z=Stranglethorn Vale","PARTY",BRO); fire("CHAT_MSG_ADDON","DADMODE","HI:1.3.4","PARTY",BRO); tk2(); nt=HB2.note.txt
+assert(nt:find("Bro|r  35  Stranglethorn Vale",1,true) and nt:find("all good",1,true), nt)
+-- a newer version in the party: one line in chat, once
+do
+  local said={}; local rp=print; print=function(x) said[#said+1]=tostring(x) end
+  fire("CHAT_MSG_ADDON","DADMODE","HI:9.9.9","PARTY",BRO); fire("CHAT_MSG_ADDON","DADMODE","HI:9.9.9","PARTY",BRO); print=rp
+  local c=0; for _,l in ipairs(said) do if l:find("DadMode 9.9.9 is out",1,true) and l:find("CurseForge",1,true) then c=c+1 end end
+  assert(c==1, "told once: "..c.." "..table.concat(said," || "))
+end
+tk2(); assert(HB2.note.txt:find("newer than yours",1,true))
+-- nobody to guide: the strip goes away and the bar gets shorter. Not during a fight.
+do
+  local k1,k2=units.party1,units.party2; local hgt; rawset(HB2,"SetHeight",function(_,h) hgt=h end)
+  DadModeDB.helperFolded=false; tk2(); HB2.Layout(); local withStrip=hgt
+  units.party1,units.party2=nil,nil
+  fight=true; clock=clock+1; tk2(); assert(HB2.stripOn==true, "the bar does not change size in a fight")
+  fight=false; clock=clock+1; tk2(); assert(HB2.stripOn==false and not HB2.note.shown and hgt<withStrip, "gone, and the bar is shorter: "..tostring(hgt).." < "..tostring(withStrip))
+  units.party1,units.party2=k1,k2; clock=clock+1; tk2(); assert(HB2.stripOn==true and HB2.note.shown and hgt==withStrip, "back with the party")
+  rawset(HB2,"SetHeight",nil)
+end
 m0=#sent; clock=clock+40; fire("GROUP_ROSTER_UPDATE"); local hi=false; for i=m0+1,#sent do if sent[i][2]:sub(1,3)=="HI:" then hi=true end end; assert(hi, "says its version when the party changes")
 fire("CHAT_MSG_ADDON","DADMODE","ST:lv=35~dead=0~cb=0~bf=20~bt=64~brk=0","PARTY",BRO)
 -- ===== boats, and recording a dock by hand =====
