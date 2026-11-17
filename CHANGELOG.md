@@ -1,5 +1,11 @@
 # DadMode changes
 
+## 1.24.0
+
+Nothing you can see changes in this version.
+
+- The addon is now made of six files instead of one very large one. That makes future changes safer.
+
 ## 1.23.0
 
 For guides:

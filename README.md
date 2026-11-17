@@ -5,11 +5,11 @@
 A World of Warcraft: Forever addon for a player who keeps losing the party.
 One addon, two roles: the person who gets lost ("dad") and the people who look after him ("guides").
 
-Version 1.23.0. Game interface 16001 (WoW Forever 1.60).
+Version 1.24.0. Game interface 16001 (WoW Forever 1.60).
 
 ## Install
 
-1. Unzip. You get a folder called `DadMode` with five files: `DadMode.toc`, `DadMode.lua`, `Arrow.tga`, `Logo.tga`, `README.md`.
+1. Unzip. You get a folder called `DadMode`. Inside are `DadMode.toc`, six `.lua` files, `Arrow.tga`, `Logo.tga` and `README.md`.
    - **Downloaded from GitHub with Code, Download ZIP?** Then the folder is called `DadMode-main`. Rename it to `DadMode`, or the game will not load it. The zip under Releases has the right name already.
    - **Downloaded from GitHub with Code, Download ZIP?** Then the folder is called `DadMode-main`. Rename it to `DadMode`, or the game will not load it.
 2. Put the folder in `World of Warcraft\_forever_\Interface\AddOns\`.
@@ -388,7 +388,10 @@ Anyone in dad's party who runs DadMode can ask for his status and quest list: le
 - The follow button is a `SecureActionButtonTemplate` button running the macro `/follow party1` (the unit, not the name).
 - Gear comparison: `Compare(link, d)` reads the slot from `C_Item.GetItemInfoInstant`, the level from `C_Item.GetDetailedItemLevelInfo`, and the difference from `C_Item.GetItemStats`. Tooltips are hooked with `TooltipDataProcessor.AddTooltipPostCall(Enum.TooltipDataType.Item, ...)`, or `OnTooltipSetItem` on older clients. Drops come from `START_LOOT_ROLL`, `LOOT_OPENED` and `CHAT_MSG_LOOT`. His class is the `cl` field in the second `ST:` message.
 - Bag gear: after the gear he sends `BGS:<count>` and `BG:<item string>~...` (at most 16). `WEAR:<item string>` from a guide shows the button on his side; it calls `C_Item.EquipItemByName` on his click and answers `WEARSEEN`, `WEAROK`, `WEARNO` or `WEARGONE` with the item id.
-- The game allows at most 200 local names in one file. Single-use helper functions are therefore globals named `DadMode_<Name>`. The test run compiles the file with Lua 5.1 to catch that limit.
+- **Files (from 1.24).** `DadMode.lua` is the core: arrows, calls, the guide bar, the status window, waypoints and travel, settings, events and slash commands. Five more files hold one feature each and load after it, in the order of the `.toc`: `Dungeon.lua` (Dungeon tab), `Compare.lua` (gear comparison, gear in bags, put-it-on), `Target.lua` (who a guide's calls are for), `Guides.lua` (approval and permissions), `Extras.lua` (version check, warnings, polling).
+- **How the files share things.** The game gives every file of an addon the same table (`local ADDON, ns = ...`). The core puts what the others need into it at the end of the file (`ns.Party = Party`, and so on), and each feature file takes its share at the top. Saved settings and windows only exist after login, so the feature files read those as `ns.db`, `ns.questWin`, `ns.helper` and `ns.optionsCategory`; the core sets them where it creates them. Feature files talk to the core and to each other through global functions named `DadMode_<Name>`.
+- **Events.** A feature file may add to the core's `handlers` table. The core registers every event in that table when its own `ADDON_LOADED` arrives, which is after all files have loaded.
+- The game allows at most 200 local names in one file, which the single file ran into at 1.21. Single-use helper functions in the core are therefore globals named `DadMode_<Name>`. The test run compiles every file with Lua 5.1 to catch that limit.
 - Guides and permissions (1.22): `db.guides[<full name, lower case>] = { name, state = "yes" or "no" }` and `db.perm[<what>] = false` for a switch that is off. `DadMode_Gate()` runs before every other handler. On the guided side it drops `PING`, `CLEAR`, `WP`, `WPC`, `TS`, `WEAR`, `QREQ`, `SREQ` and `QC` from anybody not approved and answers `LOCKED:ask:<their first name>` or `LOCKED:no:...`; a switched-off action answers `DENY:<what>:<name>`. After a Yes it sends `UNLOCK:<name>`. Every reply starts with `PERM:status=1~gold=1~...` and `DadMode_FilterReply()` leaves out what is not shared. `QREQ:a` is the automatic request and never opens the box. Messages still travel on the party channel: an unapproved guide's DadMode drops what it overhears, but a modified addon in the same party could read it.
 - Aiming (1.23): a message for one person is wrapped as `TO:<first name, lower case>:<message>`; everyone else drops it. It is only used when two or more people can be guided and one is chosen, and only towards 1.23 or newer.
 - Small messages added in 1.19: `HI:<version>` when the party changes, `SREQ` (answered with the two `ST:` messages only), (`HELP:` and `HACK`, used by the help button in 1.19 to 1.21.0, were removed in 1.21.1). Dungeon quests come from Questie's `QuestieJourney.zoneMap[areaId]` for the areas in `ZoneDB:GetDungeons()`.
@@ -435,5 +438,6 @@ Checked against the real WoW Forever client, as of version 1.10.1 (13 November 2
 - Gear in his bags and the put-it-on button (1.21).
 - The Yes / No box for guides, the My guides page and the permission switches (1.22).
 - The names on the guide's buttons, the Guiding line and aiming at one person (1.23).
+- The split into six files (1.24). It changes nothing a player can see.
 
 The simulated tests are three scripts that run the addon against a stand-in for the game. They catch logic errors, not differences in how Forever behaves.
