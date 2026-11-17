@@ -1,5 +1,10 @@
 # DadMode changes
 
+## 1.35.0
+
+- **Right click a talent to take back what you pointed at.** The pointing goes away on your Talents tab, and his screen says you took it back. Then you can point at another one right away.
+- He needs this version too for the text on his screen to go away.
+
 ## 1.34.0
 
 - **A Quest list button on the guide bar.** It shows the small quest list and puts it away again. Shown with the button, the list stays on the screen also when there is nothing to follow yet, and says how it fills.

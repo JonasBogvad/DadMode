@@ -330,6 +330,7 @@ The **Talents** tab draws his talent trees the way his own talent window shows t
 - The line at the top says how many points he has to spend.
 - Hold the mouse over a talent for its name, rank and where it sits.
 - **Click a talent to point at it.** On his screen a call sounds and the big text says **Anna says: put your talent point in Flurry**, with the tree and the row, counted from the top. Your tab says **Told him**, then **He sees it**. He spends the point himself; the game does not let anybody do that for him.
+- **Right click a talent to take it back.** Clicked the wrong one, or changed your mind: the pointing goes away on your tab, and his screen says **Anna took that back. Do not spend the point yet.** Then point at another one.
 
 Nothing is written per class. His addon reads whatever trees his character has and sends them, so it works for every class and keeps working when the game changes its talents.
 

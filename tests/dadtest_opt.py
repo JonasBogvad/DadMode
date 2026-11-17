@@ -1255,6 +1255,10 @@ do
   clock=clock+100; local s0=sounds; fire("CHAT_MSG_ADDON","DADMODE","TPICK:2:3","PARTY",B)
   assert(AL3.text.txt:find("Bro|r says: put your talent point in",1,true) and AL3.text.txt:find("Flurry",1,true) and AL3.text.txt:find("Enhancement, row 3 from the top",1,true), AL3.text.txt)
   assert(sounds==s0+1 and sent[#sent][2]=="TPOK:2:3")
+  -- the guide takes it back: the big text is replaced by a short word
+  n=#sent; fire("CHAT_MSG_ADDON","DADMODE","TPICK:0:0","PARTY",B)
+  assert(AL3.text.txt:find("Bro|r took that back",1,true) and not AL3.text.txt:find("Flurry",1,true) and #sent==n, AL3.text.txt)
+  AL3.text:SetText("x"); fire("CHAT_MSG_ADDON","DADMODE","TPICK:0:0","PARTY",B); assert(AL3.text.txt=="x", "nothing to take back: nothing happens")
   -- a game version that does not tell
   local k=GetNumTalentTabs; GetNumTalentTabs=nil; assert(DadMode_ReadTalents()[1]=="TE:none"); GetNumTalentTabs=k
 
@@ -1281,7 +1285,15 @@ do
   clock=clock+10; n=#sent; c3.onOnClick(c3)
   assert(sent[#sent][2]:find("TPICK:2:3",1,true) and PG():find("Told him: Flurry",1,true), sent[#sent][2])
   n=#sent; c1.onOnClick(c1); assert(#sent==n, "not twice within a moment")
-  fire("CHAT_MSG_ADDON","DADMODE","TPOK:2:3","PARTY",B); assert(PG():find("He sees it: Flurry",1,true))
+  fire("CHAT_MSG_ADDON","DADMODE","TPOK:2:3","PARTY",B); assert(PG():find("He sees it: Flurry",1,true) and PG():find("Right click a talent to take it back",1,true))
+  -- right click any talent: the pointing is taken back, here and on his screen
+  n=#sent; c1.onOnClick(c1,"RightButton")
+  assert(sent[#sent][2]:find("TPICK:0:0",1,true) and DadModeNS.questData.Bro.talents.pointed==nil, sent[#sent][2])
+  assert(not PG():find("He sees it",1,true) and not PG():find("Told him",1,true) and not PG():find("Right click",1,true), PG())
+  n=#sent; c1=cell("Thundering Strikes"); c1.onOnClick(c1,"RightButton"); assert(#sent==n, "nothing pointed at: a right click does nothing")
+  -- and pointing at another one right away works
+  c3=cell("Flurry"); c3.onOnClick(c3,"LeftButton"); assert(sent[#sent][2]:find("TPICK:2:3",1,true) and PG():find("Told him: Flurry",1,true))
+  fire("CHAT_MSG_ADDON","DADMODE","TPOK:2:3","PARTY",B)
   -- a fresh answer swaps in when it is complete, and keeps what was pointed at
   tal[2][3][5]=1
   local again=nil; DadMode_SetRole(false); again=DadMode_ReadTalents(); DadMode_SetRole(true)

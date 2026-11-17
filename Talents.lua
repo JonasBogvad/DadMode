@@ -9,7 +9,7 @@
 --   he answers     TT:<tree>=<name>~...           the trees
 --                  TL:<record>^<record>...        talents: tree~index~row~column~rank~most~picture~name
 --                  TE:<unspent points>            the end. "TE:none" = this game version does not tell
---   guide points   TPICK:<tree>:<index>           "put your point here"
+--   guide points   TPICK:<tree>:<index>           "put your point here". TPICK:0:0 takes it back.
 --   he answers     TPOK:<tree>:<index>
 
 local ADDON, ns = ...
@@ -18,6 +18,7 @@ local Usable = ns.Usable
 local ICONS = "Interface\\Icons\\"
 local lastAsk = {}          -- guide: name -> when his talents were last asked for
 local lastPick = 0
+local pointedBy             -- his side: the guide whose pointing is on the screen
 
 ---------------------------------------------------------------------------
 -- His side: read the talents and send them
@@ -283,6 +284,7 @@ local function Pointed(m, tab, index)
     ns.Beep("call")
     ns.ShowAlert("|cffffd100" .. m.name .. "|r says: put your talent point in\n|cff1aff1a" .. t.name .. "|r\n"
         .. tree.name .. ", row " .. t.tier .. " from the top", 15)
+    pointedBy = m.name
     DadMode_Reply(m, "TPOK:" .. tab .. ":" .. index)
 end
 
@@ -312,6 +314,16 @@ function DadMode_PointAtTalent(name, tab, index, tname)
     local d = ns.questData[name]
     if d and d.talents then d.talents.pointed = ok and { tab = tab, index = index, state = "asked" } or nil end
     if not ok then ns.Print("|cffff4d4dCould not tell him:|r " .. tostring(why)) end
+    DadMode_RenderQuests()
+end
+
+-- A guide right-clicked: the talent he pointed at is taken back, on his page and on the other screen
+function DadMode_UnpointTalent(name)
+    local d = ns.questData[name]
+    if not (d and d.talents and d.talents.pointed) then return end
+    d.talents.pointed = nil
+    lastPick = 0                        -- pointing at another one right away is fine
+    DadMode_TellPerson(name, "TPICK:0:0", true)
     DadMode_RenderQuests()
 end
 
@@ -360,7 +372,17 @@ function DadMode_TalentMessage(text, sender)
         if not ns.db.helper then SendTalents(m, sender) end
     elseif text:sub(1, 6) == "TPICK:" then
         local tab, index = text:match("^TPICK:(%d+):(%d+)$")
-        if tab and not ns.db.helper then Pointed(m, tonumber(tab), tonumber(index)) end
+        if tab and not ns.db.helper then
+            if tonumber(tab) == 0 then
+                -- the guide took it back: the big text goes away, with a short word so he knows
+                if pointedBy == m.name then
+                    pointedBy = nil
+                    ns.ShowAlert("|cffffd100" .. m.name .. "|r took that back. Do not spend the point yet.", 5)
+                end
+            else
+                Pointed(m, tonumber(tab), tonumber(index))
+            end
+        end
     elseif text:sub(1, 5) == "TPOK:" then
         local d = ns.questData[m.name]
         if d and d.talents and d.talents.pointed then d.talents.pointed.state = "seen" end
@@ -403,8 +425,8 @@ function DadMode_TalentBlocks(name, d, lines, now)
             end
         end
         if what then
-            lines[#lines + 1] = (t.pointed.state == "seen") and (ns.GOOD .. "He sees it: " .. what .. "|r")
-                or (ns.GREY .. "Told him: " .. what .. "...|r")
+            lines[#lines + 1] = ((t.pointed.state == "seen") and (ns.GOOD .. "He sees it: " .. what .. "|r")
+                or (ns.GREY .. "Told him: " .. what .. "...|r")) .. "   " .. ns.GREY .. "Right click a talent to take it back.|r"
         end
     end
     local trees = {}
@@ -412,7 +434,8 @@ function DadMode_TalentBlocks(name, d, lines, now)
         local tree = t.trees[tab]
         if tree then
             trees[#trees + 1] = { name = tree.name, points = tree.points, list = tree.list,
-                onClick = function(tal) DadMode_PointAtTalent(name, tal.tab, tal.index, tal.name) end }
+                onClick = function(tal) DadMode_PointAtTalent(name, tal.tab, tal.index, tal.name) end,
+                onUndo = function() DadMode_UnpointTalent(name) end }
         end
     end
     lines[#lines + 1] = { trees = trees, pointed = t.pointed }

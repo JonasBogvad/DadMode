@@ -333,7 +333,15 @@ local function Cell(f, i)
     c.rank = c:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
     c.rank:SetPoint("BOTTOMRIGHT", 3, -4)
     c.onClick = false
-    c:SetScript("OnClick", function(self) if self.onClick then self.onClick() end end)
+    c.onUndo = false
+    pcall(function() c:RegisterForClicks("LeftButtonUp", "RightButtonUp") end)
+    c:SetScript("OnClick", function(self, button)
+        if button == "RightButton" then
+            if self.onUndo then self.onUndo() end
+        elseif self.onClick then
+            self.onClick()
+        end
+    end)
     c:SetScript("OnEnter", function(self)
         local t = self.talent
         if not (t and GameTooltip) then return end
@@ -342,6 +350,7 @@ local function Cell(f, i)
         GameTooltip:AddLine("Rank " .. t.rank .. " of " .. t.most, 1, 0.82, 0)
         GameTooltip:AddLine(self.tree .. ", row " .. t.tier .. " from the top", 0.7, 0.7, 0.7)
         GameTooltip:AddLine("Click to point at it for him", 0.1, 1, 0.1)
+        if self.onUndo then GameTooltip:AddLine("Right click: take it back", 0.1, 1, 0.1) end
         GameTooltip:Show()
     end)
     c:SetScript("OnLeave", function() if GameTooltip then GameTooltip:Hide() end end)
@@ -391,6 +400,8 @@ local function PlaceTrees(f, spec, y, width)
             else c.rank:SetTextColor(0.6, 0.6, 0.6) end
             c.talent, c.tree = t, tree.name
             c.onClick = tree.onClick and function() tree.onClick(t) end or false
+            -- with something pointed at, a right click on any talent takes it back
+            c.onUndo = (spec.pointed and tree.onUndo) or false
             c:Show()
             if t.tier > rows then rows = t.tier end
         end
@@ -418,6 +429,7 @@ end
 --   { tiles = { { label = "Bags", value = "12 free", kind = "good", wide = false } } }
 --   { trees = { { name = "Enhancement", points = 31, onClick = function(talent),
 --                 list = { { name, tier, col, rank, most, icon, tab, index } } } }, pointed = { tab, index } }
+--     (a tree may also have onUndo = function: a right click on a talent while one is pointed at)
 function DadMode_LayoutBlocks(blocks)
     local win = ns.questWin
     if not win then return end
