@@ -5,11 +5,11 @@
 A World of Warcraft: Forever addon for a player who keeps losing the party.
 One addon, two roles: the person who gets lost ("dad") and the people who look after him ("guides").
 
-Version 1.21.2. Game interface 16001 (WoW Forever 1.60).
+Version 1.21.3. Game interface 16001 (WoW Forever 1.60).
 
 ## Install
 
-1. Unzip. You get a folder called `DadMode` with four files: `DadMode.toc`, `DadMode.lua`, `Arrow.tga`, `README.md`.
+1. Unzip. You get a folder called `DadMode` with five files: `DadMode.toc`, `DadMode.lua`, `Arrow.tga`, `Logo.tga`, `README.md`.
    - **Downloaded from GitHub with Code, Download ZIP?** Then the folder is called `DadMode-main`. Rename it to `DadMode`, or the game will not load it.
 2. Put the folder in `World of Warcraft\_forever_\Interface\AddOns\`.
 3. Fully close WoW and start it again. A new addon is not picked up by /reload.
