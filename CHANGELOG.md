@@ -11,6 +11,8 @@ For guides:
 Other:
 
 - `/dadmode testbox` shows the Yes / No box with a made-up guide, so you can look at it without a second player.
+- **My guides** is now listed under DadMode in the options from the start. In 1.22.0 it only appeared after pressing the Open button.
+- Two setting names that were cut off on the options page are shorter now.
 
 ## 1.22.0
 

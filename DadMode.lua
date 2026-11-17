@@ -3152,10 +3152,10 @@ function DadMode_CreateOptions()
     Row("Try it: show a call on my own screen",
         function() return "Test a call" end,
         function() DadMode_TestCall() end)
-    Row("Compare items with his gear (tooltips and drops)",
+    Row("Compare drops with their gear",
         function() return db.compare == false and "Off" or "On" end,
         function() db.compare = (db.compare == false) end)
-    Row("Guides: who may guide me, and what they may see",
+    Row("My guides and what they may see",
         function() return "Open" end,
         function() if DadMode_OpenGuides then DadMode_OpenGuides() end end)
     Row("Minimap button",
@@ -4152,6 +4152,7 @@ do
     function DadMode_TrustInit()
         db.guides = db.guides or {}
         db.perm = db.perm or {}
+        if DadMode_CreateGuidesPage then pcall(DadMode_CreateGuidesPage) end
         if not db.guidesInit then
             db.guidesInit = true
             db.legacyGuides = {}
@@ -4424,6 +4425,7 @@ do
     DadMode_RefreshGuides = RefreshGuides
 
     local function CreateGuidesPage()
+        if guidesPanel then return end
         local p = CreateFrame("Frame", "DadModeGuides", UIParent)
         p.name = "My guides"
         p.parent = "DadMode"
@@ -4494,6 +4496,8 @@ do
             end
         end)
     end
+
+    DadMode_CreateGuidesPage = CreateGuidesPage
 
     -- Opens the page. In chat as well when asked to (/dadmode guides), for when the page can not open.
     function DadMode_OpenGuides(chat)

@@ -76,8 +76,8 @@ If you used DadMode before version 1.22, the people you had already picked are a
 | Try it: show a call on my own screen | Shows what dad sees: sound, text, and the pulsing arrow |
 | Reset window sizes | Puts every window back to the size it came with |
 | Arrows and follow button | Locked, or Unlocked so they can be dragged to a new spot |
-| Compare items with his gear (tooltips and drops) | On, Off. Guides only |
-| Guides: who may guide me, and what they may see | Opens the My guides page |
+| Compare drops with their gear | On, Off. Guides only. Covers item tooltips and the upgrade line on drops |
+| My guides and what they may see | Opens the My guides page |
 | Minimap button | Shown, Hidden |
 
 To start with, a call is the Ready check sound and far away is the quiet Map ping, so the two can be told apart by ear.
@@ -169,7 +169,7 @@ Other cases: **Dad has nothing in that slot**, **Dad wears this**, **Dad can not
 
 It shows numbers and flags a higher item level. It does not judge which stats suit his class, and it does not know which weapon types he has trained. The armor rules are the classic ones: cloth for priest, mage and warlock; leather for rogue and druid; hunter and shaman move from leather to mail at 40; warrior and paladin from mail to plate at 40.
 
-His gear is fetched by itself when you group up and again every ten minutes. His class and level are read straight from the game on the guide's side, so the armor check works whatever version he has. He needs DadMode 1.8 or newer for the comparison at all, and 1.15 or newer for exact items with enchants. **Compare items with his gear** in the settings turns it off.
+His gear is fetched by itself when you group up and again every ten minutes. His class and level are read straight from the game on the guide's side, so the armor check works whatever version he has. He needs DadMode 1.8 or newer for the comparison at all, and 1.15 or newer for exact items with enchants. **Compare drops with their gear** in the settings turns it off.
 
 ### Gear in his bags, and "put it on"
 
