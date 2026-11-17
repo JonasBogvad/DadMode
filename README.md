@@ -161,7 +161,7 @@ To see what dad sees when he is called, use **Test a call** in the settings, or 
 
 With several people to guide and "everyone" chosen, each gets one line. With nobody to guide the strip is gone and the bar is shorter. The bar only changes size outside a fight.
 
-Somebody who is not in your party but answered a whisper a moment ago is shown too, with **not in your party** in place of the distance.
+Somebody who is not in your party but answered a moment ago is shown too, with **not in your party** in place of the distance.
 
 When no call is running, what matters most is also on the top line, so it shows with the bar folded up. The guide's addon asks for this short status every 45 seconds. Dad needs DadMode 1.19 or newer to answer; with an older version it only updates while **How is <name> doing** is open.
 
@@ -297,11 +297,11 @@ His talents are only asked for when you open this tab, and again with Refresh. H
 
 ### When he is not in your party
 
-You can still see how he is doing. Your addon remembers everybody you have guided: that happens by itself the first time you open the window in a party with them. After that, opening the window when he is not in your party asks him by whisper. Nothing shows in chat on either side.
+You can still see how he is doing. Your addon remembers everybody you have guided: that happens by itself the first time you open the window in a party with them. After that, opening the window when he is not in your party asks him directly. Nothing shows in chat on either side.
 
 | What you see | Meaning |
 |---|---|
-| The usual tabs, with **Olaf is not in your party. Asked by whisper.** | He is online and answered |
+| The usual tabs, with **Olaf is not in your party. This is how he is doing right now.** | He is online and answered |
 | **Olaf is not online.** | The game said so. He is not asked again for two minutes |
 | **Olaf does not answer.** | He is online but his addon stays quiet: he has DadMode older than 1.28, or he has not approved you |
 
@@ -409,7 +409,7 @@ If another addon has installed the usual minimap button library (LibDBIcon), Dad
 
 The guide bar tells you by itself when someone in the party has another version than you.
 
-**Everyone's version.** The bottom of the **Overview** tab in **How is <name> doing** lists every person in the party with role and version: "Ben: guide, DadMode 1.20.1, same as yours", "Dad: being guided, DadMode 1.14.2, older than yours", or "no DadMode seen". `/dadmode status` prints the same list in chat. The role is shown for people on 1.20.1 or newer; for older versions it says "role unknown", or "being guided" once that person has answered a status request. Next to a name it also says **answers by whisper**, or that his whispers do not arrive and the party channel is used instead.
+**Everyone's version.** The bottom of the **Overview** tab in **How is <name> doing** lists every person in the party with role and version: "Ben: guide, DadMode 1.20.1, same as yours", "Dad: being guided, DadMode 1.14.2, older than yours", or "no DadMode seen". `/dadmode status` prints the same list in chat. The role is shown for people on 1.20.1 or newer; for older versions it says "role unknown", or "being guided" once that person has answered a status request. Next to a name it also says **answers only to you**, or that his answers go to the whole party because sending them to you alone does not work.
 
 The version is shown in the top right corner of the **Who do you want to find?** window, next to the title of the **DadMode guide** bar, and by `/dadmode status`. When dad's addon answers a call, the guide's chat line also shows dad's version.
 
@@ -432,7 +432,7 @@ The version is shown in the top right corner of the **Who do you want to find?**
 | `/dadmode travel` | List the zeppelin platforms this computer knows, and the route to the current marker |
 | `/dadmode waypoint` | Send dad a waypoint: your map pin if you have one, otherwise where you stand |
 | `/dadmode quests` | Open the "How is <name> doing" window |
-| `/dadmode forget NAME` | Guides: stop asking this person by whisper when he is not in your party |
+| `/dadmode forget NAME` | Guides: stop asking this person how he is doing when he is not in your party |
 | `/dadmode debug` | Print the names the game reports and what the last incoming call looked like. For troubleshooting |
 | `/dadmode status` | Show your role, whether you show calls, and who is in the party |
 | `/dadmode clear` | Remove the ping on screen right away |
@@ -440,9 +440,9 @@ The version is shown in the top right corner of the **Who do you want to find?**
 
 ## Privacy
 
-His status, quests, gear and bag contents (level, gold, location, target, bag space, what he wears and its condition, consumables, hearthstone, and quests) go only to a guide he has approved, and only what he shares under **My guides**. They are whispered to that one guide, so no other computer receives them. Nothing is sent unless a guide asks.
+His status, quests, gear and bag contents (level, gold, location, target, bag space, what he wears and its condition, consumables, hearthstone, and quests) go only to a guide he has approved, and only what he shares under **My guides**. They are sent to that one guide alone, so no other computer receives them. Nothing is sent unless a guide asks.
 
-A guide outside his party can ask too, but only one he has already said yes to. A whisper from anybody else gets no answer and no Yes / No box.
+A guide outside his party can ask too, but only one he has already said yes to. Anybody else who asks from outside his party gets no answer, and no Yes / No box appears.
 
 ## Limits
 

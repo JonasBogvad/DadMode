@@ -1148,13 +1148,13 @@ do
   clock=clock+100; local n=#sent; SlashCmdList.DADMODE("quests"); W.SetView("overview")
   local w; for _,m in ipairs(since(n)) do if m[3]=="WHISPER" then w=m end end
   assert(w and w[2]=="QREQ" and w[4]==B, "asked by whisper, by the name the game gave")
-  assert(DadMode_RemoteState("Bro")=="asking" and PG():find("Asking Bro by whisper",1,true) and not PG():find("Level: 47",1,true), "what he said earlier is not shown as if it were now: "..PG())
+  assert(DadMode_RemoteState("Bro")=="asking" and PG():find("Asking Bro...",1,true) and not PG():find("Level: 47",1,true), "what he said earlier is not shown as if it were now: "..PG())
   -- he answers by whisper
   n=#sent
   fire("CHAT_MSG_ADDON","DADMODE",PERMS,"WHISPER",B)
   fire("CHAT_MSG_ADDON","DADMODE","ST:lv=48~cl=SHAMAN","WHISPER",B)
   fire("CHAT_MSG_ADDON","DADMODE","QS:1","WHISPER",B); fire("CHAT_MSG_ADDON","DADMODE","Q:9001~30~0~Far Away Quest~-1/2 Thing","WHISPER",B); fire("CHAT_MSG_ADDON","DADMODE","QE","WHISPER",B)
-  assert(DadMode_RemoteState("Bro")=="ok" and PG():find("Level: 48",1,true) and PG():find("Bro is not in your party. Asked by whisper.",1,true), PG())
+  assert(DadMode_RemoteState("Bro")=="ok" and PG():find("Level: 48",1,true) and PG():find("Bro is not in your party. This is how he is doing right now.",1,true), PG())
   W.SetView("quests"); assert(PG():find("Far Away Quest",1,true))
   local qc; for _,m in ipairs(since(n)) do if m[2]:sub(1,3)=="QC:" then qc=m end end
   assert(qc and qc[3]=="WHISPER" and qc[4]==B, "the question about finished quests goes by whisper too")
@@ -1181,7 +1181,7 @@ do
   -- alone, with nobody remembered
   units.party2=nil; SlashCmdList.DADMODE("forget bro"); assert(DadModeDB.known.bro==nil and DadModeNS.questData.Bro==nil)
   units.party1=nil; clock=clock+100; n=#sent; SlashCmdList.DADMODE("quests"); clock=clock+10; DadMode_RenderQuests()
-  assert(#sent==n and PG():find("You are not in a party",1,true) and not PG():find("Dad needs",1,true), PG())
+  assert(#sent==n and PG():find("You are not in a party",1,true) and PG():find("Open this window once while you are in a party",1,true) and not PG():lower():find("whisper",1,true) and not PG():find("Dad needs",1,true), PG())
   units.party1=keepSaqu
 
   -- as the one being guided: an approved guide outside the party asks
@@ -1212,7 +1212,7 @@ end
 do
   local B="Bro Bearfang-CAMWOW EU5 Realm 4 PvP"
   fire("CHAT_MSG_ADDON","DADMODE","ST:lv=40","WHISPER",B)
-  local t=table.concat(DadMode_VersionLines(),"\n"); assert(t:find("answers by whisper",1,true), t)
+  local t=table.concat(DadMode_VersionLines(),"\n"); assert(t:find("answers only to you",1,true) and not t:lower():find("whisper",1,true), t)
 end
 -- ===== his talents, drawn as trees =====
 do

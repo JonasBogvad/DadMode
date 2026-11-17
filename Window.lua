@@ -304,7 +304,7 @@ local function RenderQuests()
       if away == nil or away == "ok" then
         any = true
         if away then
-            lines[#lines + 1] = GREY .. name .. " is not in your party. Asked by whisper.|r"
+            lines[#lines + 1] = GREY .. name .. " is not in your party. This is how he is doing right now.|r"
         end
         -- an old DadMode on his side can lose the end of a long list: show what did arrive
         if d.pending and now - d.pending.at > STALE then
@@ -482,7 +482,7 @@ local function RenderQuests()
         else
             if #ns.Party() == 0 then
                 lines[1] = "|cffe8c36aYou are not in a party.|r"
-                lines[2] = "|cff9aa0a6Out of a party DadMode asks the people you have guided before, by whisper. Nobody is remembered yet: that happens the first time you open this window in a party with them.|r"
+                lines[2] = "|cff9aa0a6Open this window once while you are in a party with the one you guide. After that you can see here how he is doing, also when he is not in your party.|r"
             else
                 lines[1] = "|cffeb7a7aNo answer.|r"
                 lines[2] = "|cff9aa0a6The one you guide needs DadMode, and must be set up as the one being guided, not as a guide.|r"

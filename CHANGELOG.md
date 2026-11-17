@@ -1,5 +1,10 @@
 # DadMode changes
 
+## 1.31.1
+
+- Clearer words. The window no longer talks about "whispers", which is how the addon works inside and not something you need to know. When you are not in a party it now says what to do: open the window once while you are in a party with the one you guide.
+- Nothing else changes.
+
 ## 1.31.0
 
 - **A Talents tab.** His talent trees are drawn like his own talent window: every talent in its row and column, with its rank. Taken ones are bright, the rest dimmed. Each tree shows its points, so you see his build at a glance.

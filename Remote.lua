@@ -169,11 +169,11 @@ function DadMode_RemoteLines()
             lines[#lines + 1] = "|cffe8c36a" .. name .. "|r is not online."
             lines[#lines + 1] = " "
         elseif how == "asking" then
-            lines[#lines + 1] = "|cff9aa0a6Asking " .. name .. " by whisper...|r"
+            lines[#lines + 1] = "|cff9aa0a6Asking " .. name .. "...|r"
             lines[#lines + 1] = " "
         elseif how == "silent" then
             lines[#lines + 1] = "|cffe8c36a" .. name .. "|r does not answer."
-            lines[#lines + 1] = "|cff9aa0a6He is not in your party, so he was asked by whisper. He needs DadMode 1.28 or newer for that, and must have approved you as a guide.|r"
+            lines[#lines + 1] = "|cff9aa0a6He is online but not in your party. To answer from outside it he needs DadMode 1.28 or newer, and he must have approved you as a guide.|r"
             lines[#lines + 1] = " "
         end
     end

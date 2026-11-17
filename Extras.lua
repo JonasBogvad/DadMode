@@ -51,8 +51,8 @@ function DadMode_VersionLines()
             else text = text .. "  " .. GOOD .. "same as yours|r" end
         end
         local how = DadMode_WhisperState and DadMode_WhisperState(m.name)
-        if how == "ok" then text = text .. GREY .. ", answers by whisper|r"
-        elseif how == "bad" then text = text .. WARN .. ", whispers do not arrive, using the party channel|r" end
+        if how == "ok" then text = text .. GREY .. ", answers only to you|r"
+        elseif how == "bad" then text = text .. WARN .. ", his answers go to the whole party, sending them to you alone does not work|r" end
         lines[#lines + 1] = text
     end
     return lines
