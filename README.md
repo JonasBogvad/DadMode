@@ -298,7 +298,7 @@ The window has five tabs:
 | **Dungeon** | Every quest for one dungeon, and where he stands on each. See below |
 | **Gear** | What is in his bags against what he wears, his total stats, what he wears, and his potions, food and bandages |
 
-Every list is built the same way: one row for each thing, a label on the left, the name, small coloured boxes for the state (green is good or done, red is missing or lost, grey is a plain fact), and a button on the right when there is something to do. The colours and the gold edge are the game's own.
+Every list is built the same way: one row for each thing, a label on the left, the name, small coloured boxes for the state (green is good or done, red is missing or lost, grey is a plain fact), and a button on the right when there is something to do. The colours and the gold edge are the game's own, and every DadMode window and button has them: the guide bar, the window to pick people, the Yes / No box, the follow button.
 
 The Overview tab's boxes:
 

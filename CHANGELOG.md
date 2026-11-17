@@ -1,5 +1,10 @@
 # DadMode changes
 
+## 1.29.0
+
+- **Everything has the game's own look now.** The guide bar, the window to pick people, the role question, the Yes / No box and the follow button got the gold edge, the warm dark background and dark red buttons with gold text that the "How is he doing" window already had.
+- Nothing else changes.
+
 ## 1.28.0
 
 - **See how he is doing when he is not in your party.** Your addon remembers the people you have guided. Open the window without them in your party and it asks them by whisper. Nothing shows in chat. "Put it on" works this way too. Both of you need 1.28.0.

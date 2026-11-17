@@ -107,6 +107,7 @@ function DadMode_CreateFollow()
         ns.db.followPos = { point, rel, x, y }
     end)
     ns.followBtn.bg = ns.Tex(ns.followBtn, "BACKGROUND", 0.16, 0.40, 0.27, 0.95)
+    ns.Edge(ns.followBtn)
     ns.followBtn.bg:SetAllPoints()
     ns.followBtn.label = ns.followBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
     ns.followBtn.label:SetPoint("CENTER")

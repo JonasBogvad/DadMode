@@ -440,6 +440,7 @@ local function CreateWearButton()
     wearBtn:SetFrameStrata("HIGH")
     wearBtn:SetPoint("CENTER", UIParent, "CENTER", 0, -150)
     wearBtn.bg:SetColorTexture(0.55, 0.42, 0.10, 0.97)
+    ns.Edge(wearBtn)
     wearBtn.label:SetTextColor(1, 1, 1)
     wearBtn:Hide()
 end

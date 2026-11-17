@@ -14,7 +14,7 @@ function DadMode_CreatePicker()
     ns.picker:RegisterForDrag("LeftButton")
     ns.picker:SetScript("OnDragStart", ns.picker.StartMoving)
     ns.picker:SetScript("OnDragStop", ns.picker.StopMovingOrSizing)
-    ns.Tex(ns.picker, "BACKGROUND", 0.07, 0.08, 0.10, 0.97):SetAllPoints()
+    ns.WindowLook(ns.picker)
     ns.picker.showSettings = false
 
     ns.picker.title = ns.picker:CreateFontString(nil, "OVERLAY", "GameFontNormal")
@@ -137,8 +137,8 @@ function ns.RefreshPicker()
                 b.bg:SetColorTexture(0.62, 0.48, 0.16, 1)
                 b.label:SetTextColor(1, 1, 1)
             else
-                b.bg:SetColorTexture(0.16, 0.18, 0.22, 1)
-                b.label:SetTextColor(0.75, 0.77, 0.8)
+                b.bg:SetColorTexture(ns.LOOK.quiet[1], ns.LOOK.quiet[2], ns.LOOK.quiet[3], 1)
+                b.label:SetTextColor(0.80, 0.75, 0.60)
             end
             Row(b, 34)
         else

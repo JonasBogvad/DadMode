@@ -15,10 +15,40 @@ function ns.FontSize(text, size)
 end
 
 
+-- The look of the game's own windows: a warm dark background, a gold edge, dark red buttons
+-- with gold text. Every window and button of DadMode takes its colours from here.
+ns.LOOK = {
+    window = { 0.06, 0.05, 0.04 },      -- the background of a window
+    button = { 0.36, 0.07, 0.05 },      -- a button to click
+    quiet  = { 0.15, 0.14, 0.12 },      -- a button that should not shout: Close, a tab that is not open
+    picked = { 0.42, 0.08, 0.06 },      -- the tab that is open
+    field  = { 0.12, 0.11, 0.10 },      -- a box to type in
+    edge   = { 0.80, 0.65, 0.30 },      -- the gold line around a window
+}
+
+-- The gold edge the game's own tooltips and windows have. Does nothing if the game refuses.
+function ns.Edge(win)
+    pcall(function()
+        local edge = CreateFrame("Frame", nil, win, "BackdropTemplate")
+        edge:SetPoint("TOPLEFT", -4, 4)
+        edge:SetPoint("BOTTOMRIGHT", 4, -4)
+        edge:SetBackdrop({ edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border", edgeSize = 16 })
+        edge:SetBackdropBorderColor(ns.LOOK.edge[1], ns.LOOK.edge[2], ns.LOOK.edge[3], 1)
+        win.edge = edge
+    end)
+end
+
+-- The background and the edge of a window
+function ns.WindowLook(win, alpha)
+    local c = ns.LOOK.window
+    ns.Tex(win, "BACKGROUND", c[1], c[2], c[3], alpha or 0.97):SetAllPoints()
+    ns.Edge(win)
+end
+
 local function BigButton(parent, width, height, onClick)
     local b = CreateFrame("Button", nil, parent)
     b:SetSize(width, height)
-    b.bg = ns.Tex(b, "BACKGROUND", 0.16, 0.18, 0.22, 1)
+    b.bg = ns.Tex(b, "BACKGROUND", ns.LOOK.button[1], ns.LOOK.button[2], ns.LOOK.button[3], 1)
     b.bg:SetAllPoints()
     b.label = b:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
     b.label:SetPoint("CENTER")
