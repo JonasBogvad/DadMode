@@ -70,6 +70,26 @@ function DadMode_ShowRange(s, unit)
     return true
 end
 
+-- The name of the zone a party member is in, when it is another zone than mine. nil when it is
+-- the same zone or the game does not say. Looked up at most once a second for each person.
+local zoneSeen = {}
+local function OtherZone(unit, now)
+    local seen = zoneSeen[unit]
+    if seen and now - seen.at < 1 then return seen.name end
+    local name
+    if C_Map and C_Map.GetBestMapForUnit and C_Map.GetMapInfo then
+        local okA, mine = pcall(C_Map.GetBestMapForUnit, "player")
+        local okB, theirs = pcall(C_Map.GetBestMapForUnit, unit)
+        if okA and okB and ns.Usable(mine, "number") and ns.Usable(theirs, "number") and mine ~= theirs then
+            local okI, info = pcall(C_Map.GetMapInfo, theirs)
+            if okI and type(info) == "table" and ns.Usable(info.name, "string") and info.name ~= "" then name = info.name end
+        end
+    end
+    zoneSeen[unit] = { at = now, name = name }
+    return name
+end
+DadMode_OtherZone = OtherZone        -- for testing
+
 local function UpdateArrows()
     local list = ns.db.enabled and Shown() or {}
     local now = GetTime()
@@ -121,6 +141,10 @@ local function UpdateArrows()
             local r, g, b = 0.44, 0.81, 0.59                      -- green
             if dist > ns.FAR then r, g, b = 0.92, 0.48, 0.48         -- red
             elseif dist > ns.NEAR then r, g, b = 0.91, 0.76, 0.42 end -- yellow
+            -- far away and in another zone: they are doing something else on purpose. A grey arrow
+            -- that says where they are, and no warning. A call still turns the arrow white.
+            local zone = (dist > ns.FAR and not pinging) and OtherZone(m.unit, now) or nil
+            if zone then r, g, b = 0.55, 0.57, 0.60 end
             if pinging then r, g, b = 1, 1, 1 end
             if angle then
                 s.arrow:SetRotation(angle)
@@ -129,10 +153,10 @@ local function UpdateArrows()
             else
                 s.arrow:Hide()
             end
-            s.dist:SetText(math.floor(dist + 0.5) .. " yd")
+            s.dist:SetText(zone and ("in " .. zone) or (math.floor(dist + 0.5) .. " yd"))
             s.dist:SetTextColor(r, g, b)
 
-            if dist > ns.FAR and ns.db.marked[m.name] then
+            if dist > ns.FAR and ns.db.marked[m.name] and not zone then
                 ns.farSince[m.name] = ns.farSince[m.name] or now
                 if now - ns.farSince[m.name] > 4 then worstFar = worstFar or m.name end
             else
@@ -226,13 +250,10 @@ local function UpdateArrows()
     for _, untilTime in pairs(ns.pings) do
         if untilTime > now then calling = true end
     end
-    -- The sound plays once each time he drifts away. After that only the text comes back, once a minute.
-    if worstFar and ns.db.farWarning and not calling and (not ns.farBeeped[worstFar] or now - ns.lastFarWarn > ns.FAR_REPEAT) then
-        ns.lastFarWarn = now
-        if not ns.farBeeped[worstFar] then
-            ns.farBeeped[worstFar] = true
-            ns.Beep("far")
-        end
+    -- One sound and one message each time he drifts away. Nothing more until he has been back.
+    if worstFar and ns.db.farWarning and not calling and not ns.farBeeped[worstFar] then
+        ns.farBeeped[worstFar] = true
+        ns.Beep("far")
         ns.ShowAlert("|cffeb7a7aYou are far from " .. worstFar .. "|r\nFollow the arrow", 5)
     end
 end

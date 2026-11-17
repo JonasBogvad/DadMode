@@ -70,10 +70,6 @@ function DadMode_Notes()
             elseif st.bf and st.bt and st.bf <= 2 then a[#a + 1] = WARN .. st.bf .. " bag slots left|r" end
             if (st.brk or 0) > 0 then a[#a + 1] = BAD .. st.brk .. " broken|r" end
             if (st.tp or 0) > 0 then a[#a + 1] = WARN .. st.tp .. " talent point" .. (st.tp > 1 and "s" or "") .. "|r" end
-            if DadMode_BagUpgrades and ns.db.compare ~= false then
-                local okU, ups = pcall(DadMode_BagUpgrades, m.name)
-                if okU and ups > 0 then a[#a + 1] = GOOD .. ups .. " better item" .. (ups > 1 and "s" or "") .. " in his bags|r" end
-            end
             if #a > 0 then warn[#warn + 1] = m.name .. ": " .. table.concat(a, ", ") end
         end
         local v = peerVersion[m.name] or (st and st.v)

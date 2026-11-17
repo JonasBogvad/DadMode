@@ -12,7 +12,6 @@
 local ADDON, ns = ...
 
 local NEAR, FAR = 40, 110            -- yards: green below NEAR, red above FAR
-local FAR_REPEAT = 60                -- seconds between "you are far away" reminders (text only, no sound)
 local PING_SECONDS = 10              -- how long the ping text stays on screen
 local PING_ARROW = 60                -- how long the arrow keeps pulsing if he has not arrived
 local ARRIVED = 12                   -- yards: this close counts as "found them"
@@ -40,7 +39,7 @@ end
 -- defined further down
 local slots = {}
 local pings = {}                     -- name -> time the ping ends
-ns.farSince, ns.lastFarWarn = {}, 0
+ns.farSince = {}
 local farBeeped = {}                 -- name -> true once the far sound has played for this time away
 ns.lastPingFrom, lastBeep, ns.lastSent = {}, 0, 0
 ns.answered = true                -- did anyone answer my last call
@@ -222,7 +221,6 @@ ns.Beep = Beep
 ns.DEFAULT_SOUND = DEFAULT_SOUND
 ns.Dismiss = Dismiss
 ns.FAR = FAR
-ns.FAR_REPEAT = FAR_REPEAT
 ns.FOLLOW_RANGE = FOLLOW_RANGE
 ns.GRIP_MAX = GRIP_MAX
 ns.GRIP_MIN = GRIP_MIN

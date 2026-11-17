@@ -175,7 +175,26 @@ clock=clock+30
 units.party1.n=1300; tick(nil,0.1); clock=clock+5; local s0=sounds; tick(nil,0.1); assert(sounds==s0+1,"far beep")
 assert(lastSound==3175,"far away uses the quiet map ping")
 clock=clock+5; tick(nil,0.1); assert(sounds==s0+1,"no spam")
-clock=clock+70; tick(nil,0.1); assert(sounds==s0+1,"a minute later: text again but no sound")
+local AF; for _,f in ipairs(frames) do if rawget(f,"onOnMouseDown") and rawget(f,"hint") then AF=f end end
+clock=clock+70; AF.text:SetText("x"); tick(nil,0.1); assert(sounds==s0+1 and AF.text.txt=="x","a minute later: nothing more, no sound and no text")
+-- in another zone on purpose: no warning, a grey arrow that says where they are
+units.party1.n=1010; tick(nil,0.1)
+local zoneOf={player=1434,party1=1454}; local keepMap=C_Map.GetBestMapForUnit
+C_Map.GetBestMapForUnit=function(u) return zoneOf[u] or 1434 end
+C_Map.GetMapInfo=function(id) return {name=(id==1454 and "Orgrimmar" or "Stranglethorn Vale")} end
+units.party1.n=1300; clock=clock+2; tick(nil,0.1); clock=clock+5; AF.text:SetText("x"); tick(nil,0.1)
+assert(sounds==s0+1 and AF.text.txt=="x","in another zone: quiet")
+local sq; for _,f in ipairs(frames) do if rawget(f,"near") and rawget(f,"name") and f.name.txt=="Saqu" then sq=f end end
+assert(sq and sq.dist.txt=="in Orgrimmar" and sq.arrow.shown, sq and sq.dist.txt or "no arrow for Saqu")
+-- a call from there still shows the distance
+fire("CHAT_MSG_ADDON","DADMODE","PING:says: come to me","PARTY","Saqu Off-CAMWOW EU5 Realm 4 PvP"); tick(nil,0.1)
+assert(sq.dist.txt:find(" yd",1,true),"a call wins over the zone name: "..sq.dist.txt)
+fire("CHAT_MSG_ADDON","DADMODE","CLEAR","PARTY","Saqu Off-CAMWOW EU5 Realm 4 PvP"); clock=clock+100; s0=sounds-1
+tick(nil,0.1); assert(sq.dist.txt=="in Orgrimmar" and sounds==s0+1,"after the call: quiet again")
+-- the same zone again and still far: now it is a real "you are lost"
+zoneOf.party1=1434; clock=clock+2; tick(nil,0.1); clock=clock+5; tick(nil,0.1)
+assert(sounds==s0+2 and sq.dist.txt:find(" yd",1,true) and AF.text.txt:find("far from Saqu",1,true),"same zone and far: one warning"); s0=s0+1
+C_Map.GetBestMapForUnit=keepMap; C_Map.GetMapInfo=nil
 units.party1.n=1010; tick(nil,0.1); units.party1.n=1300; tick(nil,0.1); clock=clock+5; tick(nil,0.1)
 assert(sounds==s0+2,"came back and drifted off again: one more sound"); s0=s0+1
 P.showSettings=true; P.farSound.onOnClick(P.farSound); assert(DadModeDB.sounds.far==3 and lastSound==5274 and P.farSound.label.txt=="Far: Bell"); s0=s0+1
@@ -186,7 +205,7 @@ units.party1.n=1200; units.party2.w=700
 fire("CHAT_MSG_ADDON","DADMODE","PING:says: come to me","PARTY","Bro Bearfang-CAMWOW EU5 Realm 4 PvP"); assert(sounds==s0+2,"addon ping")
 assert(lastSound==8960,"a call uses the ready check sound")
 assert(sent[#sent][2]=="ACK" and sent[#sent-1][2]=="VER:1.3.4","version and ack sent back")
-local AF; for _,f in ipairs(frames) do if rawget(f,"onOnMouseDown") and rawget(f,"hint") then AF=f end end
+
 assert(AF.shown and AF.text.txt:find("Bro"))
 fire("CHAT_MSG_ADDON","DADMODE","PING:again","PARTY","Bro Bearfang-CAMWOW EU5 Realm 4 PvP"); assert(sounds==s0+2,"spam ignored")
 tick(nil,0.1)

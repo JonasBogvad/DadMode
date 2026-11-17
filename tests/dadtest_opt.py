@@ -120,7 +120,7 @@ for _,ev in ipairs({"ADDON_LOADED","PLAYER_LOGIN","CHAT_MSG_ADDON","GROUP_ROSTER
   assert(regEvents[ev], "listening for "..ev)
 end
 assert(DadModeNS.db==DadModeDB and type(DadModeNS.Party)=="function" and type(DadModeNS.questData)=="table" and DadModeNS.helper==DadModeHelper, "shared table")
-for _,g in ipairs({"DadMode_DungeonLines","DadMode_Compare","DadMode_TooltipLines","DadMode_TargetName","DadMode_Aim","DadMode_Gate","DadMode_FilterReply","DadMode_OpenGuides","DadMode_Notes","DadMode_ExtraMessage","DadMode_VersionLines","DadMode_WearMessage","DadMode_BagGearLines","DadMode_TestBox"}) do
+for _,g in ipairs({"DadMode_DungeonLines","DadMode_Compare","DadMode_TooltipLines","DadMode_TargetName","DadMode_Aim","DadMode_Gate","DadMode_FilterReply","DadMode_OpenGuides","DadMode_Notes","DadMode_ExtraMessage","DadMode_VersionLines","DadMode_WearMessage","DadMode_BagRows","DadMode_LayoutBlocks","DadMode_TestBox"}) do
   assert(type(_G[g])=="function", "every file loaded: "..g)
 end
 -- these tests are about everything else: both test guides are already approved
@@ -205,10 +205,11 @@ local Q=DadModeQuests; assert(Q.grip, "quest window has a corner")
 local qw,qh=460,540
 rawset(Q,"GetWidth",function() return qw end); rawset(Q,"GetHeight",function() return qh end)
 local tw; rawset(Q.text,"SetWidth",function(_,w) tw=w end)
+local cw=436; rawset(Q.content,"SetWidth",function(_,w) cw=w end); rawset(Q.content,"GetWidth",function() return cw end)
 local sized; rawset(Q,"StartSizing",function(_,c) sized=c end)
 rawset(Q.grip,"sizing",nil)
 Q.grip.onOnMouseDown(Q.grip); assert(sized=="BOTTOMRIGHT")
-qw,qh=700,800; Q.onOnSizeChanged(Q); assert(tw==668, "text re-wraps")
+qw,qh=700,800; Q:Show(); Q.onOnSizeChanged(Q); assert(cw==676 and tw==668, "text re-wraps: "..tostring(tw))
 Q.grip.onOnMouseUp(Q.grip); assert(DadModeDB.questSize[1]==700 and DadModeDB.questSize[2]==800)
 SlashCmdList.DADMODE("resetsize"); assert(DadModeDB.questSize==nil)
 -- opening
@@ -611,18 +612,19 @@ fire("CHAT_MSG_ADDON","DADMODE","GR:1=8001:90~11=8005:-1~12=8004:-1","PARTY",BRO
 fire("CHAT_MSG_ADDON","DADMODE","GL:1=item:8001:55","PARTY",BRO)
 local function L(id) return "|cff0070dd|Hitem:"..id.."::::::::38|h["..items[id].name.."]|h|r" end
 local r=DadMode_Compare(L(8002),"Bro")
-assert(r and r.better==true and r.level==38 and r.wornLevel==31 and r.slot==1 and r.worn=="item:8001:55" and not r.cannot, "upgrade on the head")
-assert(r.diff:find("+6 Stamina",1,true) and r.diff:find("+4 Intellect",1,true) and r.diff:find("-3 Spirit",1,true), r.diff)
+assert(r and r.gap==7 and r.better==nil and r.level==38 and r.wornLevel==31 and r.slot==1 and r.worn=="item:8001:55" and not r.cannot, "facts about the head, no verdict")
+assert(table.concat(r.gains,",")=="+4 Intellect,+6 Stamina" and table.concat(r.loses,",")=="-3 Spirit", table.concat(r.gains,",").." / "..table.concat(r.loses,","))
 assert(DadMode_Compare(L(8003),"Bro").cannot=="can not wear plate")
 assert(DadMode_Compare(L(8011),"Bro").cannot=="can not use shields")
 assert(DadMode_Compare(L(8010),"Bro")==nil, "a potion is not gear")
-local rr=DadMode_Compare(L(8006),"Bro"); assert(rr.slot==12 and rr.wornLevel==20 and rr.better==true, "rings: against the weaker one")
-local rc=DadMode_Compare(L(8007),"Bro"); assert(rc.empty and rc.better and rc.slot==15, "empty slot")
+local rr=DadMode_Compare(L(8006),"Bro"); assert(rr.slot==12 and rr.wornLevel==20 and rr.gap>0, "rings: against the weaker one")
+local rc=DadMode_Compare(L(8007),"Bro"); assert(rc.empty and rc.better==nil and rc.slot==15, "empty slot")
 assert(DadMode_Compare("item:8001","Bro").same==true)
 assert(DadMode_Compare(L(8009),"Bro").needs==42)
 -- tooltip lines
 local tl=table.concat(DadMode_TooltipLines(L(8002)),"\n")
-assert(tl:find("Bro|r wears |cff1eff00[Old Cloth Hood]",1,true) and tl:find("item level 31",1,true) and tl:find("This one: item level 38",1,true) and tl:find("+7",1,true) and tl:find("+6 Stamina",1,true), tl)
+assert(tl:find("Bro|r wears |cff1eff00[Old Cloth Hood]",1,true) and tl:find("item level 31",1,true) and tl:find("This one: item level 38",1,true) and tl:find("(+7)",1,true) and tl:find("gains|r  |cff6fcf97+4 Intellect, +6 Stamina|r",1,true) and tl:find("loses|r  |cffeb7a7a-3 Spirit|r",1,true), tl)
+assert(not tl:upper():find("BETTER",1,true) and not tl:upper():find("WORSE",1,true) and not tl:lower():find("upgrade",1,true), "no verdict in the tooltip")
 assert(table.concat(DadMode_TooltipLines(L(8003)),"\n"):find("Bro can not wear plate",1,true))
 assert(table.concat(DadMode_TooltipLines("item:8001"),"\n"):find("Bro|r wears this",1,true))
 assert(table.concat(DadMode_TooltipLines(L(8007)),"\n"):find("nothing|r in that slot (Back)",1,true))
@@ -648,7 +650,8 @@ fire("LOOT_OPENED")
 print=realPrint
 assert(#printed>0, "drop notices were printed")
 if true then
-  assert(said("Possible upgrade for Bro") and said("Drowned Crown"), table.concat(printed," || "))
+  assert(said("Bro can wear") and said("Drowned Crown") and said("+4 Intellect, +6 Stamina") and said("-3 Spirit"), table.concat(printed," || "))
+  assert(not said("upgrade") and not said("BETTER") and not said("better"), "no verdict on drops")
   local c=0; for _,p in ipairs(printed) do if p:find("Drowned Crown",1,true) then c=c+1 end end; assert(c==1, "the same drop is announced once")
   assert(not said("Grey Hood") and not said("Plate Helm") and not said("Health Potion"), "grey, unwearable and non-gear are ignored")
   assert(said("Fine Cloak") and said("slot is empty"), table.concat(printed," || "))
@@ -715,23 +718,51 @@ do
   SlashCmdList.DADMODE("quests"); QW.SetView("gear")
   assert(QW.text.txt:find("Saqu needs DadMode 1.21 or newer",1,true), "old version: bag gear unknown")
   for _,b in ipairs(bg) do fire("CHAT_MSG_ADDON","DADMODE",b,"PARTY",SAQ) end
-  assert(DadMode_BagUpgrades("Saqu")==2, "the coif, and the mace for his empty main hand: "..DadMode_BagUpgrades("Saqu"))
-  local G=QW.text.txt
-  assert(G:find("Gear in his bags",1,true) and G:find("|Hitem:8202:77::::::40|h[Mail Coif]|h",1,true) and G:find("BETTER than his head",1,true) and G:find("[Leather Cap]",1,true), G)
-  assert(G:find("can not wear plate",1,true) and G:find("not better than his head",1,true) and G:find("+9 Stamina",1,true), G)
-  assert(G:find("Mail Coif",1,true) < G:find("Weak Mail Coif",1,true), "better ones first")
-  assert(G:find("|Hdadmode:wear:Saqu:item:8202:77::::::40|h[tell him to put it on]|h",1,true), "link on the better item")
-  local _,links=G:gsub("tell him to put it on",""); assert(links==3, "not offered for what he can not wear: "..links)
-  -- warning on the guide bar
-  clock=clock+1; TK(nil,0.1); assert(DadModeHelper.note.txt:find("2 better items in his bags",1,true), DadModeHelper.note.txt)
+  assert(DadMode_BagUpgrades==nil, "nothing counts better items any more")
+  local function page() local out={}; for _,t in ipairs(QW.texts) do if t.txt and t.txt~="" then out[#out+1]=t.txt end end; return table.concat(out,"\n") end
+  local function row(word) for i=1,QW.usedRows do local sp=QW.rows[i].spec; if sp and sp.title:find(word,1,true) then return QW.rows[i], sp, i end end end
+  local function chips(sp) local o={}; for _,c in ipairs(sp.chips) do o[#o+1]=(c.good and "G" or "R")..c.text end; return table.concat(o,",") end
+  local G=page()
+  assert(G:find("In his bags",1,true) and not G:upper():find("BETTER",1,true) and not G:find("tell him to put it on",1,true), G)
+  assert(QW.usedRows==4, "one row for each thing to wear: "..QW.usedRows)
+  local r1,s1,i1=row("|Hitem:8202:77::::::40|hMail Coif|h")
+  assert(r1 and r1.shown and s1.slot=="Head" and s1.title:find("  41",1,true), "the coif has a row")
+  assert(s1.sub:find("instead of",1,true) and s1.sub:find("|Hitem:8201|hLeather Cap|h",1,true) and s1.sub:find("  30",1,true), s1.sub)
+  assert(chips(s1)=="G+9 Stamina" and r1.chips[1].shown and r1.chips[1].text.txt=="+9 Stamina", chips(s1))
+  assert(s1.button.text=="Put it on" and s1.button.kind=="action" and r1.btn.shown and r1.btn.label.txt=="Put it on")
+  -- a weaker item is listed with its facts and can be picked too: the guide decides
+  local r2,s2,i2=row("Weak Mail Coif"); assert(s2.button and s2.button.text=="Put it on" and i1<i2, "higher item level first within a slot")
+  local r3,s3=row("Stone Mace"); assert(s3.slot=="Main hand" and s3.sub:find("his main hand slot is empty",1,true) and s3.button, s3.sub)
+  -- what he can not wear: the reason, no button, and last
+  local r4,s4,i4=row("Plate Helm"); assert(s4.sub:find("Saqu can not wear plate",1,true) and not s4.button and not r4.btn.shown and i4==4, s4.sub)
+  -- the guide bar no longer judges his bags
+  clock=clock+1; TK(nil,0.1); assert(not (DadModeHelper.note.txt or ""):find("in his bags",1,true), DadModeHelper.note.txt)
+  -- text after the rows is still there
+  assert(QW.text.txt:find("Average item level",1,true), "what he wears is above the rows")
   -- nothing in bags
-  fire("CHAT_MSG_ADDON","DADMODE","BGS:0","PARTY",SAQ); assert(QW.text.txt:find("Nothing to wear in his bags",1,true))
+  fire("CHAT_MSG_ADDON","DADMODE","BGS:0","PARTY",SAQ); assert(page():find("Nothing to wear in his bags",1,true) and QW.usedRows==0 and not QW.rows[1].shown)
   for _,b in ipairs(bg) do fire("CHAT_MSG_ADDON","DADMODE",b,"PARTY",SAQ) end
-  -- the guide clicks the link
-  m0=#sent; QW.content.onOnHyperlinkClick(QW.content,"dadmode:wear:Saqu:item:8202:77::::::40","[tell him to put it on]","LeftButton")
-  assert(sent[#sent][2]=="WEAR:item:8202:77::::::40" and QW.text.txt:find("told him...",1,true))
-  fire("CHAT_MSG_ADDON","DADMODE","WEARSEEN:8202","PARTY",SAQ); assert(QW.text.txt:find("he sees the button",1,true))
-  fire("CHAT_MSG_ADDON","DADMODE","WEAROK:8202","PARTY",SAQ); assert(QW.text.txt:find("he put it on",1,true))
+  -- the guide clicks the button
+  r1,s1=row("|hMail Coif|h"); m0=#sent; r1.btn.onOnClick(r1.btn)
+  assert(sent[#sent][2]=="WEAR:item:8202:77::::::40", "sent")
+  r1,s1=row("|hMail Coif|h"); assert(r1.btn.label.txt=="Asked" and s1.button.kind=="wait" and s1.button.onClick, "asked, and he can ask again")
+  fire("CHAT_MSG_ADDON","DADMODE","WEARSEEN:8202","PARTY",SAQ); r1=row("|hMail Coif|h"); assert(r1.btn.label.txt=="He sees it")
+  fire("CHAT_MSG_ADDON","DADMODE","WEARNO:8202","PARTY",SAQ); r1,s1=row("|hMail Coif|h"); assert(r1.btn.label.txt=="Didn't work" and s1.button.kind=="bad")
+  fire("CHAT_MSG_ADDON","DADMODE","WEARGONE:8202","PARTY",SAQ); r1=row("|hMail Coif|h"); assert(r1.btn.label.txt=="Not in bags")
+  fire("CHAT_MSG_ADDON","DADMODE","WEAROK:8202","PARTY",SAQ); r1,s1=row("|hMail Coif|h"); assert(r1.btn.label.txt=="He put it on" and s1.button.kind=="done")
+  m0=#sent; r1.btn.onOnClick(r1.btn); assert(#sent==m0, "nothing more to click once it is on")
+  -- another tab: the rows go away
+  QW.SetView("overview"); assert(QW.usedRows==0 and not QW.rows[1].shown and not QW.rows[4].shown, "rows only on the Gear tab"); QW.SetView("gear")
+  -- lighter armor and a level he does not have yet are stated, not judged
+  do
+    it[8209]={n="Hide Cap",q=2,lvl=44,loc="INVTYPE_HEAD",class=4,sub=2}; it[8210]={n="Future Coif",q=3,lvl=50,loc="INVTYPE_HEAD",class=4,sub=3}
+    local keep=C_Item.GetItemInfo; C_Item.GetItemInfo=function(l) local x=it[id3(l)]; if not x then return nil end; return x.n,l,x.q,x.lvl,(id3(l)==8210) and 45 or 0 end
+    fire("CHAT_MSG_ADDON","DADMODE","BGS:2","PARTY",SAQ); fire("CHAT_MSG_ADDON","DADMODE","BG:item:8209~item:8210","PARTY",SAQ)
+    local _,sa=row("Hide Cap"); assert(sa.sub:find("this is leather, he can wear mail",1,true) and sa.button, sa.sub)
+    local _,sb,ib=row("Future Coif"); assert(sb.sub:find("needs level 45",1,true) and not sb.button and ib==2, sb.sub)
+    C_Item.GetItemInfo=keep
+    for _,b in ipairs(bg) do fire("CHAT_MSG_ADDON","DADMODE",b,"PARTY",SAQ) end
+  end
   -- his side: the gold button
   DadMode_SetRole(false); DadModeDB.alerts=true
   worn={[1]=8201}
@@ -850,7 +881,7 @@ do
   fire("CHAT_MSG_ADDON","DADMODE","LOCKED:ask:dad","PARTY",BRO)
   assert(QW.text.txt:find("Bro|r has not approved you as a guide yet",1,true) and not QW.text.txt:find("level 38",1,true), QW.text.txt)
   fire("CHAT_MSG_ADDON","DADMODE","ST:lv=39","PARTY",BRO); fire("CHAT_MSG_ADDON","DADMODE","GR:1=8001:90","PARTY",BRO)
-  assert(not QW.text.txt:find("level 39",1,true) and DadMode_BagUpgrades("Bro")==0, "what I overhear from him is not shown")
+  assert(not QW.text.txt:find("level 39",1,true) and QW.usedRows==0, "what I overhear from him is not shown")
   clock=clock+1; TK(nil,0.1); assert(not DadModeHelper.note.txt:find("Bro:",1,true), "no warnings about him either")
   fire("CHAT_MSG_ADDON","DADMODE","LOCKED:no:dad","PARTY",BRO); assert(QW.text.txt:find("said no to you as a guide",1,true))
   m1=#sent; fire("CHAT_MSG_ADDON","DADMODE","UNLOCK:dad","PARTY",BRO); assert(not QW.text.txt:find("said no",1,true) and sentSince(m1,"QREQ"), "approved: asks again by itself")

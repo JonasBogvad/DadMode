@@ -9,7 +9,7 @@ Version 1.25.0. Game interface 16001 (WoW Forever 1.60).
 
 ## Install
 
-1. Unzip. You get a folder called `DadMode`. Inside are `DadMode.toc`, 23 `.lua` files, `Arrow.tga`, `Logo.tga` and `README.md`.
+1. Unzip. You get a folder called `DadMode`. Inside are `DadMode.toc`, 24 `.lua` files, `Arrow.tga`, `Logo.tga` and `README.md`.
    - **Downloaded from GitHub with Code, Download ZIP?** Then the folder is called `DadMode-main`. Rename it to `DadMode`, or the game will not load it. The zip under Releases has the right name already.
    - **Downloaded from GitHub with Code, Download ZIP?** Then the folder is called `DadMode-main`. Rename it to `DadMode`, or the game will not load it.
 2. Put the folder in `World of Warcraft\_forever_\Interface\AddOns\`.
@@ -24,7 +24,8 @@ Nothing to set up except picking people once.
 - Each picked person gets a **big arrow** at the top of the screen, with their name and the distance.
   - Green: close. Yellow: a bit away. Red: far.
   - Walk in the direction the arrow points.
-- If you drift more than 110 yards from a picked person you see **You are far from <name>**. A soft sound plays **once**. After that only the text comes back, once a minute, with no sound, until you are near again.
+- If you drift more than 110 yards from a picked person you see **You are far from <name>**. A soft sound plays **once**, with the text. Then nothing more until you have been near again.
+- If that person is far away **and in another zone**, there is no warning at all. They are doing something else on purpose. The arrow turns grey and says where they are: **in Orgrimmar**. Back in the same zone, everything is as before. A call still reaches you wherever they are.
 - If someone calls you, you hear a sound, see their name in big text, and their arrow turns **white and pulses**. Walk to it.
 
 The one rule: **white pulsing arrow and a beep means someone is calling you. Walk to the arrow.**
@@ -76,7 +77,7 @@ If you used DadMode before version 1.22, the people you had already picked are a
 | Try it: show a call on my own screen | Shows what dad sees: sound, text, and the pulsing arrow |
 | Reset window sizes | Puts every window back to the size it came with |
 | Arrows and follow button | Locked, or Unlocked so they can be dragged to a new spot |
-| Compare drops with their gear | On, Off. Guides only. Covers item tooltips and the upgrade line on drops |
+| Compare drops with their gear | On, Off. Guides only. Covers item tooltips and the chat line on drops |
 | My guides and what they may see | Opens the My guides page |
 | Minimap button | Shown, Hidden |
 
@@ -103,7 +104,8 @@ Kept deliberately short, so dad is not pestered.
 | First party ever, nobody picked | The picker window opens. Once in a lifetime |
 | Later parties where nobody is picked | One line in chat, at most every 10 minutes |
 | A picked person is in the party | Arrows, and the green follow button |
-| He drifts far away | One soft sound, then silent text once a minute |
+| He drifts far away, same zone | One soft sound and one text each time |
+| He is far away in another zone | Nothing. A grey arrow with the zone name |
 | Someone calls or sends a marker | Sound, big text, pulsing arrow |
 | He arrives | A short green message |
 | A guide asks how he is doing | Nothing. His addon answers silently |
@@ -153,40 +155,54 @@ When no call is running, the most important one is also on the top line, so it s
 
 **Version check.** The same area says when someone in the party runs another DadMode than you: "Dad has DadMode 1.14.2, you have 1.19.0". Most "it does not work" moments so far came from that. Addons tell each other their version when the party changes.
 
-### Is this drop an upgrade for him?
+### What would this item change for him?
 
-No need to inspect him. The guide's addon knows what he wears and compares.
+No need to inspect him. The guide's addon knows what he wears and shows what would change. **It states facts and gives no verdict.** Whether Strength or Spell Power is better depends on how he plays, and that is for you to judge.
 
 **In every item tooltip** (loot window, roll window, chat links, bags, vendors) a guide gets extra lines:
 
 - **Dad wears [Old Cloth Hood] item level 31**
-- **This one: item level 38 +7**
-- **+6 Stamina, +4 Intellect, -3 Spirit**: what changes if he swaps
+- **This one: item level 38 (+7)**
+- **gains +4 Intellect, +6 Stamina** in green
+- **loses -3 Spirit** in red
 
-Other cases: **Dad has nothing in that slot**, **Dad wears this**, **Dad can not wear plate**, **This is leather. His class wears heavier armor**, **Needs level 42, he is 38**. For rings, trinkets and one-hand weapons it compares against the weaker of his two.
+Other cases: **Dad has nothing in that slot**, **Dad wears this**, **Dad can not wear plate**, **This is leather. He can wear mail**, **Needs level 42, he is 38**. For rings, trinkets and one-hand weapons it compares against the one of his two with the lower item level.
 
-**When gear drops** (roll window, your own loot window, or the party's loot line in chat) you get one chat line: **Possible upgrade for Dad: [Drowned Crown] item level 38. He wears [Old Cloth Hood] item level 31.** Only for green or better items that he can wear, in his own armor type, with a higher item level than what he has in that slot, or when the slot is empty.
+**When gear drops** (roll window, your own loot window, or the party's loot line in chat) you get one chat line: **Dad can wear [Drowned Crown] item level 38. He wears [Old Cloth Hood] item level 31. +4 Intellect, +6 Stamina, -3 Spirit.** For every green or better item that he can wear in his own armor type and does not already wear.
 
-It shows numbers and flags a higher item level. It does not judge which stats suit his class, and it does not know which weapon types he has trained. The armor rules are the classic ones: cloth for priest, mage and warlock; leather for rogue and druid; hunter and shaman move from leather to mail at 40; warrior and paladin from mail to plate at 40.
+It does not know which weapon types he has trained. The armor rules are the classic ones: cloth for priest, mage and warlock; leather for rogue and druid; hunter and shaman move from leather to mail at 40; warrior and paladin from mail to plate at 40.
 
 His gear is fetched by itself when you group up and again every ten minutes. His class and level are read straight from the game on the guide's side, so the armor check works whatever version he has. He needs DadMode 1.8 or newer for the comparison at all, and 1.15 or newer for exact items with enchants. **Compare drops with their gear** in the settings turns it off.
 
 ### Gear in his bags, and "put it on"
 
-He often carries something better than what he has on. The **Gear** tab has a section **Gear in his bags**, compared with what he wears:
+The **Gear** tab has a section **In his bags**: one row for each thing in his bags that he could wear. Every row is laid out the same way:
 
-- **BETTER than his head [Leather Cap] item level 30**, with the stat change. The better ones come first.
-- **BETTER: his main hand slot is empty**
-- **not better than his head (item level 35)**
-- **can not wear plate**, **needs level 45**, or **leather, lighter than his class wears**
+| Left | Middle | Right |
+|---|---|---|
+| The slot: Head, Ring, Main hand | The item and its item level. Under it, what it would replace. Under that, small chips: green for what he gains, red for what he loses | A button |
 
-The guide bar says **Dad: 2 better items in his bags** by itself.
+- Hold the mouse over either item name for the game's own tooltip.
+- An item for an empty slot says **his main hand slot is empty**.
+- Lighter armor says so: **this is leather, he can wear mail**.
+- What he can put on now comes first, ordered by slot. Then items that need a higher level, the same item he already wears, and last what he can not wear (**Dad can not wear plate**). Those have no button.
 
-**Tell him to put it on.** Under each item he is able to wear there is a link **[tell him to put it on]**. Click it and on his screen a call sounds, the text says **Anna says: put on Mail Coif**, and a big gold button appears: **CLICK TO PUT ON: Mail Coif**. One click and the item goes on. Your window then shows **he sees the button**, and **he put it on** when it worked.
+**The button.** Click **Put it on** and on his screen a call sounds, the text says **Anna says: put on Mail Coif**, and a big gold button appears: **CLICK TO PUT ON: Mail Coif**. One click and the item goes on. Your button shows what happened:
+
+| Button | Meaning |
+|---|---|
+| Put it on (gold) | Click to ask him |
+| Asked (grey) | Sent, no answer yet |
+| He sees it (grey) | The gold button is on his screen |
+| He put it on (green) | Done |
+| Didn't work (red) | He clicked but the item did not go on. He has to right-click it in his bags |
+| Not in bags (red) | He no longer has it |
+| Not sent (red) | The message could not be sent. Chat says why |
+
+Any button except the green one can be clicked again.
 
 - During a fight his button says to click again afterwards. The game does not allow changing armor in a fight.
-- If the click does not put it on, he is told to open his bags and right-click the item, and you see that it did not work.
-- The button goes away by itself after two minutes.
+- The gold button on his screen goes away by itself after two minutes.
 
 His addon sends up to 16 wearable things from his bags. He needs DadMode 1.21 or newer for all of this.
 
@@ -319,7 +335,7 @@ No addon? Type `!dad` or `!dad come here` in party chat. Dad's addon reacts to t
 - A second call from the same person within 3 seconds is ignored.
 - The call ends by itself when he is within 12 yards of the caller.
 - No far warning while someone is calling him. One thing at a time.
-- The far-away sound plays once each time he drifts off, not on repeat. The text reminder comes at most once a minute, and dad can switch the whole warning off in the picker window.
+- The far-away sound plays once each time he drifts off, not on repeat. There is no repeat, and none at all when that person is in another zone. Dad can switch the whole warning off in the picker window.
 - Dad picks his own sounds, including no sound at all.
 
 ## Minimap button
@@ -403,6 +419,7 @@ Anyone in dad's party who runs DadMode can ask for his status and quest list: le
   | `Waypoints.lua` | Waypoints from a guide |
   | `Report.lua` | What the one being guided reports: status, quests, gear, bags |
   | `Window.lua` | The "How is <name> doing" window |
+  | `Rows.lua` | The page inside that window: text and rows with a label, facts, chips and a button |
   | `Follow.lua` | The green follow button |
   | `Frames.lua` | The arrow bar, the big message frame, the timer that drives everything |
   | `Minimap.lua` | The minimap button |
@@ -463,7 +480,7 @@ Checked against the real WoW Forever client, as of version 1.10.1 (13 November 2
 - Zeppelin steps with the platform arrow, and the flight point hint (1.17).
 - The four tabs, the paced sending of long quest lists, and the list swapping in only when complete (1.18).
 - The Dungeon tab, warnings and the version check on the guide bar, and boats (1.19).
-- The gear comparison in tooltips and the upgrade line on drops (1.20).
+- The gear comparison in tooltips and the chat line on drops (1.20). Since 1.26 it states what changes and gives no verdict.
 - Gear in his bags and the put-it-on button (1.21).
 - The Yes / No box for guides, the My guides page and the permission switches (1.22).
 - The names on the guide's buttons, the Guiding line and aiming at one person (1.23).

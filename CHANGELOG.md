@@ -1,5 +1,14 @@
 # DadMode changes
 
+## 1.26.0
+
+- **Gear is now shown as facts, with no verdict.** DadMode no longer says an item is BETTER. It only knew the item level, not how he plays. You see what he gains (green) and what he loses (red), and you decide. This goes for the Gear tab, item tooltips and the chat line on drops.
+- **The Gear tab has real rows for what is in his bags.** Slot on the left, the item and what it would replace in the middle, a button on the right. The button shows what happened: Put it on, Asked, He sees it, He put it on.
+- Every wearable item in his bags is listed, not only the ones with a higher item level.
+- The guide bar no longer says "2 better items in his bags".
+- **The far-away warning knows about zones.** When a picked person is far away in another zone, there is no sound and no text. The arrow turns grey and says where they are, like "in Orgrimmar". A call still gets through.
+- In the same zone, the far-away warning now comes once each time he drifts off. The text no longer comes back every minute.
+
 ## 1.25.0
 
 - **Your status, quests, gear and bag contents are now private.** They are whispered to the guide who asked, so no other computer in the party receives them. Before, they went to the whole party and other DadMode users' addons simply ignored them.

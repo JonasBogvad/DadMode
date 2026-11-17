@@ -354,8 +354,8 @@ local function RenderQuests()
                 lines[#lines + 1] = GREY .. "No gear information. " .. name .. " needs DadMode 1.8 or newer.|r"
             end
             lines[#lines + 1] = " "
-            if DadMode_BagGearLines then
-                DadMode_BagGearLines(name, d, lines)
+            if DadMode_BagRows then
+                DadMode_BagRows(name, d, lines)
                 lines[#lines + 1] = " "
             end
             if d.cons then
@@ -460,8 +460,7 @@ local function RenderQuests()
         lines[#lines + 1] = "|cffe8c36aDadMode in this party|r"
         for _, line in ipairs(DadMode_VersionLines()) do lines[#lines + 1] = line end
     end
-    ns.questWin.text:SetText(table.concat(lines, "\n"))
-    ns.questWin.content:SetHeight((ns.questWin.text:GetStringHeight() or 100) + 20)
+    DadMode_LayoutBlocks(lines)
 end
 
 -- The window asks again by itself now and then. Not while a list is still coming in, and not
@@ -586,6 +585,38 @@ function DadMode_ReceiveQuestData(sender, text)
     RenderQuests()
 end
 
+-- Makes the links inside a frame work: the mouse over an item shows the game's tooltip, a click
+-- on a dungeon name opens it. The frame still drags the window.
+function ns.EnableLinks(c)
+    pcall(function()
+        c:SetHyperlinksEnabled(true)
+        c:EnableMouse(true)
+        c:RegisterForDrag("LeftButton")
+        c:SetScript("OnDragStart", function() ns.questWin:StartMoving() end)
+        c:SetScript("OnDragStop", function() ns.questWin:StopMovingOrSizing() end)
+        c:SetScript("OnHyperlinkEnter", function(self, link)
+            if not GameTooltip or type(link) ~= "string" or link:sub(1, 8) == "dadmode:" then return end
+            GameTooltip:SetOwner(ns.questWin, "ANCHOR_RIGHT")
+            local ok = pcall(GameTooltip.SetHyperlink, GameTooltip, link)
+            if ok then GameTooltip:Show() else GameTooltip:Hide() end
+        end)
+        c:SetScript("OnHyperlinkLeave", function() if GameTooltip then GameTooltip:Hide() end end)
+        c:SetScript("OnHyperlinkClick", function(self, link, text, button)
+            if type(link) == "string" and link:sub(1, 16) == "dadmode:dungeon:" then
+                -- a dungeon name on the Dungeon tab was clicked (0 = back to the list)
+                local id = tonumber(link:sub(17))
+                ns.questWin.dungeon = (id and id > 0) and id or false
+                if ns.questWin.dungeon and ns.db.helper then
+                    for name in pairs(ns.questData) do pcall(DadMode_AskDone, name) end
+                end
+                ns.questWin.SetView("dungeon")
+            elseif type(SetItemRef) == "function" then
+                pcall(SetItemRef, link, text, button)
+            end
+        end)
+    end)
+end
+
 function DadMode_CreateQuestWindow()
     ns.questWin = CreateFrame("Frame", "DadModeQuests", UIParent)
     ns.questWin = ns.questWin
@@ -610,6 +641,7 @@ function DadMode_CreateQuestWindow()
     local again = ns.BigButton(ns.questWin, 70, 22, function() AskQuests() end)
     again:SetPoint("RIGHT", close, "LEFT", -6, 0)
     again.label:SetText("Refresh")
+    ns.questWin.texts, ns.questWin.rows, ns.questWin.usedRows = {}, {}, 0
     ns.questWin.view = "overview"
     ns.questWin.filter = ""
     ns.questWin.dungeon = false          -- the dungeon picked on the Dungeon tab
@@ -706,46 +738,15 @@ function DadMode_CreateQuestWindow()
     ns.questWin.text:SetJustifyV("TOP")
     ns.questWin.text:SetSpacing(2)
 
-    -- Item names in the gear list are links: the mouse over one shows the game's own tooltip
-    pcall(function()
-        local c = ns.questWin.content
-        c:SetHyperlinksEnabled(true)
-        -- links need the mouse; keep the window draggable from the text as well
-        c:EnableMouse(true)
-        c:RegisterForDrag("LeftButton")
-        c:SetScript("OnDragStart", function() ns.questWin:StartMoving() end)
-        c:SetScript("OnDragStop", function() ns.questWin:StopMovingOrSizing() end)
-        c:SetScript("OnHyperlinkEnter", function(self, link)
-            if not GameTooltip or type(link) ~= "string" or link:sub(1, 8) == "dadmode:" then return end
-            GameTooltip:SetOwner(ns.questWin, "ANCHOR_RIGHT")
-            local ok = pcall(GameTooltip.SetHyperlink, GameTooltip, link)
-            if ok then GameTooltip:Show() else GameTooltip:Hide() end
-        end)
-        c:SetScript("OnHyperlinkLeave", function() if GameTooltip then GameTooltip:Hide() end end)
-        c:SetScript("OnHyperlinkClick", function(self, link, text, button)
-            if type(link) == "string" and link:sub(1, 13) == "dadmode:wear:" then
-                local who, item = link:sub(14):match("^([^:]+):(item:[%-%d:]+)$")
-                if who and DadMode_TellWear then DadMode_TellWear(who, item) end
-            elseif type(link) == "string" and link:sub(1, 16) == "dadmode:dungeon:" then
-                -- a dungeon name on the Dungeon tab was clicked (0 = back to the list)
-                local id = tonumber(link:sub(17))
-                ns.questWin.dungeon = (id and id > 0) and id or false
-                if ns.questWin.dungeon and ns.db.helper then
-                    for name in pairs(ns.questData) do pcall(DadMode_AskDone, name) end
-                end
-                ns.questWin.SetView("dungeon")
-            elseif type(SetItemRef) == "function" then
-                pcall(SetItemRef, link, text, button)
-            end
-        end)
-    end)
+    -- Item names are links: the mouse over one shows the game's own tooltip
+    ns.EnableLinks(ns.questWin.content)
 
     -- Drag the corner for a wider or taller window. The text re-wraps to the new width.
     local function Fit()
         local w = ns.questWin:GetWidth() or 460
         if w < 100 then return end
         ns.questWin.content:SetWidth(w - 24)
-        ns.questWin.text:SetWidth(w - 32)
+        if ns.questWin:IsShown() then DadMode_RenderQuests() end     -- rows and text follow the new width
     end
     pcall(function()
         ns.questWin:SetResizable(true)

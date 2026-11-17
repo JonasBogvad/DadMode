@@ -54,7 +54,8 @@ local function Stats(link)
     if ok and type(t) == "table" and not Secret(t) then return t end
 end
 
--- "+6 Stamina, -3 Spirit": what changes when he swaps old for new
+-- What changes when he swaps old for new: two lists of plain text, "+6 Stamina" and "-3 Spirit".
+-- oldLink = nil compares against an empty slot.
 local function Difference(newLink, oldLink)
     local a, b = Stats(newLink), oldLink and Stats(oldLink) or {}
     if not a or not b then return nil end
@@ -62,31 +63,35 @@ local function Difference(newLink, oldLink)
     for k in pairs(a) do if not seen[k] then seen[k] = true; keys[#keys + 1] = k end end
     for k in pairs(b) do if not seen[k] then seen[k] = true; keys[#keys + 1] = k end end
     table.sort(keys)
-    local parts = {}
+    local gains, loses = {}, {}
     for _, k in ipairs(keys) do
         local va, vb = a[k], b[k]
         if (va == nil or Usable(va, "number")) and (vb == nil or Usable(vb, "number")) then
             local diff = (va or 0) - (vb or 0)
-            if diff ~= 0 and #parts < 8 then
+            if diff ~= 0 and #gains + #loses < 8 then
                 local label = (type(_G[k]) == "string" and _G[k]) or tostring(k):gsub("^ITEM_MOD_", ""):gsub("_SHORT$", ""):gsub("_", " "):lower()
-                local size = math.floor(math.abs(diff) * 10 + 0.5) / 10
-                parts[#parts + 1] = (diff > 0 and (GOOD .. "+") or (BAD .. "-")) .. ("%g"):format(size) .. " " .. label .. "|r"
+                local size = ("%g"):format(math.floor(math.abs(diff) * 10 + 0.5) / 10)
+                if diff > 0 then gains[#gains + 1] = "+" .. size .. " " .. label
+                else loses[#loses + 1] = "-" .. size .. " " .. label end
             end
         end
     end
-    return (#parts > 0) and table.concat(parts, ", ") or nil
+    return gains, loses
 end
 
 -- Compares one item against what one person wears.
 -- Returns nil when it is not something to wear, otherwise a table:
 --   cannot = text why he can not wear it, or
---   worn = his item in that slot (nil = empty), wornLevel, level, better (true/false/nil), diff, same
+--   worn = his item in that slot (nil = empty), wornLevel, level, gap (level minus wornLevel),
+--   gains and loses (lists of text), same.
+-- It only states facts. Whether the item is better for him depends on how he plays, and that
+-- is for the guide to judge.
 local function Compare(link, d)
     local it = Info(link)
     if not it or not d or not d.gear then return nil end
     local slots = EQUIP[it.loc]
     if not slots then return nil end
-    local res = { level = it.level, name = it.name, quality = it.quality }
+    local res = { level = it.level, name = it.name, quality = it.quality, slot = slots[1] }
     local class, lv = d.st and d.st.cl, d.st and d.st.lv
     local heavy = class and HEAVIEST[class]
     if it.class == 4 and ARMOR[it.sub] and heavy and it.loc ~= "INVTYPE_CLOAK" then
@@ -96,6 +101,7 @@ local function Compare(link, d)
             return res
         end
         res.lighter = (it.sub < most) and ARMOR[it.sub] or nil      -- wearable, but not his armor type
+        res.most = ARMOR[most]
     end
     if it.loc == "INVTYPE_SHIELD" and class and not SHIELD[class] then
         res.cannot = "can not use shields"
@@ -120,11 +126,11 @@ local function Compare(link, d)
         res.worn = g.link or ("item:" .. g.id)
         local w = Info(res.worn)
         res.wornName, res.wornQuality, res.wornLevel = w and w.name, w and w.quality, w and w.level
-        if res.level and res.wornLevel then res.better = res.level > res.wornLevel end
-        if not res.same then res.diff = Difference(link, res.worn) end
+        if res.level and res.wornLevel then res.gap = res.level - res.wornLevel end
+        if not res.same then res.gains, res.loses = Difference(link, res.worn) end
     else
         res.empty = true
-        res.better = true
+        res.gains, res.loses = Difference(link, nil)
     end
     return res
 end
@@ -168,14 +174,14 @@ local function TooltipLines(link)
                     lines[#lines + 1] = "|cffe8c36a" .. m.name .. "|r wears " .. Coloured(res.wornName, res.wornQuality)
                         .. (res.wornLevel and (GREY .. "  item level " .. res.wornLevel .. "|r") or "")
                 end
-                if res.level and res.wornLevel then
-                    local gap = res.level - res.wornLevel
-                    lines[#lines + 1] = "  This one: item level " .. res.level .. "  "
-                        .. ((gap > 0 and (GOOD .. "+" .. ("%g"):format(gap))) or (gap < 0 and (BAD .. ("%g"):format(gap))) or (GREY .. "same")) .. "|r"
+                if res.level and res.gap then
+                    lines[#lines + 1] = "  This one: item level " .. res.level .. GREY .. "  ("
+                        .. ((res.gap > 0 and "+" or "") .. ("%g"):format(res.gap)) .. ")|r"
                 end
-                if res.diff then lines[#lines + 1] = "  " .. res.diff end
-                if res.lighter then lines[#lines + 1] = "  " .. WARN .. "This is " .. res.lighter .. ". His class wears heavier armor.|r" end
-                if res.needs then lines[#lines + 1] = "  " .. WARN .. "Needs level " .. res.needs .. ", he is " .. tostring(d.st and d.st.lv) .. "|r" end
+                if res.gains and #res.gains > 0 then lines[#lines + 1] = "  " .. GREY .. "gains|r  " .. GOOD .. table.concat(res.gains, ", ") .. "|r" end
+                if res.loses and #res.loses > 0 then lines[#lines + 1] = "  " .. GREY .. "loses|r  " .. BAD .. table.concat(res.loses, ", ") .. "|r" end
+                if res.lighter then lines[#lines + 1] = "  " .. GREY .. "This is " .. res.lighter .. ". He can wear " .. res.most .. ".|r" end
+                if res.needs then lines[#lines + 1] = "  " .. GREY .. "Needs level " .. res.needs .. ", he is " .. tostring(d.st and d.st.lv) .. "|r" end
             end
         end
     end
@@ -216,25 +222,51 @@ function DadMode_HookTooltips()
     end)
 end
 
--- Is this item from his bags better than what he wears? Same rule as for drops.
-local function IsUpgrade(res)
-    return res and not res.cannot and not res.same and not res.lighter and not res.needs and res.better and true or false
+-- What the button on a bag row shows, by what happened after the guide clicked it
+local WEAR_STATE = {
+    asked = { "Asked", "wait" }, seen = { "He sees it", "wait" }, ok = { "He put it on", "done" },
+    gone = { "Not in bags", "bad" }, no = { "Didn't work", "bad" }, fail = { "Not sent", "bad" },
+}
+
+local function Link(item, name, quality)
+    return "|cff" .. (QUALITY[quality or 1] or "ffffff") .. "|H" .. item .. "|h" .. (name or "loading...") .. "|h|r"
 end
 
--- How many things in his bags are better than what he has on
-function DadMode_BagUpgrades(name)
-    local d = questData[name]
-    if not d or not d.bagGear or not d.gear then return 0 end
-    local n = 0
-    for _, item in ipairs(d.bagGear) do
-        if IsUpgrade(Compare(item, d)) then n = n + 1 end
+-- One row of the "In his bags" list: the facts about one item, and a button when he can wear it
+local function BagRow(name, d, item, res)
+    local row = { row = true, slot = SLOTS[res.slot] or "", chips = {} }
+    row.title = Link(item, res.name, res.quality) .. (res.level and (GREY .. "  " .. res.level .. "|r") or "")
+    local sub = {}
+    if res.cannot then
+        sub[1] = GREY .. name .. " " .. res.cannot .. "|r"
+    elseif res.same then
+        sub[1] = GREY .. "the same as what he wears|r"
+    else
+        if res.empty then
+            sub[1] = GREY .. "his " .. SLOTS[res.slot]:lower() .. " slot is empty|r"
+        else
+            sub[1] = GREY .. "instead of|r " .. Link(res.worn, res.wornName, res.wornQuality)
+                .. (res.wornLevel and (GREY .. "  " .. res.wornLevel .. "|r") or "")
+        end
+        if res.lighter then sub[#sub + 1] = GREY .. "this is " .. res.lighter .. ", he can wear " .. res.most .. "|r" end
+        if res.needs then sub[#sub + 1] = GREY .. "needs level " .. res.needs .. "|r" end
+        for _, text in ipairs(res.gains or {}) do row.chips[#row.chips + 1] = { text = text, good = true } end
+        for _, text in ipairs(res.loses or {}) do row.chips[#row.chips + 1] = { text = text, good = false } end
+        if not res.needs then
+            local state = WEAR_STATE[d.wearTold and d.wearTold[item] or ""]
+            row.button = { text = state and state[1] or "Put it on", kind = state and state[2] or "action" }
+            if row.button.kind ~= "done" then
+                row.button.onClick = function() DadMode_TellWear(name, item) end
+            end
+        end
     end
-    return n
+    row.sub = table.concat(sub, "\n")
+    return row
 end
 
--- The "In his bags" part of the Gear tab
-function DadMode_BagGearLines(name, d, lines)
-    lines[#lines + 1] = "|cffe8c36aGear in his bags|r  " .. GREY .. "compared with what he wears|r"
+-- The "In his bags" part of the Gear tab: a heading, then one row for each thing he could wear
+function DadMode_BagRows(name, d, lines)
+    lines[#lines + 1] = "|cffe8c36aIn his bags|r  " .. GREY .. "what changes if he puts it on|r"
     if not d.bagGear then
         lines[#lines + 1] = GREY .. "Not known. " .. name .. " needs DadMode 1.21 or newer.|r"
         return
@@ -243,46 +275,23 @@ function DadMode_BagGearLines(name, d, lines)
         lines[#lines + 1] = GREY .. "Nothing to wear in his bags.|r"
         return
     end
-    local rows = {}
+    local list = {}
     for _, item in ipairs(d.bagGear) do
         local res = Compare(item, d)
-        if res then rows[#rows + 1] = { item = item, res = res, up = IsUpgrade(res), index = #rows + 1 } end
+        if res then
+            -- what he can put on right now comes first, then by slot, then the highest item level
+            local rank = (res.cannot and 3) or (res.same and 2) or (res.needs and 1) or 0
+            list[#list + 1] = { item = item, res = res, rank = rank, index = #list + 1 }
+        end
     end
-    table.sort(rows, function(a, b)
-        if a.up ~= b.up then return a.up end
-        return (a.res.level or 0) > (b.res.level or 0)
+    table.sort(list, function(a, b)
+        if a.rank ~= b.rank then return a.rank < b.rank end
+        if (a.res.slot or 0) ~= (b.res.slot or 0) then return (a.res.slot or 0) < (b.res.slot or 0) end
+        if (a.res.level or 0) ~= (b.res.level or 0) then return (a.res.level or 0) > (b.res.level or 0) end
+        return a.index < b.index
     end)
-    for _, row in ipairs(rows) do
-        local res = row.res
-        local head = "|cff" .. (QUALITY[res.quality or 1] or "ffffff") .. "|H" .. row.item .. "|h[" .. (res.name or "loading...") .. "]|h|r"
-            .. (res.level and (GREY .. "  item level " .. res.level .. "|r") or "")
-        local note
-        if res.cannot then
-            note = GREY .. res.cannot .. "|r"
-        elseif res.same then
-            note = GREY .. "same as what he wears|r"
-        elseif res.empty then
-            note = GOOD .. "BETTER: his " .. SLOTS[res.slot]:lower() .. " slot is empty|r"
-        elseif row.up then
-            note = GOOD .. "BETTER than his " .. SLOTS[res.slot]:lower() .. "|r " .. Coloured(res.wornName, res.wornQuality)
-                .. (res.wornLevel and (GREY .. " item level " .. res.wornLevel .. "|r") or "")
-        elseif res.needs then
-            note = WARN .. "needs level " .. res.needs .. "|r"
-        elseif res.lighter then
-            note = GREY .. res.lighter .. ", lighter than his class wears|r"
-        else
-            note = GREY .. "not better than his " .. SLOTS[res.slot]:lower()
-                .. (res.wornLevel and (" (item level " .. res.wornLevel .. ")") or "") .. "|r"
-        end
-        lines[#lines + 1] = head
-        lines[#lines + 1] = "    " .. note
-        if row.up and res.diff then lines[#lines + 1] = "    " .. res.diff end
-        -- anything he is able to wear can be pointed out to him
-        if not res.cannot and not res.same and not res.needs then
-            local state = d.wearTold and d.wearTold[row.item]
-            lines[#lines + 1] = "    |cff6fb1e8|Hdadmode:wear:" .. name .. ":" .. row.item .. "|h[tell him to put it on]|h|r"
-                .. (state and ("  " .. state) or "")
-        end
+    for _, entry in ipairs(list) do
+        lines[#lines + 1] = BagRow(name, d, entry.item, entry.res)
     end
 end
 
@@ -294,7 +303,8 @@ function DadMode_TellWear(name, item)
     if not d then return end
     local ok, why = Tell(DadMode_AimAt(name, "WEAR:" .. item))
     d.wearTold = d.wearTold or {}
-    d.wearTold[item] = ok and (GREY .. "told him...|r") or (BAD .. "not sent: " .. tostring(why) .. "|r")
+    d.wearTold[item] = ok and "asked" or "fail"
+    if not ok then Print("|cffeb7a7aCould not tell him:|r " .. tostring(why)) end
     DadMode_RenderQuests()
 end
 
@@ -402,8 +412,7 @@ function DadMode_WearMessage(text, sender)
     local d = questData[m.name]
     if not kind or not d then return true end
     d.wearTold = d.wearTold or {}
-    local note = (kind == "WEAROK" and (GOOD .. "he put it on|r")) or (kind == "WEARSEEN" and (GREY .. "he sees the button|r"))
-        or (kind == "WEARGONE" and (BAD .. "not in his bags any more|r")) or (WARN .. "it did not work, he has to right-click it|r")
+    local note = (kind == "WEAROK" and "ok") or (kind == "WEARSEEN" and "seen") or (kind == "WEARGONE" and "gone") or "no"
     for item in pairs(d.wearTold) do
         if item:match("item:(%d+)") == id then d.wearTold[item] = note end
     end
@@ -415,7 +424,7 @@ function DadMode_WearMessage(text, sender)
     return true
 end
 
--- A drop: say so once when it looks like an upgrade for him
+-- A drop he could wear: say so once, with what would change. No verdict.
 local told = {}
 local function Dropped(link)
     if not ns.db.helper or ns.db.compare == false or not Usable(link, "string") then return end
@@ -427,13 +436,17 @@ local function Dropped(link)
         local d = questData[m.name]
         Fill(m, d)
         local res = d and Compare(link, d)
-        -- only real candidates: he can wear it, it is his armor type, it is better, and not grey or white
-        if res and not res.cannot and not res.same and not res.lighter and res.better and (res.quality or 0) >= 2 then
+        -- only what he can put on: his own armor type, not what he already wears, and not grey or white
+        if res and not res.cannot and not res.same and not res.lighter and (res.quality or 0) >= 2 then
             told[item] = now
-            Print("|cff6fcf97Possible upgrade for " .. m.name .. ":|r " .. link
+            local change = {}
+            if res.gains and #res.gains > 0 then change[#change + 1] = GOOD .. table.concat(res.gains, ", ") .. "|r" end
+            if res.loses and #res.loses > 0 then change[#change + 1] = BAD .. table.concat(res.loses, ", ") .. "|r" end
+            Print("|cffe8c36a" .. m.name .. " can wear|r " .. link
                 .. (res.level and (" item level " .. res.level) or "") .. ". "
                 .. (res.empty and ("His " .. SLOTS[res.slot]:lower() .. " slot is empty.")
                     or ("He wears " .. Coloured(res.wornName, res.wornQuality) .. (res.wornLevel and (" item level " .. res.wornLevel) or "") .. "."))
+                .. (#change > 0 and (" " .. table.concat(change, ", ") .. ".") or "")
                 .. (res.needs and (" Needs level " .. res.needs .. ".") or ""))
         end
     end
