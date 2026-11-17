@@ -1,5 +1,13 @@
 # DadMode changes
 
+## 1.23.0
+
+For guides:
+
+- The buttons now carry the name of the one you guide: "Call Olaf", "Waypoint for Olaf", "How is Olaf doing". They no longer say "dad".
+- A new line on the guide bar shows who you are guiding.
+- With two or more people to guide in the party, click that line to choose one. Calls and waypoints then go only to that person. "Everyone" sends to all.
+
 ## 1.22.0
 
 The one being guided now decides who may guide them.

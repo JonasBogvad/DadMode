@@ -5,7 +5,7 @@
 A World of Warcraft: Forever addon for a player who keeps losing the party.
 One addon, two roles: the person who gets lost ("dad") and the people who look after him ("guides").
 
-Version 1.22.0. Game interface 16001 (WoW Forever 1.60).
+Version 1.23.0. Game interface 16001 (WoW Forever 1.60).
 
 ## Install
 
@@ -84,7 +84,7 @@ To start with, a call is the Ready check sound and far away is the quiet Map pin
 
 **Resizing by dragging.** Three windows have a small grip in the bottom right corner. Hold the left mouse button on it and drag, like a window in Windows:
 
-- **How is dad doing**: becomes wider or taller, and the text re-wraps to fit.
+- **How is <name> doing**: becomes wider or taller, and the text re-wraps to fit.
 - **The small DadMode window** and **the guide bar**: the whole window grows or shrinks, buttons and text together. The top left corner stays where it is.
 - **The guide bar has a break point.** Drag it narrow and the buttons jump into one column. Drag it wide again and they go back to two. That is the same choice as **Guide bar layout** in the settings.
 
@@ -132,12 +132,12 @@ Four buttons do two things each. Rest the mouse on a button to see what it does.
 
 | Button | What it does |
 |---|---|
-| Call dad | Beep and big text on his screen, and your arrow pulses white until he reaches you. While a call is running the button is red and reads **Cancel my call**: click it to take the call back |
+| Call <name> | Beep and big text on his screen, and your arrow pulses white until he reaches you. While a call is running the button is red and reads **Cancel my call**: click it to take the call back |
 | Come to me / Stop, wait here / Follow me | Same as a call, with that message |
-| Waypoint for dad | Puts a marker on dad's map and makes the game track it for him. See below. Once he has it, the button is red and reads **Remove his waypoint**. A right click always removes it |
+| Waypoint for <name> | Puts a marker on dad's map and makes the game track it for him. See below. Once he has it, the button is red and reads **Remove the waypoint**. A right click always removes it |
 | Star on my head | **Left click** puts a target marker on you, so he can see which character is you. **Right click** switches to the next icon. Give each guide a different one |
 | Beam on the ground | **Left click**, then click the ground: a coloured beam marks the spot. **Right click** removes the beam |
-| How is dad doing | Opens a window with dad's status and his quests. See below |
+| How is <name> doing | Opens a window with dad's status and his quests. See below |
 
 To see what dad sees when he is called, use **Test a call** in the settings, or `/dadmode test`.
 
@@ -149,7 +149,7 @@ To see what dad sees when he is called, use **Test a call** in the settings, or 
 - **broken** gear
 - unspent **talent points**
 
-When no call is running, the most important one is also on the top line, so it shows with the bar folded up. The guide's addon asks for this short status every 45 seconds. Dad needs DadMode 1.19 or newer to answer; with an older version the warnings only update while **How is dad doing** is open.
+When no call is running, the most important one is also on the top line, so it shows with the bar folded up. The guide's addon asks for this short status every 45 seconds. Dad needs DadMode 1.19 or newer to answer; with an older version the warnings only update while **How is <name> doing** is open.
 
 **Version check.** The same area says when someone in the party runs another DadMode than you: "Dad has DadMode 1.14.2, you have 1.19.0". Most "it does not work" moments so far came from that. Addons tell each other their version when the party changes.
 
@@ -190,11 +190,17 @@ The guide bar says **Dad: 2 better items in his bags** by itself.
 
 His addon sends up to 16 wearable things from his bags. He needs DadMode 1.21 or newer for all of this.
 
+**Who you are guiding.** The buttons carry the name of the one they are for: **Call Olaf**, **Waypoint for Olaf**, **How is Olaf doing**. A line at the top of the bar says **Guiding: Olaf**.
+
+With two or more people to guide in the party, that line reads **Guiding: everyone (click to change)**. Click it to go through them one by one. With one person chosen, calls, cancels and waypoints go only to that person; with **everyone**, to all of them. A person you aim at needs DadMode 1.23 or newer; an older version gets the message the old way, to everybody.
+
+Anyone in the party who runs DadMode and is not a guide counts as someone to guide.
+
 **Being approved.** The one you guide has to say yes to you once. Until then your window says **<name> has not approved you as a guide yet** and a call shows **<name> has not approved you** on the bar. When he clicks Yes you get a chat line and the window fills by itself. If he has switched something off, the tab says so plainly: **<name> does not share his gear with guides**.
 
-### Waypoint for dad
+### Waypoint for <name>
 
-Press **Waypoint for dad** and two things happen on his screen:
+Press **Waypoint for <name>** and two things happen on his screen:
 
 - A **red, pulsing arrow** labelled **MARKER** appears next to his other arrows, pointing at the spot, with the distance. This is the part he will notice.
 - The game's own pin is set on his world map and minimap and tracked.
@@ -238,7 +244,7 @@ To record an exact spot, a guide stands on the dock and types `/dadmode stop NAM
 
 Limits: the arrow cannot point up, so climbing the tower is text only. An addon cannot see which zeppelin is docked or when it leaves. Which side of the tower is taken from the classic game; if Forever differs, go by the zeppelin master's name.
 
-### The "How is dad doing" window
+### The "How is <name> doing" window
 
 The window has five tabs:
 
@@ -320,7 +326,7 @@ No addon? Type `!dad` or `!dad come here` in party chat. Dad's addon reacts to t
 
 A gold arrow button on the edge of the minimap.
 
-- **Left click**: the window for your role. For dad that is **Who do you want to find?**, where he picks who to find and follow. For a guide it shows or hides the guide bar with the commands (not during a fight). **How is dad doing** is a button on that bar.
+- **Left click**: the window for your role. For dad that is **Who do you want to find?**, where he picks who to find and follow. For a guide it shows or hides the guide bar with the commands (not during a fight). **How is <name> doing** is a button on that bar.
 - **Right click**: the DadMode page in the game options.
 - **Drag** it around the minimap to move it.
 - `/dadmode minimap` hides it or brings it back.
@@ -331,7 +337,7 @@ If another addon has installed the usual minimap button library (LibDBIcon), Dad
 
 The guide bar tells you by itself when someone in the party has another version than you.
 
-**Everyone's version.** The bottom of the **Overview** tab in **How is dad doing** lists every person in the party with role and version: "Ben: guide, DadMode 1.20.1, same as yours", "Dad: being guided, DadMode 1.14.2, older than yours", or "no DadMode seen". `/dadmode status` prints the same list in chat. The role is shown for people on 1.20.1 or newer; for older versions it says "role unknown", or "being guided" once that person has answered a status request.
+**Everyone's version.** The bottom of the **Overview** tab in **How is <name> doing** lists every person in the party with role and version: "Ben: guide, DadMode 1.20.1, same as yours", "Dad: being guided, DadMode 1.14.2, older than yours", or "no DadMode seen". `/dadmode status` prints the same list in chat. The role is shown for people on 1.20.1 or newer; for older versions it says "role unknown", or "being guided" once that person has answered a status request.
 
 The version is shown in the top right corner of the **Who do you want to find?** window, next to the title of the **DadMode guide** bar, and by `/dadmode status`. When dad's addon answers a call, the guide's chat line also shows dad's version.
 
@@ -352,7 +358,7 @@ The version is shown in the top right corner of the **Who do you want to find?**
 | `/dadmode stop NAME` | Record the dock or platform you stand on. Without a name it lists the names |
 | `/dadmode travel` | List the zeppelin platforms this computer knows, and the route to the current marker |
 | `/dadmode waypoint` | Send dad a waypoint: your map pin if you have one, otherwise where you stand |
-| `/dadmode quests` | Open the "How is dad doing" window |
+| `/dadmode quests` | Open the "How is <name> doing" window |
 | `/dadmode debug` | Print the names the game reports and what the last incoming call looked like. For troubleshooting |
 | `/dadmode status` | Show your role, whether you show calls, and who is in the party |
 | `/dadmode clear` | Remove the ping on screen right away |
@@ -383,6 +389,7 @@ Anyone in dad's party who runs DadMode can ask for his status and quest list: le
 - Bag gear: after the gear he sends `BGS:<count>` and `BG:<item string>~...` (at most 16). `WEAR:<item string>` from a guide shows the button on his side; it calls `C_Item.EquipItemByName` on his click and answers `WEARSEEN`, `WEAROK`, `WEARNO` or `WEARGONE` with the item id.
 - The game allows at most 200 local names in one file. Single-use helper functions are therefore globals named `DadMode_<Name>`. The test run compiles the file with Lua 5.1 to catch that limit.
 - Guides and permissions (1.22): `db.guides[<full name, lower case>] = { name, state = "yes" or "no" }` and `db.perm[<what>] = false` for a switch that is off. `DadMode_Gate()` runs before every other handler. On the guided side it drops `PING`, `CLEAR`, `WP`, `WPC`, `TS`, `WEAR`, `QREQ`, `SREQ` and `QC` from anybody not approved and answers `LOCKED:ask:<their first name>` or `LOCKED:no:...`; a switched-off action answers `DENY:<what>:<name>`. After a Yes it sends `UNLOCK:<name>`. Every reply starts with `PERM:status=1~gold=1~...` and `DadMode_FilterReply()` leaves out what is not shared. `QREQ:a` is the automatic request and never opens the box. Messages still travel on the party channel: an unapproved guide's DadMode drops what it overhears, but a modified addon in the same party could read it.
+- Aiming (1.23): a message for one person is wrapped as `TO:<first name, lower case>:<message>`; everyone else drops it. It is only used when two or more people can be guided and one is chosen, and only towards 1.23 or newer.
 - Small messages added in 1.19: `HI:<version>` when the party changes, `SREQ` (answered with the two `ST:` messages only), (`HELP:` and `HACK`, used by the help button in 1.19 to 1.21.0, were removed in 1.21.1). Dungeon quests come from Questie's `QuestieJourney.zoneMap[areaId]` for the areas in `ZoneDB:GetDungeons()`.
 - Travel: `STOPS` lists the six zeppelin platforms with the zeppelin master's NPC id and name. `ResolveStops()` reads the master's spawn from Questie (`QueryNPCSingle(id, "spawns")`, `ZoneDB:GetUiMapIdByAreaId`) and stores world coordinates in `db.stops`. The guide sends them as `TS:<KEY>=<continent>:<north>:<west>` after each `WP`. `TravelStep()` picks the platform when walk + ride + walk is under 60% of the direct distance, or when the marker is on another continent. The flight hint runs on `TAXIMAP_OPENED` with `C_TaxiMap.GetAllTaxiNodes(GetTaxiMapID())`.
 - Waypoints: the guide sends `WP:<uiMapID>:<x>:<y>` (map coordinates 0 to 1). Dad's side calls `C_Map.SetUserWaypoint` and `C_SuperTrack.SetSuperTrackedUserWaypoint(true)`, then answers `WPOK` or `WPNO`, and `WPHERE` on arrival. `WPC` clears it. The red arrow converts the map spot with `C_Map.GetWorldPosFromMapPos`.
@@ -403,7 +410,7 @@ Checked against the real WoW Forever client, as of version 1.10.1 (13 November 2
 - The guide bar, the settings window and the minimap button, in their layout up to 1.10.1. The compact layout from 1.11 has only been simulated.
 - Calls between two computers, including the "got your call" reply. This needed the two-part name fix in 1.3.2.
 - The beam on the ground: dad sees it.
-- The "How is dad doing" window: the status card and the quest list read correctly from a real character.
+- The "How is <name> doing" window: the status card and the quest list read correctly from a real character.
 - The "hand in:" and "then:" lines from Questie, the search box, and the "only <name>" / "you have it too" marks (seen 15 November).
 - Waypoints: the red marker arrow points at the right spot, and "You reached the marker" shows on arrival.
 - A waypoint did not disturb RestedXP's own arrow or pins.
@@ -426,5 +433,6 @@ Checked against the real WoW Forever client, as of version 1.10.1 (13 November 2
 - The gear comparison in tooltips and the upgrade line on drops (1.20).
 - Gear in his bags and the put-it-on button (1.21).
 - The Yes / No box for guides, the My guides page and the permission switches (1.22).
+- The names on the guide's buttons, the Guiding line and aiming at one person (1.23).
 
 The simulated tests are three scripts that run the addon against a stand-in for the game. They catch logic errors, not differences in how Forever behaves.

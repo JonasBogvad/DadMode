@@ -820,7 +820,7 @@ local function TestCall()
         Beep()
         ShowAlert("|cffe8c36a" .. who .. "|r wants you. Follow the white arrow  |cff9aa0a6(test)|r", PING_SECONDS)
         alertFrame.from = who
-        Print("Test: this is what dad sees when " .. who .. " calls. If you stand next to them it ends right away with \"You found " .. who .. "\".")
+        Print("Test: this is what the one you guide sees when " .. who .. " calls. If you stand next to them it ends right away with \"You found " .. who .. "\".")
     else
         Beep()
         ShowAlert("|cffe8c36aTest|r wants you. Follow the white arrow  |cff9aa0a6(test)|r", 5)
@@ -866,7 +866,7 @@ local function SendPing(text)
         Print("You are not in a party.")
         return
     end
-    local ok, why = Tell("PING:" .. text:sub(1, 200))
+    local ok, why = Tell(DadMode_Aim("PING:" .. text:sub(1, 200)))
     if ok then
         lastSent = GetTime()
         answered = false
@@ -889,7 +889,7 @@ end
 DadMode_SendPing = SendPing
 
 local function SendClear()
-    Tell("CLEAR")
+    Tell(DadMode_Aim("CLEAR"))
     lastSent = 0
     call.state = nil
     Print("Call cancelled.")
@@ -1259,6 +1259,18 @@ function DadMode_CreateHelper()
     helper.status = helper:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
     helper.status:SetPoint("TOPLEFT", 10, -26)
 
+    -- Who the calls and waypoints go to. With two or more people to guide, a click changes it.
+    helper.aimBtn = BigButton(helper, 286, 22, function()
+        DadMode_NextTarget()
+        if DadMode_UpdateHelperStatus then DadMode_UpdateHelperStatus() end
+    end)
+    helper.aimBtn:SetPoint("TOPLEFT", 8, -44)
+    helper.aimBtn.bg:SetColorTexture(0.12, 0.14, 0.18, 1)
+    pcall(function()
+        local font, _, flags = helper.aimBtn.label:GetFont()
+        if font then helper.aimBtn.label:SetFont(font, 11, flags) end
+    end)
+
     -- Warnings about the one being guided, and who runs an older DadMode. Always the same
     -- height, because the bar can not change size during a fight.
     local NOTE_H = 44
@@ -1307,20 +1319,20 @@ function DadMode_CreateHelper()
     end
 
     -- Call dad. While a call is running the same button cancels it.
-    helper.callBtn = Plain("Call dad", function()
+    helper.callBtn = Plain("Call", function()
         if call.state == "sent" or call.state == "ack" then SendClear() else DadMode_SendPing("") end
     end)
-    Tip(helper.callBtn, "Call dad", "Shows a big call on his screen.", "While it runs, this button cancels it.")
+    Tip(helper.callBtn, "Call", "Shows a big call on the screen of the one you guide.", "While it runs, this button cancels it.")
     Plain("Come to me", function() DadMode_SendPing("says: come to me") end)
     Plain("Stop, wait here", function() DadMode_SendPing("says: stop and wait") end)
     Plain("Follow me", function() DadMode_SendPing("says: follow me. Click the green button") end)
     -- Waypoint. Once he has one, the same button removes it. Right click always removes.
-    helper.wpBtn = Plain("Waypoint for dad", function() end)
+    helper.wpBtn = Plain("Waypoint", function() end)
     helper.wpBtn:SetScript("OnClick", function(self, button)
         if button == "RightButton" or wpOut then DadMode_SendWaypointClear() else DadMode_SendWaypoint() end
     end)
     pcall(function() helper.wpBtn:RegisterForClicks("LeftButtonUp", "RightButtonUp") end)
-    Tip(helper.wpBtn, "Waypoint for dad", "Sends your map pin, or the spot where you stand.",
+    Tip(helper.wpBtn, "Waypoint", "Sends your map pin, or the spot where you stand.",
         "Click again to remove it.", "Right click: always remove.")
     helper.star = Secure()
     Tip(helper.star, "Icon over my head", "Left click: put it on.", "Right click: pick the next icon.")
@@ -1340,7 +1352,7 @@ function DadMode_CreateHelper()
     end)
     helper.beam = Secure("Beam on the ground")
     Tip(helper.beam, "Beam on the ground", "Left click, then click the ground.", "Right click: remove the beam.")
-    Plain("How is dad doing", function() OpenQuests() end)
+    helper.howBtn = Plain("How are they doing", function() OpenQuests() end)
 
     -- Puts the buttons in one or two columns. Not possible during a fight.
     local function Layout()
@@ -1351,9 +1363,10 @@ function DadMode_CreateHelper()
             local n = i - 1
             b:ClearAllPoints()
             b:SetSize(width, 24)
-            b:SetPoint("TOPLEFT", helper, "TOPLEFT", 8 + (n % cols) * (width + 6), -46 - math.floor(n / cols) * ROW)
+            b:SetPoint("TOPLEFT", helper, "TOPLEFT", 8 + (n % cols) * (width + 6), -72 - math.floor(n / cols) * ROW)
         end
-        fullHeight = 46 + math.ceil(#helper.buttons / cols) * ROW + 6 + NOTE_H
+        helper.aimBtn:SetWidth(cols * width + (cols - 1) * 6)
+        fullHeight = 72 + math.ceil(#helper.buttons / cols) * ROW + 6 + NOTE_H
         helper:SetWidth(8 + cols * width + (cols - 1) * 6 + 8)
         helper.note:SetWidth(cols * width + (cols - 1) * 6 - 14)
         helper:SetHeight(db.helperFolded and 44 or fullHeight)
@@ -1368,6 +1381,7 @@ function DadMode_CreateHelper()
             if db.helperFolded then b:Hide() else b:Show() end
         end
         if db.helperFolded then helper.note:Hide() else helper.note:Show() end
+        if db.helperFolded then helper.aimBtn:Hide() else helper.aimBtn:Show() end
         helper:SetHeight(db.helperFolded and 44 or fullHeight)
         helper.fold.label:SetText(db.helperFolded and "+" or "-")
     end
@@ -1399,10 +1413,18 @@ function DadMode_CreateHelper()
 end
 
 -- The line at the top of the helper bar: did my call arrive, and how far away is he
-local function UpdateHelperStatus()
+local UpdateHelperStatus
+function DadMode_UpdateHelperStatus() if UpdateHelperStatus then UpdateHelperStatus() end end
+function UpdateHelperStatus()
     if not (helper and helper:IsShown()) then return end
-    helper.callBtn.label:SetText((call.state == "sent" or call.state == "ack") and "|cffeb7a7aCancel my call|r" or "Call dad")
-    helper.wpBtn.label:SetText(wpOut and "|cffeb7a7aRemove his waypoint|r" or "Waypoint for dad")
+    -- the buttons carry the name of the one they are for
+    local who, several = DadMode_TargetName()
+    helper.callBtn.label:SetText((call.state == "sent" or call.state == "ack") and "|cffeb7a7aCancel my call|r"
+        or (who and ("Call " .. who)) or (several and "Call everyone") or "Call")
+    helper.wpBtn.label:SetText(wpOut and "|cffeb7a7aRemove the waypoint|r"
+        or (who and ("Waypoint for " .. who)) or (several and "Waypoint for all") or "Waypoint")
+    helper.howBtn.label:SetText(who and ("How is " .. who .. " doing") or "How are they doing")
+    helper.aimBtn.label:SetText(DadMode_TargetLine())
     local now, text = GetTime(), ""
     if call.state == "sent" then
         text = "|cffe8c36aCalling...|r"
@@ -1546,7 +1568,7 @@ local function SendWaypoint()
         Print("|cffeb7a7aNo position to send.|r That happens in dungeons. Outdoors it works.")
         return
     end
-    local ok, why = Tell(("WP:%d:%.4f:%.4f"):format(mapID, x, y))
+    local ok, why = Tell(DadMode_Aim(("WP:%d:%.4f:%.4f"):format(mapID, x, y)))
     if ok then
         lastSent = GetTime()
         wpOut = true
@@ -1560,7 +1582,7 @@ local function SendWaypoint()
 end
 
 local function SendWaypointClear()
-    Tell("WPC")
+    Tell(DadMode_Aim("WPC"))
     wpOut = false
     Print("Asked to remove the waypoint.")
 end
@@ -2199,6 +2221,11 @@ local function RenderQuests()
     local filter = questWin.filter
     local view = questWin.view
     local myQuests = MyQuests()
+    do  -- the title names the one it is about, when it is about one person
+        local only, count = nil, 0
+        for name in pairs(questData) do only, count = name, count + 1 end
+        questWin.title:SetText("|cffe8c36a" .. ((count == 1) and ("How is " .. only .. " doing") or "How are they doing") .. "|r")
+    end
     local now = GetTime()
     local lines, any = {}, false
     local function QuestLine(q)
@@ -2271,7 +2298,7 @@ local function RenderQuests()
             if d.gear then
                 DadMode_GearLines(d.gear, lines)
             else
-                lines[#lines + 1] = GREY .. "No gear information. Dad needs DadMode 1.8 or newer.|r"
+                lines[#lines + 1] = GREY .. "No gear information. " .. name .. " needs DadMode 1.8 or newer.|r"
             end
             lines[#lines + 1] = " "
             if DadMode_BagGearLines then
@@ -2519,7 +2546,8 @@ function DadMode_CreateQuestWindow()
     Tex(questWin, "BACKGROUND", 0.07, 0.08, 0.10, 0.97):SetAllPoints()
     local title = questWin:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     title:SetPoint("TOPLEFT", 12, -10)
-    title:SetText("|cffe8c36aHow is dad doing|r")
+    title:SetText("|cffe8c36aHow are they doing|r")
+    questWin.title = title
 
     local close = BigButton(questWin, 60, 22, function() questWin:Hide() end)
     close:SetPoint("TOPRIGHT", -8, -6)
@@ -3276,6 +3304,13 @@ end
 handlers.CHAT_MSG_ADDON = function(prefix, text, _, sender)
     if not Usable(prefix, "string") or prefix ~= PREFIX then return end
     if not Usable(text, "string") or not Usable(sender, "string") then return end
+    -- "TO:<first name>:<message>" is meant for one person only (from 1.23)
+    if text:sub(1, 3) == "TO:" then
+        local key, inner = text:match("^TO:([^:]+):(.*)$")
+        local okMe, me = pcall(UnitName, "player")
+        if not key or not okMe or Key(me) ~= key then return end
+        text = inner
+    end
     if DadMode_Gate and DadMode_Gate(text, sender) then return end
     if DadMode_ExtraMessage and DadMode_ExtraMessage(text, sender) then return end
     if DadMode_WearMessage and DadMode_WearMessage(text, sender) then return end
@@ -3820,7 +3855,7 @@ do
     function DadMode_TellWear(name, item)
         local d = questData[name]
         if not d then return end
-        local ok, why = Tell("WEAR:" .. item)
+        local ok, why = Tell(DadMode_AimAt(name, "WEAR:" .. item))
         d.wearTold = d.wearTold or {}
         d.wearTold[item] = ok and (GREY .. "told him...|r") or (BAD .. "not sent: " .. tostring(why) .. "|r")
         DadMode_RenderQuests()
@@ -3986,6 +4021,77 @@ do
         if not Usable(text, "string") then return end
         local link = text:match("|c%x+|Hitem:.-|h%[.-%]|h|r") or text:match("|Hitem:.-|h%[.-%]|h")
         if link then pcall(Dropped, link) end
+    end
+end
+
+---------------------------------------------------------------------------
+-- Who a guide's calls and waypoints are for
+---------------------------------------------------------------------------
+do
+    -- The people in the party a guide can guide: everybody who runs DadMode and is not a guide
+    local function Candidates()
+        local out = {}
+        for _, m in ipairs(Party()) do
+            local d = questData[m.name]
+            local role = DadMode_RoleOf and DadMode_RoleOf(m.name) or nil
+            local known = peerVersion[m.name] or d
+            if known and role ~= "g" then out[#out + 1] = m end
+        end
+        return out
+    end
+
+    -- The one chosen, or nil for "everyone". Second value: true when there are two or more to choose from.
+    function DadMode_TargetName()
+        local list = Candidates()
+        if #list == 1 then return list[1].name, false end
+        if #list >= 2 then
+            for _, m in ipairs(list) do
+                if db.aim and m.key == db.aim then return m.name, true end
+            end
+            return nil, true
+        end
+        return nil, false
+    end
+
+    function DadMode_TargetLine()
+        local list = Candidates()
+        if #list == 0 then return "|cff9aa0a6Guiding: nobody with DadMode in the party|r" end
+        if #list == 1 then return "Guiding: |cffe8c36a" .. list[1].name .. "|r" end
+        local who = DadMode_TargetName()
+        return "Guiding: |cffe8c36a" .. (who or "everyone") .. "|r  |cff9aa0a6(click to change)|r"
+    end
+
+    -- everyone -> first -> second -> ... -> everyone
+    function DadMode_NextTarget()
+        local list = Candidates()
+        if #list < 2 then return end
+        local at = 0
+        for i, m in ipairs(list) do
+            if db.aim and m.key == db.aim then at = i end
+        end
+        local nxt = list[at + 1]
+        db.aim = nxt and nxt.key or nil
+    end
+
+    -- A message for one person. Versions before 1.23 do not know the address, so they get it plain.
+    function DadMode_AimAt(name, body)
+        for _, m in ipairs(Party()) do
+            if m.name == name then
+                local d = questData[m.name]
+                local v = peerVersion[m.name] or (d and d.st and d.st.v)
+                if v and DadMode_VersionNumber and DadMode_VersionNumber(v) >= DadMode_VersionNumber("1.23.0") then
+                    return "TO:" .. m.key .. ":" .. body
+                end
+            end
+        end
+        return body
+    end
+
+    -- A call, a cancel or a waypoint: to the chosen one when one of several is chosen, else to all
+    function DadMode_Aim(body)
+        local who, several = DadMode_TargetName()
+        if who and several then return DadMode_AimAt(who, body) end
+        return body
     end
 end
 
@@ -4408,6 +4514,7 @@ end
 do
     local lastHi, lastPoll, lastStatusReply, lastGearAsk = 0, 0, 0, 0
     local peerRole = {}         -- name -> "g" guide or "d" being guided
+    function DadMode_RoleOf(name) return peerRole[name] end
     local gearAsked = {}
 
     -- "1.14.2" as one number, so versions can be compared
