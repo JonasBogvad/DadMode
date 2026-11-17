@@ -5,11 +5,12 @@
 A World of Warcraft: Forever addon for a player who keeps losing the party.
 One addon, two roles: the person who gets lost ("dad") and the people who look after him ("guides").
 
-Version 1.21.3. Game interface 16001 (WoW Forever 1.60).
+Version 1.22.0. Game interface 16001 (WoW Forever 1.60).
 
 ## Install
 
 1. Unzip. You get a folder called `DadMode` with five files: `DadMode.toc`, `DadMode.lua`, `Arrow.tga`, `Logo.tga`, `README.md`.
+   - **Downloaded from GitHub with Code, Download ZIP?** Then the folder is called `DadMode-main`. Rename it to `DadMode`, or the game will not load it. The zip under Releases has the right name already.
    - **Downloaded from GitHub with Code, Download ZIP?** Then the folder is called `DadMode-main`. Rename it to `DadMode`, or the game will not load it.
 2. Put the folder in `World of Warcraft\_forever_\Interface\AddOns\`.
 3. Fully close WoW and start it again. A new addon is not picked up by /reload.
@@ -34,6 +35,31 @@ The text goes away after 10 seconds. The arrow keeps pulsing until you reach the
 
 The button only flashes when the caller is close enough to be followed, about 30 yards. If the caller is further away or in another zone it stays calm, and the call text on screen says how many yards away the caller is. In a dungeon, where the game gives no distances, it flashes when the caller is in sight.
 
+**Who may guide you.** Nobody can see how you are doing or call you until you have said yes to them.
+
+The first time somebody tries to guide you (calls you, opens the window about you, sets a waypoint), a box appears: **Anna Stormhoof wants to be your guide. Yes / No**.
+
+- **Yes**: that person is your guide from now on, and is picked for an arrow as well. You are not asked again.
+- **No**: nothing from that person reaches you, and you are not asked about them again.
+
+Until you answer, nothing of yours is sent to that person. Their window says you have not approved them yet.
+
+**What your guides may see and do.** Everything is allowed for an approved guide unless you switch it off. Esc, Options, AddOns, DadMode, **My guides** (or `/dadmode guides`):
+
+| Switch | Off means |
+|---|---|
+| See my level, zone and bag space | No status card for guides |
+| See my gold | The gold is left out, the rest stays |
+| See my quests | No quest list, no missing or dungeon check |
+| See my gear and what is in my bags | No gear tab, no item comparison |
+| Call me | Calls from guides do not show |
+| Set waypoints for me | Waypoints are not taken |
+| Tell me to put on gear | The gold button never appears |
+
+The switches are the same for all your guides. The same page lists everyone you approved or refused, with **Remove** and **Forget**. A removed or forgotten person is asked about again next time.
+
+If you used DadMode before version 1.22, the people you had already picked are approved by themselves the first time they do something, so nothing changes for you.
+
 **Settings.** All settings are on one page inside the game's own options: press **Esc**, then **Options**, then **AddOns** on the left, then **DadMode**. Three shortcuts go to the same page: the **Settings** button in the small DadMode window, a right click on the minimap button, and `/dadmode settings`. Each line has one button. Click it to switch to the next choice:
 
 | Line | Choices |
@@ -51,6 +77,7 @@ The button only flashes when the caller is close enough to be followed, about 30
 | Reset window sizes | Puts every window back to the size it came with |
 | Arrows and follow button | Locked, or Unlocked so they can be dragged to a new spot |
 | Compare items with his gear (tooltips and drops) | On, Off. Guides only |
+| Guides: who may guide me, and what they may see | Opens the My guides page |
 | Minimap button | Shown, Hidden |
 
 To start with, a call is the Ready check sound and far away is the quiet Map ping, so the two can be told apart by ear.
@@ -162,6 +189,8 @@ The guide bar says **Dad: 2 better items in his bags** by itself.
 - The button goes away by itself after two minutes.
 
 His addon sends up to 16 wearable things from his bags. He needs DadMode 1.21 or newer for all of this.
+
+**Being approved.** The one you guide has to say yes to you once. Until then your window says **<name> has not approved you as a guide yet** and a call shows **<name> has not approved you** on the bar. When he clicks Yes you get a chat line and the window fills by itself. If he has switched something off, the tab says so plainly: **<name> does not share his gear with guides**.
 
 ### Waypoint for dad
 
@@ -313,6 +342,7 @@ The version is shown in the top right corner of the **Who do you want to find?**
 | `/dadmode` | Open the window to pick people. It also has Move arrows and the far warning switch |
 | `/dadmode settings` | Open the DadMode page in the game options |
 | `/dadmode resetsize` | Put every window back to its normal size |
+| `/dadmode guides` | Open the My guides page, and list guides and permissions in chat |
 | `/dadmode role` | Reopen the question: being guided, or a guide |
 | `/dadmode on`, `/dadmode off` | Show or hide the arrows |
 | `/dadmode minimap` | Show or hide the minimap button |
@@ -352,6 +382,7 @@ Anyone in dad's party who runs DadMode can ask for his status and quest list: le
 - Gear comparison: `Compare(link, d)` reads the slot from `C_Item.GetItemInfoInstant`, the level from `C_Item.GetDetailedItemLevelInfo`, and the difference from `C_Item.GetItemStats`. Tooltips are hooked with `TooltipDataProcessor.AddTooltipPostCall(Enum.TooltipDataType.Item, ...)`, or `OnTooltipSetItem` on older clients. Drops come from `START_LOOT_ROLL`, `LOOT_OPENED` and `CHAT_MSG_LOOT`. His class is the `cl` field in the second `ST:` message.
 - Bag gear: after the gear he sends `BGS:<count>` and `BG:<item string>~...` (at most 16). `WEAR:<item string>` from a guide shows the button on his side; it calls `C_Item.EquipItemByName` on his click and answers `WEARSEEN`, `WEAROK`, `WEARNO` or `WEARGONE` with the item id.
 - The game allows at most 200 local names in one file. Single-use helper functions are therefore globals named `DadMode_<Name>`. The test run compiles the file with Lua 5.1 to catch that limit.
+- Guides and permissions (1.22): `db.guides[<full name, lower case>] = { name, state = "yes" or "no" }` and `db.perm[<what>] = false` for a switch that is off. `DadMode_Gate()` runs before every other handler. On the guided side it drops `PING`, `CLEAR`, `WP`, `WPC`, `TS`, `WEAR`, `QREQ`, `SREQ` and `QC` from anybody not approved and answers `LOCKED:ask:<their first name>` or `LOCKED:no:...`; a switched-off action answers `DENY:<what>:<name>`. After a Yes it sends `UNLOCK:<name>`. Every reply starts with `PERM:status=1~gold=1~...` and `DadMode_FilterReply()` leaves out what is not shared. `QREQ:a` is the automatic request and never opens the box. Messages still travel on the party channel: an unapproved guide's DadMode drops what it overhears, but a modified addon in the same party could read it.
 - Small messages added in 1.19: `HI:<version>` when the party changes, `SREQ` (answered with the two `ST:` messages only), (`HELP:` and `HACK`, used by the help button in 1.19 to 1.21.0, were removed in 1.21.1). Dungeon quests come from Questie's `QuestieJourney.zoneMap[areaId]` for the areas in `ZoneDB:GetDungeons()`.
 - Travel: `STOPS` lists the six zeppelin platforms with the zeppelin master's NPC id and name. `ResolveStops()` reads the master's spawn from Questie (`QueryNPCSingle(id, "spawns")`, `ZoneDB:GetUiMapIdByAreaId`) and stores world coordinates in `db.stops`. The guide sends them as `TS:<KEY>=<continent>:<north>:<west>` after each `WP`. `TravelStep()` picks the platform when walk + ride + walk is under 60% of the direct distance, or when the marker is on another continent. The flight hint runs on `TAXIMAP_OPENED` with `C_TaxiMap.GetAllTaxiNodes(GetTaxiMapID())`.
 - Waypoints: the guide sends `WP:<uiMapID>:<x>:<y>` (map coordinates 0 to 1). Dad's side calls `C_Map.SetUserWaypoint` and `C_SuperTrack.SetSuperTrackedUserWaypoint(true)`, then answers `WPOK` or `WPNO`, and `WPHERE` on arrival. `WPC` clears it. The red arrow converts the map spot with `C_Map.GetWorldPosFromMapPos`.
@@ -394,5 +425,6 @@ Checked against the real WoW Forever client, as of version 1.10.1 (13 November 2
 - The Dungeon tab, warnings and the version check on the guide bar, and boats (1.19).
 - The gear comparison in tooltips and the upgrade line on drops (1.20).
 - Gear in his bags and the put-it-on button (1.21).
+- The Yes / No box for guides, the My guides page and the permission switches (1.22).
 
 The simulated tests are three scripts that run the addon against a stand-in for the game. They catch logic errors, not differences in how Forever behaves.

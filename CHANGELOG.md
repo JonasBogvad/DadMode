@@ -1,5 +1,14 @@
 # DadMode changes
 
+## 1.22.0
+
+The one being guided now decides who may guide them.
+
+- The first time somebody tries to guide you, a box asks: "Anna wants to be your guide. Yes / No". Until you say yes, that person sees nothing of yours and cannot call you.
+- New page in the game options, under DadMode: **My guides**. It lists who you approved or refused, and has switches for what your guides may see (status, gold, quests, gear) and do (call you, set waypoints, tell you to put on gear). Everything is on unless you switch it off.
+- A guide who is not approved yet, or who asks for something that is switched off, is told so in plain words.
+- If you used DadMode before this version, the people you had already picked are approved by themselves. Nothing changes for you.
+
 ## 1.21.3
 
 - The DadMode logo now shows in the game's addon list instead of a question mark.
