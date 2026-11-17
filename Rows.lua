@@ -353,7 +353,14 @@ local function PlaceTrees(f, spec, y, width)
     f:ClearAllPoints()
     f:SetPoint("TOPLEFT", 4, -y)
     f:SetWidth(width - 8)
-    local treeW = TREE_COLS * CELL + 10
+    -- as wide as the widest tree needs
+    local cols = TREE_COLS
+    for _, tree in ipairs(spec.trees or {}) do
+        for _, t in ipairs(tree.list) do
+            if t.col > cols then cols = t.col end
+        end
+    end
+    local treeW = cols * CELL + 10
     local perLine = math.max(1, math.floor((width - 8) / treeW))
     local n, top, lineH = 0, 0, 0
     for ti, tree in ipairs(spec.trees or {}) do

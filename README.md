@@ -331,6 +331,8 @@ The **Talents** tab draws his talent trees the way his own talent window shows t
 
 Nothing is written per class. His addon reads whatever trees his character has and sends them, so it works for every class and keeps working when the game changes its talents.
 
+WoW Forever keeps all talents of a class in one big tree with three named groups; the addon reads that (1.33). The older way, where the game has three separate trees, is read too, so the same addon works on both kinds of game version.
+
 His talents are only asked for when you open this tab, and again with Refresh. He needs DadMode 1.31 or newer. If his game version does not let an addon read talents, the tab says so.
 
 ### When he is not in your party

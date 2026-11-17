@@ -1,5 +1,10 @@
 # DadMode changes
 
+## 1.33.0
+
+- **The Talents tab now works on WoW Forever.** It said "His game does not let an addon read talents". The game keeps talents in a newer way than the addon looked for. Now it reads that, with the three trees and their names.
+- The one being guided needs this version, since his addon does the reading.
+
 ## 1.32.2
 
 - The big text and the arrows on the screen of the one being guided keep their calm colours. The brighter colours from 1.32.1 are only for the guide's windows.

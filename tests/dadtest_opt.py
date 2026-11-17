@@ -1427,5 +1427,49 @@ do
   DadModeNS.ShowAlert("|cffffd100Saqu|r says |cff1aff1ayes|r and |cffff4d4dno|r and |cffffa033soon|r and |cff9aa0a6grey|r", 5)
   assert(AL4.text.txt=="|cffe8c36aSaqu|r says |cff6fcf97yes|r and |cffeb7a7ano|r and |cffe8c36asoon|r and |cff9aa0a6grey|r", AL4.text.txt)
 end
+-- ===== talents the way WoW Forever stores them: one big tree, three groups =====
+do
+  local B="Bro Bearfang-CAMWOW EU5 Realm 4 PvP"
+  local AL5; for _,f in ipairs(frames) do if rawget(f,"text") and rawget(f,"hint") and rawget(f,"onOnMouseDown") then AL5=f end end
+  assert(GetNumTalentTabs==nil and GetTalentInfo==nil, "no classic talent functions in this test")
+  DadMode_SetRole(false); DadModeDB.guides=DadModeDB.guides or {}; DadModeDB.guides["bro bearfang"]={name="Bro Bearfang",state="yes"}; DadModeDB.perm={}
+  assert(DadMode_ReadTalents()[1]=="TE:none", "nothing to read with")
+  -- node = { x, y, groups, entry, purchased, most, visible }
+  local nodes={ [11]={600,1200,{71},111,5,5,true}, [12]={1200,1200,{71},112,0,5,true},          -- Elemental, row 1
+                [21]={4800,1200,{72},121,5,5,true}, [22]={5400,1800,{72},122,2,3,true},          -- Enhancement, rows 1 and 2
+                [23]={6000,3000,{72},123,0,1,true},                                              -- Enhancement, row 4, third column
+                [20]={5400,1800,{72},124,0,3,true},                                              -- an older talent on the same square: the newer one counts
+                [31]={9000,1200,{73},131,0,5,true},                                              -- Restoration
+                [41]={9000,1800,{73},141,0,0,true}, [42]={9600,1200,{73},142,0,5,false},         -- no ranks, and hidden: not talents
+                [43]={12000,1200,{99},143,0,5,true} }                                            -- in no tree
+  local spells={ [111]={"Convection",1001}, [112]={"Concussion",1002}, [121]={"Thundering Strikes",2001}, [122]={"Shield Specialization",2002},
+                 [123]={"Flurry",2003}, [124]={"Old Shield Talent",2099}, [131]={"Healing Focus",3001}, [141]={"Nothing",1}, [142]={"Hidden",1}, [143]={"Elsewhere",1} }
+  C_ClassTalents={ GetActiveConfigID=function() return 900 end, HasUnspentTalentPoints=function() return true,1,0 end }
+  C_Traits={ GetConfigInfo=function(c) assert(c==900); return {treeIDs={672}} end,
+    GetTreeNodes=function(t) assert(t==672); return {43,31,20,23,22,21,12,11,41,42} end,
+    GetGroupDisplayInfoByTreeID=function(t) return { {groupID=71,displayName="Elemental"}, {groupID=72,displayName="Enhancement"}, {groupID=73,displayName="Restoration"} } end,
+    GetNodeInfo=function(c,id) local n=nodes[id]; return {ID=id,posX=n[1],posY=n[2],groupIDs=n[3],entryIDs={n[4]},ranksPurchased=n[5],activeRank=n[5],maxRanks=n[6],isVisible=n[7]} end,
+    GetEntryInfo=function(c,e) return {definitionID=e+5000} end,
+    GetDefinitionInfo=function(d) return {spellID=d-5000} end }
+  C_Spell={ GetSpellInfo=function(id) local sp=spells[id]; return sp and {name=sp[1],iconID=sp[2]} end }
+  local msgs=DadMode_ReadTalents()
+  assert(msgs[1]=="TT:1=Elemental~2=Enhancement~3=Restoration", msgs[1])
+  assert(msgs[2]=="TL:1~1~1~1~5~5~1001~Convection^1~2~1~2~0~5~1002~Concussion^2~1~1~1~5~5~2001~Thundering Strikes^2~2~2~2~2~3~2002~Shield Specialization^2~3~4~3~0~1~2003~Flurry^3~1~1~1~0~5~3001~Healing Focus", msgs[2])
+  assert(msgs[3]=="TE:1" and #msgs==3, "one point to spend")
+  -- a guide points at one: found by tree and number, said with its row
+  clock=clock+400; AL5.text:SetText("x"); fire("CHAT_MSG_ADDON","DADMODE","TPICK:2:3","PARTY",B)
+  assert(AL5.text.txt:find("put your talent point in",1,true) and AL5.text.txt:find("Flurry",1,true) and AL5.text.txt:find("Enhancement, row 4 from the top",1,true), AL5.text.txt)
+  assert(sent[#sent][2]=="TPOK:2:3")
+  -- no points to spend
+  C_ClassTalents.HasUnspentTalentPoints=function() return false,0,0 end; local m2=DadMode_ReadTalents(); assert(m2[#m2]=="TE:0")
+  -- the game tells no groups: the trees are found by the gaps between the columns
+  C_Traits.GetGroupDisplayInfoByTreeID=nil; nodes[43]=nil; C_Traits.GetTreeNodes=function() return {31,20,23,22,21,12,11,41,42} end
+  local m3=DadMode_ReadTalents()
+  assert(m3[1]=="TT:1=Tree 1~2=Tree 2~3=Tree 3" and m3[2]:find("2~3~4~3~0~1~2003~Flurry",1,true) and m3[2]:find("3~1~1~1~0~5~3001~Healing Focus",1,true), m3[1].." "..m3[2])
+  -- a game value the addon may not read: no crash, no talents
+  C_Traits.GetNodeInfo=function() return {ID=1,posX=SECRET,posY=SECRET} end; assert(DadMode_ReadTalents()[1]=="TE:none")
+  C_Traits,C_ClassTalents,C_Spell=nil,nil,nil
+  DadMode_SetRole(true)
+end
 print("OPTIONS_TESTS_PASSED")
 ''')
