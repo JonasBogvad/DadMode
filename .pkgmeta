@@ -1,4 +1,9 @@
 package-as: DadMode
 
+# Release notes come from CHANGELOG.md, written by hand, not from commit messages.
+manual-changelog:
+  filename: CHANGELOG.md
+  markup-type: markdown
+
 ignore:
   - media
