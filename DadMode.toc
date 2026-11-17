@@ -1,7 +1,7 @@
 ## Interface: 16001
 ## Title: DadMode
 ## Notes: For a player who keeps losing the party, and the people who guide them. Big arrows to picked party members, calls, a follow button, waypoints with zeppelin steps, and a status window for the guides.
-## Version: 1.27.0
+## Version: 1.28.0
 ## IconTexture: Interface\AddOns\DadMode\Logo
 ## SavedVariables: DadModeDB
 ## X-Curse-Project-ID: 1811123
@@ -31,3 +31,4 @@ Target.lua
 Guides.lua
 Extras.lua
 Private.lua
+Remote.lua

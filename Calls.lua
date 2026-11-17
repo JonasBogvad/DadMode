@@ -13,6 +13,8 @@ local function Member(sender)
     for _, m in ipairs(ns.Party()) do
         if m.key == key then return m end
     end
+    -- somebody outside the party we are talking to by whisper (Remote.lua)
+    return DadMode_RemoteMember and DadMode_RemoteMember(key, sender) or nil
 end
 
 local function IsMe(sender)

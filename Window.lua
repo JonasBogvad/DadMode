@@ -222,12 +222,12 @@ local function AskDone(name)
     local cur = ""
     for _, id in ipairs(ids) do
         if #cur + #tostring(id) + 1 > 230 then
-            ns.Tell("QC:" .. cur)
+            DadMode_TellPerson(name, "QC:" .. cur)
             cur = ""
         end
         cur = (cur == "" and "" or (cur .. ",")) .. id
     end
-    if cur ~= "" then ns.Tell("QC:" .. cur) end
+    if cur ~= "" then DadMode_TellPerson(name, "QC:" .. cur) end
 end
 
 -- The other side: which of these quests have I already done?
@@ -281,7 +281,10 @@ local function RenderQuests()
     local people = 0
     do  -- the header: who it is about, with class, level and where he is. The same on every tab.
         local only
-        for name in pairs(ns.questData) do only, people = name, people + 1 end
+        for name in pairs(ns.questData) do
+            local away = DadMode_RemoteState(name)
+            if away == nil or away == "ok" then only, people = name, people + 1 end
+        end
         if people == 1 then
             local st = ns.questData[only].st or {}
             local about = {}
@@ -296,7 +299,13 @@ local function RenderQuests()
     local now = GetTime()
     local lines, any = {}, false
     for name, d in pairs(ns.questData) do
+      -- somebody outside my party is only shown when he answered the whisper just now
+      local away = DadMode_RemoteState(name)
+      if away == nil or away == "ok" then
         any = true
+        if away then
+            lines[#lines + 1] = GREY .. name .. " is not in your party. Asked by whisper.|r"
+        end
         -- an old DadMode on his side can lose the end of a long list: show what did arrive
         if d.pending and now - d.pending.at > STALE then
             d.partial = { #d.pending.list, d.pending.expect }
@@ -449,6 +458,11 @@ local function RenderQuests()
             end
             lines[#lines + 1] = " "
         end
+      end
+    end
+    for _, line in ipairs(DadMode_RemoteLines()) do
+        lines[#lines + 1] = line
+        any = true
     end
     if DadMode_LockLines then
         for _, line in ipairs(DadMode_LockLines()) do
@@ -460,8 +474,13 @@ local function RenderQuests()
         if now - ns.questAsked < 4 then
             lines[1] = "|cff9aa0a6Asking...|r"
         else
-            lines[1] = "|cffeb7a7aNo answer.|r"
-            lines[2] = "|cff9aa0a6Dad needs DadMode 1.5 or newer, and must not be set up as a guide.|r"
+            if #ns.Party() == 0 then
+                lines[1] = "|cffe8c36aYou are not in a party.|r"
+                lines[2] = "|cff9aa0a6Out of a party DadMode asks the people you have guided before, by whisper. Nobody is remembered yet: that happens the first time you open this window in a party with them.|r"
+            else
+                lines[1] = "|cffeb7a7aNo answer.|r"
+                lines[2] = "|cff9aa0a6The one you guide needs DadMode, and must be set up as the one being guided, not as a guide.|r"
+            end
         end
     end
     -- who runs which DadMode, at the bottom of the overview
@@ -488,10 +507,14 @@ DadMode_AutoRefreshDue = AutoRefreshDue
 
 local function AskQuests()
     ns.questAsked = GetTime()
-    if DadMode_AskVersions then pcall(DadMode_AskVersions) end
-    local ok, why = ns.Tell("QREQ")
-    if not ok then ns.Print("|cffeb7a7aCould not ask:|r " .. tostring(why)) end
-    if ok and DadMode_NoteAsk then pcall(DadMode_NoteAsk, false) end
+    if #ns.Party() > 0 then
+        if DadMode_AskVersions then pcall(DadMode_AskVersions) end
+        local ok, why = ns.Tell("QREQ")
+        if not ok then ns.Print("|cffeb7a7aCould not ask:|r " .. tostring(why)) end
+        if ok and DadMode_NoteAsk then pcall(DadMode_NoteAsk, false) end
+    end
+    -- and the people I guide who are not in my party, by whisper
+    pcall(DadMode_AskRemote, false)
     RenderQuests()
     if C_Timer and C_Timer.After then C_Timer.After(4.2, RenderQuests) end
 end
@@ -545,6 +568,7 @@ function DadMode_ReceiveQuestData(sender, text)
         ns.questData[m.name] = d
         d.st = d.st or {}
         d.at = GetTime()
+        DadMode_Know(m, sender)             -- so he can be asked by whisper when he is not in my party
         for pair in text:sub(4):gmatch("[^~]+") do
             local k, v = pair:match("^(%w+)=(.*)$")
             if k then d.st[k] = tonumber(v) or v end

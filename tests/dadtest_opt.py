@@ -1104,5 +1104,89 @@ do
   for i=1,30 do clock=clock+2; DadMode_PrivateTick() end
   fb=0; for _,m in ipairs(since(n)) do if m[2]=="TO:bro:QREQ:p" then fb=fb+1 end end; assert(fb==1 and not DadMode_WhisperBad("Bro"), "one try, then quiet: "..fb)
 end
+-- ===== guiding somebody who is not in my party =====
+do
+  local function since(n) local t={}; for i=n+1,#sent do t[#t+1]=sent[i] end; return t end
+  local function drain() for i=1,60 do clock=clock+2; DadMode_PumpOutbox() end end
+  local B="Bro Bearfang-CAMWOW EU5 Realm 4 PvP"
+  local W=DadModeQuests
+  local keepBro,keepSaqu=units.party2,units.party1
+  local PERMS="PERM:status=1~gold=1~quests=1~gear=1~call=1~waypoint=1~wear=1"
+  -- as a guide: Bro answers while he is in my party, so he is remembered
+  DadMode_SetRole(true); DadModeDB.known=nil; clock=clock+100
+  fire("CHAT_MSG_ADDON","DADMODE","ST:lv=47~cl=SHAMAN","WHISPER",B)
+  assert(DadModeDB.known.bro and DadModeDB.known.bro.name=="Bro" and DadModeDB.known.bro.full==B and DadModeDB.known.bro.id=="bro bearfang", "remembered")
+  assert(DadMode_RemoteState("Bro")==nil, "in my party")
+  -- he leaves the party. Opening the window asks him by whisper.
+  units.party2=nil
+  clock=clock+100; local n=#sent; SlashCmdList.DADMODE("quests"); W.SetView("overview")
+  local w; for _,m in ipairs(since(n)) do if m[3]=="WHISPER" then w=m end end
+  assert(w and w[2]=="QREQ" and w[4]==B, "asked by whisper, by the name the game gave")
+  assert(DadMode_RemoteState("Bro")=="asking" and PG():find("Asking Bro by whisper",1,true) and not PG():find("Level: 47",1,true), "what he said earlier is not shown as if it were now: "..PG())
+  -- he answers by whisper
+  n=#sent
+  fire("CHAT_MSG_ADDON","DADMODE",PERMS,"WHISPER",B)
+  fire("CHAT_MSG_ADDON","DADMODE","ST:lv=48~cl=SHAMAN","WHISPER",B)
+  fire("CHAT_MSG_ADDON","DADMODE","QS:1","WHISPER",B); fire("CHAT_MSG_ADDON","DADMODE","Q:9001~30~0~Far Away Quest~-1/2 Thing","WHISPER",B); fire("CHAT_MSG_ADDON","DADMODE","QE","WHISPER",B)
+  assert(DadMode_RemoteState("Bro")=="ok" and PG():find("Level: 48",1,true) and PG():find("Bro is not in your party. Asked by whisper.",1,true), PG())
+  W.SetView("quests"); assert(PG():find("Far Away Quest",1,true))
+  local qc; for _,m in ipairs(since(n)) do if m[2]:sub(1,3)=="QC:" then qc=m end end
+  assert(qc and qc[3]=="WHISPER" and qc[4]==B, "the question about finished quests goes by whisper too")
+  -- somebody else with the same first name is not him
+  fire("CHAT_MSG_ADDON","DADMODE","ST:lv=59","WHISPER","Bro Other-Some Realm"); W.SetView("overview"); assert(PG():find("Level: 48",1,true) and not PG():find("Level: 59",1,true))
+  -- a call by whisper from outside the party is not a thing
+  fire("CHAT_MSG_ADDON","DADMODE","HI:9.9.9:d","WHISPER",B)
+  -- "put it on" goes by whisper, and so does his answer
+  n=#sent; DadMode_TellWear("Bro","item:8202"); assert(sent[#sent][2]=="WEAR:item:8202" and sent[#sent][3]=="WHISPER" and sent[#sent][4]==B)
+  fire("CHAT_MSG_ADDON","DADMODE","WEAROK:8202","WHISPER",B); assert(DadModeNS.questData.Bro.wearTold["item:8202"]=="ok")
+  -- no answer
+  clock=clock+100; SlashCmdList.DADMODE("quests"); clock=clock+10; DadMode_RenderQuests()
+  assert(DadMode_RemoteState("Bro")=="silent" and PG():find("Bro|r does not answer",1,true) and not PG():find("Level: 48",1,true), PG())
+  -- not online: the game's own line says so, and it stays out of the chat window
+  ERR_CHAT_PLAYER_NOT_FOUND_S="No player named '%s' is currently playing."
+  clock=clock+100; SlashCmdList.DADMODE("quests")
+  assert(DadMode_RemoteSystem("No player named 'Someone Else' is currently playing.")==false, "other lines pass")
+  assert(DadMode_RemoteSystem("No player named 'Bro Bearfang' is currently playing.")==true, "this one is ours")
+  assert(DadMode_RemoteState("Bro")=="offline" and PG():find("Bro|r is not online",1,true), PG())
+  clock=clock+100; assert(DadMode_RemoteSystem("No player named 'Bro Bearfang' is currently playing.")==false, "not long after asking")
+  -- back in my party: the normal way again
+  units.party2=keepBro; assert(DadMode_RemoteState("Bro")==nil)
+  clock=clock+100; n=#sent; SlashCmdList.DADMODE("quests"); for _,m in ipairs(since(n)) do assert(m[3]~="WHISPER", "nobody is asked by whisper when everybody is here") end
+  -- alone, with nobody remembered
+  units.party2=nil; SlashCmdList.DADMODE("forget bro"); assert(DadModeDB.known.bro==nil and DadModeNS.questData.Bro==nil)
+  units.party1=nil; clock=clock+100; n=#sent; SlashCmdList.DADMODE("quests"); clock=clock+10; DadMode_RenderQuests()
+  assert(#sent==n and PG():find("You are not in a party",1,true) and not PG():find("Dad needs",1,true), PG())
+  units.party1=keepSaqu
+
+  -- as the one being guided: an approved guide outside the party asks
+  DadMode_SetRole(false); DadModeDB.guides=DadModeDB.guides or {}
+  DadModeDB.guides["bro bearfang"]={name="Bro Bearfang",state="yes"}
+  clock=clock+400; n=#sent; fire("CHAT_MSG_ADDON","DADMODE","QREQ","WHISPER",B); drain()
+  local got=since(n); assert(#got>=4 and got[1][2]:sub(1,5)=="PERM:", "he answers: "..#got)
+  for _,m in ipairs(got) do assert(m[3]=="WHISPER" and m[4]==B, "only to him: "..m[2]:sub(1,12).." on "..tostring(m[3])) end
+  -- a call or a waypoint by whisper from outside the party does nothing
+  local AL2; for _,f in ipairs(frames) do if rawget(f,"text") and rawget(f,"hint") and rawget(f,"onOnMouseDown") then AL2=f end end
+  AL2.text:SetText("x"); n=#sent
+  fire("CHAT_MSG_ADDON","DADMODE","PING:says: come to me","WHISPER",B); fire("CHAT_MSG_ADDON","DADMODE","WP:1434:0.5:0.5","WHISPER",B)
+  assert(AL2.text.txt=="x" and #sent==n and not DadModeDB.waypoint, "calls and waypoints need a party")
+  -- "put it on" from outside: the answer goes back by whisper
+  clock=clock+100; n=#sent; fire("CHAT_MSG_ADDON","DADMODE","WEAR:item:9999","WHISPER",B)
+  assert(sent[#sent][2]=="WEARGONE:9999" and sent[#sent][3]=="WHISPER" and sent[#sent][4]==B)
+  -- a stranger gets nothing at all: no answer, no box
+  clock=clock+400; n=#sent; fire("CHAT_MSG_ADDON","DADMODE","QREQ","WHISPER","Stranger Danger-Some Realm"); drain()
+  assert(#sent==n and not DadModeApprove.shown, "silence for strangers")
+  -- and so does a guide he has said no to, or taken back his yes from
+  DadModeDB.guides["bro bearfang"].state="no"
+  clock=clock+400; n=#sent; fire("CHAT_MSG_ADDON","DADMODE","QREQ","WHISPER",B); drain(); assert(#sent==n, "refused: silence")
+  DadModeDB.guides["bro bearfang"]=nil
+  clock=clock+400; n=#sent; fire("CHAT_MSG_ADDON","DADMODE","QREQ","WHISPER",B); drain(); assert(#sent==n and not DadModeApprove.shown, "not approved: silence, and no box from outside the party")
+  units.party2=keepBro; DadMode_SetRole(true)
+end
+-- ===== whispers arrive or not: said on the Overview =====
+do
+  local B="Bro Bearfang-CAMWOW EU5 Realm 4 PvP"
+  fire("CHAT_MSG_ADDON","DADMODE","ST:lv=40","WHISPER",B)
+  local t=table.concat(DadMode_VersionLines(),"\n"); assert(t:find("answers by whisper",1,true), t)
+end
 print("OPTIONS_TESTS_PASSED")
 ''')

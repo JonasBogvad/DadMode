@@ -44,6 +44,8 @@ SlashCmdList["DADMODE"] = function(msg)
             ns.Print("Marker: " .. (key == nil and "walk straight to it" or key == "unknown" and "another continent, no platform known"
                 or ("first the " .. ns.Ride(ns.STOPS[key]) .. " from " .. ns.STOPS[key].at .. " to " .. ns.STOPS[key].to)))
         end
+    elseif msg:sub(1, 7) == "forget " then
+        DadMode_Forget(msg:sub(8))
     elseif msg == "minimap" then
         ns.ToggleMinimapButton()
     elseif msg == "quests" then

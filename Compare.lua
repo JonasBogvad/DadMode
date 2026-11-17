@@ -378,12 +378,12 @@ function DadMode_BagRows(name, d, lines)
 end
 
 -- "Put this on": a guide points at an item in his bags
-local wearBtn, wearItem, wearFrom, wearUntil = nil, nil, nil, 0
+local wearBtn, wearItem, wearFrom, wearUntil = nil, nil, nil, 0      -- wearFrom = the guide who asked
 
 function DadMode_TellWear(name, item)
     local d = questData[name]
     if not d then return end
-    local ok, why = Tell(DadMode_AimAt(name, "WEAR:" .. item))
+    local ok, why = DadMode_TellPerson(name, "WEAR:" .. item, true)
     d.wearTold = d.wearTold or {}
     d.wearTold[item] = ok and "asked" or "fail"
     if not ok then Print("|cffeb7a7aCould not tell him:|r " .. tostring(why)) end
@@ -428,10 +428,10 @@ local function CreateWearButton()
                 wearBtn:Hide()
                 wearItem = nil
                 ShowAlert("|cff6fcf97You put it on.|r", 4)
-                Tell("WEAROK:" .. id)
+                DadMode_Reply(wearFrom, "WEAROK:" .. id)
             else
                 ShowAlert("|cffe8c36aThat did not work by itself.|r\nOpen your bags and right-click " .. (wearBtn.name or "the item") .. ".", 10)
-                Tell("WEARNO:" .. (id or 0))
+                DadMode_Reply(wearFrom, "WEARNO:" .. (id or 0))
             end
         end
         if C_Timer and C_Timer.After then C_Timer.After(1, Check) else Check() end
@@ -450,12 +450,12 @@ local function ReceiveWear(m, item)
     local id = tonumber(item:match("item:(%d+)"))
     if not id then return end
     if WornNow(id) then
-        Tell("WEAROK:" .. id)
+        DadMode_Reply(m, "WEAROK:" .. id)
         return
     end
     local has, link = InBags(id)
     if not has then
-        Tell("WEARGONE:" .. id)
+        DadMode_Reply(m, "WEARGONE:" .. id)
         return
     end
     if not wearBtn then CreateWearButton() end
@@ -464,14 +464,14 @@ local function ReceiveWear(m, item)
         local ok, n = pcall(C_Item.GetItemInfo, id)
         if ok and Usable(n, "string") then name = n end
     end
-    wearItem, wearFrom, wearUntil = item, m.name, GetTime() + 120
+    wearItem, wearFrom, wearUntil = item, m, GetTime() + 120
     wearBtn.name = name
     wearBtn.link = Usable(link, "string") and link or nil
     wearBtn.label:SetText("CLICK TO PUT ON: " .. (name or "the new item"))
     wearBtn:Show()
     Beep("call")
     ShowAlert("|cffe8c36a" .. m.name .. "|r says: put on |cff6fcf97" .. (name or "the new item") .. "|r\nClick the gold button.", 10)
-    Tell("WEARSEEN:" .. id)
+    DadMode_Reply(m, "WEARSEEN:" .. id)
 end
 
 function DadMode_WearTick()

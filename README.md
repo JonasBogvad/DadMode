@@ -9,7 +9,7 @@ Version 1.25.0. Game interface 16001 (WoW Forever 1.60).
 
 ## Install
 
-1. Unzip. You get a folder called `DadMode`. Inside are `DadMode.toc`, 24 `.lua` files, `Arrow.tga`, `Logo.tga` and `README.md`.
+1. Unzip. You get a folder called `DadMode`. Inside are `DadMode.toc`, 25 `.lua` files, `Arrow.tga`, `Logo.tga` and `README.md`.
    - **Downloaded from GitHub with Code, Download ZIP?** Then the folder is called `DadMode-main`. Rename it to `DadMode`, or the game will not load it. The zip under Releases has the right name already.
    - **Downloaded from GitHub with Code, Download ZIP?** Then the folder is called `DadMode-main`. Rename it to `DadMode`, or the game will not load it.
 2. Put the folder in `World of Warcraft\_forever_\Interface\AddOns\`.
@@ -269,6 +269,21 @@ To record an exact spot, a guide stands on the dock and types `/dadmode stop NAM
 
 Limits: the arrow cannot point up, so climbing the tower is text only. An addon cannot see which zeppelin is docked or when it leaves. Which side of the tower is taken from the classic game; if Forever differs, go by the zeppelin master's name.
 
+### When he is not in your party
+
+You can still see how he is doing. Your addon remembers everybody you have guided: that happens by itself the first time you open the window in a party with them. After that, opening the window when he is not in your party asks him by whisper. Nothing shows in chat on either side.
+
+| What you see | Meaning |
+|---|---|
+| The usual tabs, with **Olaf is not in your party. Asked by whisper.** | He is online and answered |
+| **Olaf is not online.** | The game said so. He is not asked again for two minutes |
+| **Olaf does not answer.** | He is online but his addon stays quiet: he has DadMode older than 1.28, or he has not approved you |
+
+- **Put it on** works outside the party too.
+- Arrows, distance, the far-away warning, calls and waypoints need a party. The game only tells positions inside one.
+- He needs DadMode 1.28 or newer, and so do you.
+- `/dadmode forget olaf` takes somebody off your list.
+
 ### The "How is <name> doing" window
 
 The top line says who it is about: **Olaf  Shaman, level 40, Stranglethorn Vale**. It is the same on every tab. With more than one person to guide it says **How are they doing** and each name is on the page.
@@ -367,7 +382,7 @@ If another addon has installed the usual minimap button library (LibDBIcon), Dad
 
 The guide bar tells you by itself when someone in the party has another version than you.
 
-**Everyone's version.** The bottom of the **Overview** tab in **How is <name> doing** lists every person in the party with role and version: "Ben: guide, DadMode 1.20.1, same as yours", "Dad: being guided, DadMode 1.14.2, older than yours", or "no DadMode seen". `/dadmode status` prints the same list in chat. The role is shown for people on 1.20.1 or newer; for older versions it says "role unknown", or "being guided" once that person has answered a status request.
+**Everyone's version.** The bottom of the **Overview** tab in **How is <name> doing** lists every person in the party with role and version: "Ben: guide, DadMode 1.20.1, same as yours", "Dad: being guided, DadMode 1.14.2, older than yours", or "no DadMode seen". `/dadmode status` prints the same list in chat. The role is shown for people on 1.20.1 or newer; for older versions it says "role unknown", or "being guided" once that person has answered a status request. Next to a name it also says **answers by whisper**, or that his whispers do not arrive and the party channel is used instead.
 
 The version is shown in the top right corner of the **Who do you want to find?** window, next to the title of the **DadMode guide** bar, and by `/dadmode status`. When dad's addon answers a call, the guide's chat line also shows dad's version.
 
@@ -390,6 +405,7 @@ The version is shown in the top right corner of the **Who do you want to find?**
 | `/dadmode travel` | List the zeppelin platforms this computer knows, and the route to the current marker |
 | `/dadmode waypoint` | Send dad a waypoint: your map pin if you have one, otherwise where you stand |
 | `/dadmode quests` | Open the "How is <name> doing" window |
+| `/dadmode forget NAME` | Guides: stop asking this person by whisper when he is not in your party |
 | `/dadmode debug` | Print the names the game reports and what the last incoming call looked like. For troubleshooting |
 | `/dadmode status` | Show your role, whether you show calls, and who is in the party |
 | `/dadmode clear` | Remove the ping on screen right away |
@@ -397,7 +413,9 @@ The version is shown in the top right corner of the **Who do you want to find?**
 
 ## Privacy
 
-Anyone in dad's party who runs DadMode can ask for his status and quest list: level, gold, location, target, bag space, the gear he is wearing and its condition, consumables, hearthstone, and quests. Nothing is sent unless someone in his party asks, and nothing goes outside the party.
+His status, quests, gear and bag contents (level, gold, location, target, bag space, what he wears and its condition, consumables, hearthstone, and quests) go only to a guide he has approved, and only what he shares under **My guides**. They are whispered to that one guide, so no other computer receives them. Nothing is sent unless a guide asks.
+
+A guide outside his party can ask too, but only one he has already said yes to. A whisper from anybody else gets no answer and no Yes / No box.
 
 ## Limits
 
@@ -446,6 +464,7 @@ Anyone in dad's party who runs DadMode can ask for his status and quest list: le
   | `Guides.lua` | Approval and permissions |
   | `Extras.lua` | Version check, warnings on the guide bar, polling |
   | `Private.lua` | The guide's safety net for whispers |
+  | `Remote.lua` | Guiding somebody who is not in the party, by whisper |
 
 - **How the files share things.** The game gives every file of an addon the same table (`local ADDON, ns = ...`). A function or table that other files need stays a normal `local` in its own file and is copied into the table at the bottom of that file ("used by other files"). Other files read it as `ns.<name>`. Anything that changes while playing (saved settings `ns.db`, the windows, a few counters) lives in the table only, so every file sees the same value. Some features also offer global functions named `DadMode_<Name>`.
 - **Events.** A file may add to `ns.handlers`. All events in that table are registered when DadMode's own `ADDON_LOADED` arrives, which is after every file has loaded.

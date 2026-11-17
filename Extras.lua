@@ -50,6 +50,9 @@ function DadMode_VersionLines()
             elseif Num(v) > Num(VERSION) then text = text .. "  " .. WARN .. "newer than yours|r"
             else text = text .. "  " .. GOOD .. "same as yours|r" end
         end
+        local how = DadMode_WhisperState and DadMode_WhisperState(m.name)
+        if how == "ok" then text = text .. GREY .. ", answers by whisper|r"
+        elseif how == "bad" then text = text .. WARN .. ", whispers do not arrive, using the party channel|r" end
         lines[#lines + 1] = text
     end
     return lines

@@ -1,5 +1,15 @@
 # DadMode changes
 
+## 1.28.0
+
+- **See how he is doing when he is not in your party.** Your addon remembers the people you have guided. Open the window without them in your party and it asks them by whisper. Nothing shows in chat. "Put it on" works this way too. Both of you need 1.28.0.
+- The window says when he is **not online**, and when he is online but **does not answer**.
+- Only a guide he has already approved gets an answer from outside the party. Anybody else gets nothing, and no Yes / No box appears.
+- Arrows, calls and waypoints still need a party.
+- The Overview says for each person whether his answers **arrive by whisper**.
+- The text for an empty window is right now: it no longer says "Dad needs DadMode 1.5" when you are simply not in a party.
+- `/dadmode forget NAME` takes somebody off the list of people you guide.
+
 ## 1.27.0
 
 - **Tell the addon what counts for him.** On the Gear tab, above the items in his bags, click the stats that matter for how he plays (Strength, Agility, Spell Power and so on). Items that gain those stats come first, and their chips are bright while the rest is dimmed. It is remembered for each person.

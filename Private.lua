@@ -12,6 +12,7 @@ local FIRST = "1.25.0"      -- the first version that whispers
 local WAIT = 6              -- seconds without any answer before asking for the party channel
 local asked = {}            -- name -> { at = time, auto = bool, fell = bool }
 local bad = {}              -- name -> true: his whispers do not reach this computer
+local good = {}             -- name -> true: a whisper from him has arrived
 
 local function Whispers(m)
     local d = ns.questData[m.name]
@@ -54,8 +55,10 @@ function DadMode_Heard(text, channel, sender)
     local a = asked[m.name]
     if channel == "WHISPER" then
         bad[m.name] = nil                       -- whispers from him do arrive
+        good[m.name] = true
     elseif a and a.fell then
         bad[m.name] = true                      -- nothing came by whisper, the party channel worked
+        good[m.name] = nil
     end
     asked[m.name] = nil
 end
@@ -75,3 +78,8 @@ function DadMode_PrivateTick()
 end
 
 function DadMode_WhisperBad(name) return bad[name] == true end
+
+-- "ok" when his answers arrive by whisper, "bad" when they had to come on the party channel, nil when not known yet
+function DadMode_WhisperState(name)
+    return (bad[name] and "bad") or (good[name] and "ok") or nil
+end

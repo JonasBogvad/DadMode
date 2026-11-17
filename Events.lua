@@ -109,6 +109,10 @@ end
 handlers.CHAT_MSG_ADDON = function(prefix, text, channel, sender)
     if not ns.Usable(prefix, "string") or prefix ~= ns.PREFIX then return end
     if not ns.Usable(text, "string") or not ns.Usable(sender, "string") then return end
+    if DadMode_RemoteHeard then
+        local ok, verdict = pcall(DadMode_RemoteHeard, text, channel, sender)
+        if ok and verdict == "drop" then return end
+    end
     if DadMode_Heard then pcall(DadMode_Heard, text, channel, sender) end
     -- "TO:<first name>:<message>" is meant for one person only (from 1.23)
     if text:sub(1, 3) == "TO:" then
