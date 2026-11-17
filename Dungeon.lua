@@ -125,20 +125,22 @@ function DadMode_DungeonLines(name, d, list, has, myQuests, filter, lines, progr
     if not chosen then
         -- the list of dungeons to pick from. The one he stands in comes first.
         local all = Dungeons() or {}
-        lines[#lines + 1] = "|cffe8c36aPick a dungeon|r  " .. GREY .. "click a name|r"
+        lines[#lines + 1] = "|cffe8c36aPick a dungeon|r"
         if #all == 0 then
             lines[#lines + 1] = GREY .. "Questie has no dungeon quests ready yet. Try again in a moment.|r"
             return
         end
         local here = d.st and d.st.z
-        local function Link(dg, note)
-            return "|cff6fb1e8|Hdadmode:dungeon:" .. dg.id .. "|h[" .. dg.name .. "]|h|r  " .. GREY .. dg.count .. " quests" .. (note or "") .. "|r"
+        local function Row(dg, isHere)
+            return { row = true, title = dg.name, sub = GREY .. dg.count .. " quests|r", chipsTop = true,
+                chips = isHere and { { text = name .. " is here", kind = "good" } } or nil,
+                button = { text = "Open", kind = "action", onClick = function() DadMode_OpenDungeon(dg.id) end } }
         end
         for _, dg in ipairs(all) do
-            if here and dg.name == here then lines[#lines + 1] = Link(dg, ", " .. name .. " is here") end
+            if here and dg.name == here then lines[#lines + 1] = Row(dg, true) end
         end
         for _, dg in ipairs(all) do
-            if not (here and dg.name == here) then lines[#lines + 1] = Link(dg) end
+            if not (here and dg.name == here) then lines[#lines + 1] = Row(dg) end
         end
         return
     end
@@ -162,39 +164,45 @@ function DadMode_DungeonLines(name, d, list, has, myQuests, filter, lines, progr
         if a.level ~= b.level then return a.level < b.level end
         return a.title < b.title
     end)
-    lines[#lines + 1] = "|cffe8c36a" .. name .. " in " .. title .. "|r  " .. GREY .. #ids .. " quests|r   |cff6fb1e8|Hdadmode:dungeon:0|h[other dungeon]|h|r" .. progress
-    lines[#lines + 1] = GOOD .. inLog .. " in his log|r   " .. BAD .. notTaken .. " not picked up|r   " .. GREY .. finished .. " already done|r"
-        .. ((filter and filter ~= "") and (GREY .. "   " .. #rows .. " match the search|r") or "")
+    lines[#lines + 1] = "|cffe8c36a" .. name .. " in " .. title .. "|r  " .. GREY .. #ids .. " quests|r" .. progress
+    lines[#lines + 1] = { tiles = {
+        { label = "In his log", value = tostring(inLog), kind = "good" },
+        { label = "Not picked up", value = tostring(notTaken), kind = (notTaken > 0) and "bad" or nil },
+        { label = "Already done", value = tostring(finished) },
+    } }
+    lines[#lines + 1] = { bar = true, items = { { text = "Other dungeon", onClick = function() DadMode_OpenDungeon(0) end } } }
+    if filter and filter ~= "" then lines[#lines + 1] = GREY .. #rows .. " match the search|r" end
     local waited = GetTime() - (d.checkAsked or GetTime())
     local level = d.st and d.st.lv
     for _, q in ipairs(rows) do
         local his = mine[q.id]
-        local head = (q.level > 0 and ("|cff9aa0a6[" .. q.level .. "]|r ") or "") .. q.title
         local state = d.check and d.check[q.id]
-        lines[#lines + 1] = " "
+        local chips, sub = {}, {}
         if his then
-            lines[#lines + 1] = head .. "  " .. GOOD .. (his.done and "in his log, ready to hand in" or "in his log") .. "|r"
-                .. (myQuests[q.id] and "  |cff6fb1e8you have it too|r" or "")
+            chips[#chips + 1] = { text = his.done and "in his log, ready to hand in" or "in his log", kind = "good" }
+            if myQuests[q.id] then chips[#chips + 1] = { text = "you have it too", kind = "plain" } end
             for _, o in ipairs(his.objs) do
                 local done = o:sub(1, 1) == "+"
-                lines[#lines + 1] = "    " .. (done and "|cff6fcf97" or "|cff9aa0a6") .. o:sub(2) .. "|r"
+                sub[#sub + 1] = (done and "|cff6fcf97" or "|cff9aa0a6") .. o:sub(2) .. "|r"
             end
         elseif state == true then
-            lines[#lines + 1] = head .. "  " .. GREY .. "already done|r"
+            chips[#chips + 1] = { text = "already done", kind = "dim" }
         elseif state == false then
-            lines[#lines + 1] = head .. "  " .. BAD .. "not picked up|r" .. (myQuests[q.id] and "  |cff6fb1e8you have it|r" or "")
+            chips[#chips + 1] = { text = "not picked up", kind = "bad" }
+            if myQuests[q.id] then chips[#chips + 1] = { text = "you have it", kind = "plain" } end
             local from = StartsAt(QDB, q.id)
-            if from then lines[#lines + 1] = "    |cffe8c36astarts at: " .. from .. "|r" end
+            if from then sub[#sub + 1] = "|cffe8c36astarts at: " .. from .. "|r" end
             local need = tonumber(Field(QDB, q.id, "requiredLevel"))
             if need and level and need > level then
-                lines[#lines + 1] = "    " .. WARN .. "needs level " .. need .. ", he is " .. level .. "|r"
+                sub[#sub + 1] = WARN .. "needs level " .. need .. ", he is " .. level .. "|r"
             end
         elseif not d.done then
-            lines[#lines + 1] = head .. "  " .. GREY .. "waiting for his quest list...|r"
+            chips[#chips + 1] = { text = "waiting for his quest list...", kind = "dim" }
         elseif waited > 4 then
-            lines[#lines + 1] = head .. "  " .. GREY .. "unknown. " .. name .. " needs DadMode 1.16 or newer|r"
+            chips[#chips + 1] = { text = "unknown, " .. name .. " needs DadMode 1.16 or newer", kind = "dim" }
         else
-            lines[#lines + 1] = head .. "  " .. GREY .. "checking...|r"
+            chips[#chips + 1] = { text = "checking...", kind = "dim" }
         end
+        lines[#lines + 1] = ns.QuestRow(q, chips, sub)
     end
 end

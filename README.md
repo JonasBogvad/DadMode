@@ -176,7 +176,7 @@ His gear is fetched by itself when you group up and again every ten minutes. His
 
 ### Gear in his bags, and "put it on"
 
-The **Gear** tab has a section **In his bags**: one row for each thing in his bags that he could wear. Every row is laid out the same way:
+The **Gear** tab starts with **In his bags**: one row for each thing in his bags that he could wear. Every row is laid out the same way:
 
 | Left | Middle | Right |
 |---|---|---|
@@ -185,7 +185,16 @@ The **Gear** tab has a section **In his bags**: one row for each thing in his ba
 - Hold the mouse over either item name for the game's own tooltip.
 - An item for an empty slot says **his main hand slot is empty**.
 - Lighter armor says so: **this is leather, he can wear mail**.
-- What he can put on now comes first, ordered by slot. Then items that need a higher level, the same item he already wears, and last what he can not wear (**Dad can not wear plate**). Those have no button.
+- What he can put on now comes first. Then items that need a higher level, the same item he already wears, and last what he can not wear (**Dad can not wear plate**). Those have no button.
+
+**What counts for him.** Above the rows is a line of small buttons, one for each stat that shows up in the list: Strength, Agility, Spell Power and so on. Click the stats that matter for how he plays. From then on:
+
+- Items that gain those stats come first, the biggest gain on top. Items that lose them sink below the rest.
+- The chips for his stats are bright and come first on each row. The other chips are dimmed.
+
+The addon does not guess this. You tell it, once, and it is remembered for that person. Click a stat again to switch it off.
+
+**Sort.** Under that line: **By slot**, **Item level** (the biggest step up in item level first, an empty slot counts in full), and **His stats** (only there when you have picked some). Picking a stat switches to His stats by itself.
 
 **The button.** Click **Put it on** and on his screen a call sounds, the text says **Anna says: put on Mail Coif**, and a big gold button appears: **CLICK TO PUT ON: Mail Coif**. One click and the item goes on. Your button shows what happened:
 
@@ -262,27 +271,32 @@ Limits: the arrow cannot point up, so climbing the tower is text only. An addon 
 
 ### The "How is <name> doing" window
 
+The top line says who it is about: **Olaf  Shaman, level 40, Stranglethorn Vale**. It is the same on every tab. With more than one person to guide it says **How are they doing** and each name is on the page.
+
 The window has five tabs:
 
 | Tab | Shows |
 |---|---|
-| **Overview** | The status card, how many quests he has and how many are ready to hand in, and how many of your quests he is missing |
-| **Quests** | His quest list, with search |
+| **Overview** | A grid of small boxes with his status, how many quests he has and how many are ready to hand in, and how many of your quests he is missing |
+| **Quests** | His quest list, one row for each quest, with search |
 | **Missing** | Your quests that are not in his log: not picked up, or already done. With search |
 | **Dungeon** | Every quest for one dungeon, and where he stands on each. See below |
-| **Gear** | His total stats, what he wears, and his potions, food and bandages |
+| **Gear** | What is in his bags against what he wears, his total stats, what he wears, and his potions, food and bandages |
 
-The Overview tab's status card:
+Every list is built the same way: one row for each thing, a label on the left, the name, small coloured boxes for the state (green is good or done, red is missing or lost, grey is a plain fact), and a button on the right when there is something to do. The colours and the gold edge are the game's own.
 
-- Level, how far to the next level, and his gold.
-- **DEAD**, in a fight, or away from keyboard, when that applies.
-- Where he is: zone and area. Works across zones, where the arrow gives up.
-- What he is looking at (his target).
+The Overview tab's boxes:
+
+- **Level**, with how far to the next level, and his **Gold**.
+- **Right now**: DEAD, in a fight, or away from keyboard, when that applies.
+- **Where**: zone and area. Works across zones, where the arrow gives up.
+- **Looking at**: his target.
 - **Bags**: free slots. Yellow at 6 or fewer, red at 2 or fewer, FULL at 0.
 - **Gear**: his most worn piece in percent, and how many pieces are broken. Yellow at 40%, red at 20% or when something is broken.
-- Food and drink, bandages and potions in his bags.
-- Where his hearthstone is set and whether it is ready.
-- Unspent talent points, if the game reports them.
+- **Food and drink**, **Bandages** and **Potions** in his bags.
+- **Hearthstone**: where it is set and whether it is ready.
+- **Talent points**, when he has unspent ones and the game reports them.
+- **Quests** and **Missing**.
 
 The **Quests** tab: level, what is left to do, **ready to hand in** first, and **you have it too** on quests you share.
 
@@ -295,13 +309,13 @@ The **Quests** tab: level, what is left to do, **ready to hand in** first, and *
 
 Before a dungeon this shows at a glance which pickups he is missing, as long as one guide has all the quests. His game is the only one that knows what he has already done, so he needs DadMode 1.16 or newer for this list. With an older version it says so.
 
-**Dungeon.** The **Dungeon** tab first lists the dungeons that have quests. The one he is standing in comes first. Click a name. You then get every quest Questie knows for that dungeon, each with his state:
+**Dungeon.** The **Dungeon** tab first lists the dungeons that have quests. The one he is standing in comes first. Click **Open**. You then get every quest Questie knows for that dungeon, each with his state:
 
 - **in his log** (green), with his progress, or **ready to hand in**
 - **not picked up** (red), with **starts at:** who gives it and where, and **needs level N** when he is too low
 - **already done** (grey)
 
-The top line counts them: "1 in his log, 2 not picked up, 1 already done". This catches quests that none of you has picked up, which the Missing tab cannot. **[other dungeon]** goes back to the list. The search box works here too.
+Three boxes at the top count them: In his log, Not picked up, Already done. This catches quests that none of you has picked up, which the Missing tab cannot. **Other dungeon** goes back to the list. The search box works here too.
 
 It needs Questie on the guide's computer; dad does not need it. Dad needs DadMode 1.16 or newer to answer which quests he has already done. The list is Questie's list for your own race and class, so a quest only dad's class can do is not in it, and a quest that needs an earlier quest first still shows as not picked up.
 
@@ -419,7 +433,7 @@ Anyone in dad's party who runs DadMode can ask for his status and quest list: le
   | `Waypoints.lua` | Waypoints from a guide |
   | `Report.lua` | What the one being guided reports: status, quests, gear, bags |
   | `Window.lua` | The "How is <name> doing" window |
-  | `Rows.lua` | The page inside that window: text and rows with a label, facts, chips and a button |
+  | `Rows.lua` | The page inside that window: text, rows (label, facts, chips, button), lines of small switches, and grids of boxes |
   | `Follow.lua` | The green follow button |
   | `Frames.lua` | The arrow bar, the big message frame, the timer that drives everything |
   | `Minimap.lua` | The minimap button |

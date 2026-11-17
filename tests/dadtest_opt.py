@@ -102,6 +102,26 @@ Settings={
 # load the files the way the game does: in the order of the .toc, each with (addon name, shared table)
 import os as _os
 _dir=_os.path.dirname(_os.path.abspath(sys.argv[1]))
+L.execute(r'''
+-- everything on the page of the "How is ... doing" window, as one piece of text
+function PG() local w=DadModeQuests; local out={}
+  for _,b in ipairs(rawget(w,"blocks") or {}) do
+    if type(b)=="string" then out[#out+1]=b
+    elseif b.row then
+      local l=((b.slot and b.slot~="") and ("["..b.slot.."] ") or "")..(b.title or "")
+      for _,ch in ipairs(b.chips or {}) do l=l.."  "..ch.text end
+      if b.button then l=l.."  <"..b.button.text..">" end
+      out[#out+1]=l
+      if b.sub and b.sub~="" then out[#out+1]="    "..(b.sub:gsub("\n","\n    ")) end
+    elseif b.bar then local l=(b.label or ""); for _,it in ipairs(b.items) do l=l.." "..(it.on and "(x)" or "( )")..it.text end; out[#out+1]=l
+    elseif b.tiles then for _,t in ipairs(b.tiles) do out[#out+1]=t.label..": "..t.value end end
+  end
+  return table.concat(out,"\n") end
+
+-- the row whose title holds a word, and the small button with that text on a bar
+function ROW(word) local w=DadModeQuests; for i=1,(rawget(w,"usedRows") or 0) do local r=w.rows[i]; local sp=rawget(r,"spec"); if sp and sp.title:find(word,1,true) then return r,sp,i end end end
+function PILL(text) local w=DadModeQuests; for i=1,(rawget(w,"usedBars") or 0) do local b=w.bars[i]; for j,it in ipairs(b.spec.items) do if it.text==text then return b.pills[j],it end end end end
+''')
 L.execute('DadModeNS={}')
 _load=L.eval('function(src,name) local f,e=(loadstring or load)(src,"@"..name); if not f then error(e) end; return f("DadMode", DadModeNS) end')
 _files=[l.strip() for l in open(_os.path.join(_dir,'DadMode.toc')) if l.strip().endswith('.lua')]
@@ -271,17 +291,17 @@ fire("CHAT_MSG_ADDON","DADMODE","GR:1=2000:90~16=3000:100","PARTY",BRO)
 fire("CHAT_MSG_ADDON","DADMODE","GL:1=item:2000:55:::::-12","PARTY",BRO)
 fire("CHAT_MSG_ADDON","DADMODE","SS:sta=33~int=44~arm=345~hp=1234~scr=43","PARTY",BRO)
 fire("CHAT_MSG_ADDON","DADMODE","QS:0","PARTY",BRO); fire("CHAT_MSG_ADDON","DADMODE","QE","PARTY",BRO)
-QW.SetView("gear"); local T=QW.text.txt
+QW.SetView("gear"); local T=PG()
 assert(T:find("|Hitem:2000:55:::::-12|h[Hat of the Owl]|h",1,true), "exact item link")
 assert(T:find("|Hitem:3000|h[Staff]|h",1,true), "falls back to the plain item when no link was sent")
-assert(T:find("Stats",1,true) and T:find("Stamina|r 33",1,true) and T:find("Armor|r 345",1,true) and T:find("Health|r 1234",1,true) and T:find("Spell crit|r 4.3%",1,true), T)
+assert(T:find("Stats",1,true) and T:find("Stamina: 33",1,true) and T:find("Armor: 345",1,true) and T:find("Health: 1234",1,true) and T:find("Spell crit: 4.3%",1,true), T)
 assert(not T:find("Attack power",1,true))
 -- hovering a link shows the game tooltip
 local shownLink; rawset(GameTooltip,"SetHyperlink",function(_,l) shownLink=l end)
 QW.content.onOnHyperlinkEnter(QW.content,"item:2000:55:::::-12"); assert(shownLink=="item:2000:55:::::-12")
 QW.content.onOnHyperlinkLeave(QW.content)
 -- an old DadMode on dad's side sends no stats: no Stats block, nothing breaks
-fire("CHAT_MSG_ADDON","DADMODE","SS:","PARTY",BRO); DadMode_RenderQuests(); assert(not QW.text.txt:find("Stats|r",1,true))
+fire("CHAT_MSG_ADDON","DADMODE","SS:","PARTY",BRO); DadMode_RenderQuests(); assert(not PG():find("Stats|r",1,true))
 -- ===== call text says how far away =====
 DadMode_SetRole(false); clock=clock+100
 local AF2; for _,f in ipairs(frames) do if rawget(f,"text") and rawget(f,"from")~=nil then AF2=f end end
@@ -301,41 +321,41 @@ fire("CHAT_MSG_ADDON","DADMODE","Q:501~30~0~Shared Quest~-5/8 Boar Tusk^777~29~1
 fire("CHAT_MSG_ADDON","DADMODE","QE","PARTY",BRO)
 local qc; for i=m0+1,#sent do if sent[i][2]:sub(1,3)=="QC:" then qc=sent[i][2] end end
 assert(qc=="QC:502,503", "asks about the quests only I have: "..tostring(qc))
-QW.SetView("quests"); T=QW.text.txt
-assert(T:find("Shared Quest  |cff6fb1e8you have it too",1,true) and T:find("you: 2/8 Boar Tusk",1,true), "my progress next to his")
+QW.SetView("quests"); T=PG()
+assert(T:find("Shared Quest  you have it too",1,true) and T:find("you: 2/8 Boar Tusk",1,true), "my progress next to his")
 assert(T:find("only Bro",1,true), "only dad mark")
 assert(not T:find("Guide Only A",1,true), "missing quests live on their own tab")
-QW.SetView("overview"); T=QW.text.txt
-assert(T:find("Missing|r  |cffeb7a7a2",1,true) and T:find("1 ready to hand in",1,true) and not T:find("Shared Quest",1,true), T)
-QW.SetView("missing"); T=QW.text.txt
+QW.SetView("overview"); T=PG()
+assert(T:find("Missing: 2 of your quests are not in his log",1,true) and T:find("1 ready to hand in",1,true) and not T:find("Shared Quest",1,true), T)
+QW.SetView("missing"); T=PG()
 assert(T:find("You have, Bro does not",1,true) and T:find("Guide Only A",1,true) and T:find("checking...",1,true) and not T:find("Dad Only Quest",1,true), T)
-fire("CHAT_MSG_ADDON","DADMODE","QD:502=1,503=0","PARTY",BRO); T=QW.text.txt
-assert(T:find("Guide Only A  |cff6fcf97already done",1,true) and T:find("Guide Only B  |cffeb7a7anot picked up",1,true), T)
+fire("CHAT_MSG_ADDON","DADMODE","QD:502=1,503=0","PARTY",BRO); T=PG()
+assert(T:find("Guide Only A  already done",1,true) and T:find("Guide Only B  not picked up",1,true), T)
 -- search works on both lists, and the box is only there on those two tabs
 assert(QW.search.shown and QW.wipe.shown)
-QW.ApplySearch("only b"); T=QW.text.txt
+QW.ApplySearch("only b"); T=PG()
 assert(T:find("Guide Only B",1,true) and not T:find("Guide Only A",1,true) and T:find("1 match the search",1,true))
-QW.SetView("quests"); QW.ApplySearch("  IDOL "); T=QW.text.txt
+QW.SetView("quests"); QW.ApplySearch("  IDOL "); T=PG()
 assert(QW.filter=="idol" and T:find("Dad Only Quest",1,true) and not T:find("Shared Quest",1,true) and T:find("1 match the search",1,true), T)
-QW.ApplySearch("zzz"); assert(QW.text.txt:find("0 match the search",1,true))
-QW.ApplySearch(""); T=QW.text.txt; assert(T:find("Shared Quest",1,true) and T:find("Dad Only Quest",1,true) and not T:find("match the search",1,true))
+QW.ApplySearch("zzz"); assert(PG():find("0 match the search",1,true))
+QW.ApplySearch(""); T=PG(); assert(T:find("Shared Quest",1,true) and T:find("Dad Only Quest",1,true) and not T:find("match the search",1,true))
 QW.SetView("gear"); assert(not QW.search.shown and not QW.wipe.shown, "no search box on the gear tab")
 QW.SetView("overview"); assert(not QW.search.shown)
 -- a refresh does not empty the list on screen: the new one swaps in when it is complete
 QW.SetView("quests")
-fire("CHAT_MSG_ADDON","DADMODE","QS:3","PARTY",BRO); T=QW.text.txt
+fire("CHAT_MSG_ADDON","DADMODE","QS:3","PARTY",BRO); T=PG()
 assert(T:find("Shared Quest",1,true) and T:find("Dad Only Quest",1,true) and T:find("updating...",1,true), "old list stays while the new one loads")
-fire("CHAT_MSG_ADDON","DADMODE","Q:501~30~0~Shared Quest~-6/8 Boar Tusk","PARTY",BRO); T=QW.text.txt
+fire("CHAT_MSG_ADDON","DADMODE","Q:501~30~0~Shared Quest~-6/8 Boar Tusk","PARTY",BRO); T=PG()
 assert(T:find("5/8 Boar Tusk",1,true) and not T:find("6/8 Boar Tusk",1,true), "still the old one")
 assert(DadMode_AutoRefreshDue()==false, "no automatic refresh while a list is coming in")
 fire("CHAT_MSG_ADDON","DADMODE","Q:777~29~1~Dad Only Quest~+1/1 Golden Idol^888~31~0~Brand New Quest~-0/1 Thing","PARTY",BRO)
-fire("CHAT_MSG_ADDON","DADMODE","QE","PARTY",BRO); T=QW.text.txt
+fire("CHAT_MSG_ADDON","DADMODE","QE","PARTY",BRO); T=PG()
 assert(T:find("6/8 Boar Tusk",1,true) and T:find("Brand New Quest",1,true) and not T:find("updating",1,true) and T:find("quests|r  |cff9aa0a63|r",1,true), T)
 -- an old DadMode loses the end of a long list: after a while show what arrived, and say so
 fire("CHAT_MSG_ADDON","DADMODE","QS:29","PARTY",BRO)
 fire("CHAT_MSG_ADDON","DADMODE","Q:501~30~0~Shared Quest~-7/8 Boar Tusk","PARTY",BRO)
-clock=clock+10; DadMode_RenderQuests(); assert(QW.text.txt:find("updating...",1,true) and QW.text.txt:find("6/8",1,true))
-clock=clock+20; DadMode_RenderQuests(); T=QW.text.txt
+clock=clock+10; DadMode_RenderQuests(); assert(PG():find("updating...",1,true) and PG():find("6/8",1,true))
+clock=clock+20; DadMode_RenderQuests(); T=PG()
 assert(T:find("only 1 of 29 arrived. Bro needs DadMode 1.18",1,true) and T:find("7/8 Boar Tusk",1,true), T)
 -- automatic refresh: once a minute, not while typing
 clock=clock+100; assert(DadMode_AutoRefreshDue()==true)
@@ -348,7 +368,7 @@ fire("CHAT_MSG_ADDON","DADMODE","QS:2","PARTY",BRO); fire("CHAT_MSG_ADDON","DADM
 qlog[#qlog+1]={title="Guide Only C",questID=504,level=33}
 fire("CHAT_MSG_ADDON","DADMODE","QS:0","PARTY",BRO); fire("CHAT_MSG_ADDON","DADMODE","QE","PARTY",BRO)
 QW.SetView("missing")
-clock=clock+10; DadMode_RenderQuests(); assert(QW.text.txt:find("Guide Only C  |cff9aa0a6unknown. Bro needs DadMode 1.16",1,true), QW.text.txt)
+clock=clock+10; DadMode_RenderQuests(); assert(PG():find("Guide Only C  unknown, Bro needs DadMode 1.16",1,true), PG())
 -- the other side answers which quests are done
 DadMode_SetRole(false)
 C_QuestLog.IsQuestFlaggedCompleted=function(id) return id==502 end
@@ -535,28 +555,28 @@ fire("CHAT_MSG_ADDON","DADMODE","ST:lv=38","PARTY",BRO); fire("CHAT_MSG_ADDON","
 fire("CHAT_MSG_ADDON","DADMODE","QS:1","PARTY",BRO)
 fire("CHAT_MSG_ADDON","DADMODE","Q:601~38~0~Into the Deep~-2/5 Deep Pearl","PARTY",BRO)
 fire("CHAT_MSG_ADDON","DADMODE","QE","PARTY",BRO)
-QW.dungeon=false; QW.SetView("dungeon"); T=QW.text.txt
-assert(T:find("Pick a dungeon",1,true) and T:find("|Hdadmode:dungeon:5000|h[The Drowned City]|h",1,true) and T:find("Bro is here",1,true) and not QW.search.shown, T)
+QW.dungeon=false; QW.SetView("dungeon"); T=PG()
+assert(T:find("Pick a dungeon",1,true) and T:find("The Drowned City  Bro is here  <Open>",1,true) and T:find("Empty Hole  <Open>",1,true) and not QW.search.shown, T)
 assert(T:find("The Drowned City",1,true) < T:find("Empty Hole",1,true), "the one he stands in comes first")
 -- pick it
-m0=#sent; QW.content.onOnHyperlinkClick(QW.content,"dadmode:dungeon:5000","[The Drowned City]","LeftButton")
+m0=#sent; do local r=ROW("The Drowned City"); assert(r.btn.shown and r.btn.label.txt=="Open"); r.btn.onOnClick(r.btn) end
 assert(QW.dungeon==5000 and QW.view=="dungeon" and QW.search.shown)
 local asked; for i=m0+1,#sent do if sent[i][2]:sub(1,3)=="QC:" then asked=sent[i][2] end end
 assert(asked=="QC:602,603,604", "asks about the dungeon quests he does not have: "..tostring(asked))
-T=QW.text.txt
-assert(T:find("Bro in The Drowned City",1,true) and T:find("4 quests",1,true) and T:find("Into the Deep  |cff6fcf97in his log",1,true) and T:find("2/5 Deep Pearl",1,true) and T:find("checking...",1,true), T)
-fire("CHAT_MSG_ADDON","DADMODE","QD:602=0,603=0,604=1","PARTY",BRO); T=QW.text.txt
-assert(T:find("1 in his log",1,true) and T:find("2 not picked up",1,true) and T:find("1 already done",1,true), T)
-assert(T:find("The Drowned King  |cffeb7a7anot picked up",1,true) and T:find("starts at: King's Herald, Stranglethorn Vale",1,true) and T:find("needs level 39, he is 38",1,true), T)
-assert(T:find("Lost Tablets  |cffeb7a7anot picked up|r  |cff6fb1e8you have it",1,true) and T:find("starts at: Soggy Crate",1,true), T)
-assert(T:find("Old Business  |cff9aa0a6already done",1,true) and not T:find("Elsewhere Quest",1,true))
-QW.ApplySearch("king"); T=QW.text.txt; assert(T:find("The Drowned King",1,true) and not T:find("Old Business",1,true) and T:find("1 match the search",1,true)); QW.ApplySearch("")
+T=PG()
+assert(T:find("Bro in The Drowned City",1,true) and T:find("4 quests",1,true) and T:find("Into the Deep  in his log",1,true) and T:find("2/5 Deep Pearl",1,true) and T:find("checking...",1,true), T)
+fire("CHAT_MSG_ADDON","DADMODE","QD:602=0,603=0,604=1","PARTY",BRO); T=PG()
+assert(T:find("In his log: 1",1,true) and T:find("Not picked up: 2",1,true) and T:find("Already done: 1",1,true), T)
+assert(T:find("The Drowned King  not picked up",1,true) and T:find("starts at: King's Herald, Stranglethorn Vale",1,true) and T:find("needs level 39, he is 38",1,true), T)
+assert(T:find("Lost Tablets  not picked up  you have it",1,true) and T:find("starts at: Soggy Crate",1,true), T)
+assert(T:find("Old Business  already done",1,true) and not T:find("Elsewhere Quest",1,true))
+QW.ApplySearch("king"); T=PG(); assert(T:find("The Drowned King",1,true) and not T:find("Old Business",1,true) and T:find("1 match the search",1,true)); QW.ApplySearch("")
 -- back to the list
-QW.content.onOnHyperlinkClick(QW.content,"dadmode:dungeon:0","[other dungeon]","LeftButton"); assert(QW.dungeon==false and QW.text.txt:find("Pick a dungeon",1,true))
+do local p=PILL("Other dungeon"); assert(p and p.shown); p.onOnClick(p) end; assert(QW.dungeon==false and PG():find("Pick a dungeon",1,true))
 -- hovering a dungeon name does not try to show an item tooltip
 shownLink=nil; QW.content.onOnHyperlinkEnter(QW.content,"dadmode:dungeon:5000"); assert(shownLink==nil)
 -- no Questie on this computer
-QuestieLoader=nil; QW.SetView("dungeon"); assert(QW.text.txt:find("needs the Questie addon",1,true))
+QuestieLoader=nil; QW.SetView("dungeon"); assert(PG():find("needs the Questie addon",1,true))
 QuestieLoader=QL2; C_Map.GetAreaInfo=oldArea; QW.SetView("overview")
 -- ===== rough boat spots (the town, not the dock) =====
 DadMode_SetRole(false); DadModeDB.stops={}
@@ -716,12 +736,12 @@ do
   fire("CHAT_MSG_ADDON","DADMODE","ST:lv=40~bf=10~bt=64","PARTY",SAQ); fire("CHAT_MSG_ADDON","DADMODE","ST:cl=SHAMAN","PARTY",SAQ)
   fire("CHAT_MSG_ADDON","DADMODE","GR:1=8201:90","PARTY",SAQ)
   SlashCmdList.DADMODE("quests"); QW.SetView("gear")
-  assert(QW.text.txt:find("Saqu needs DadMode 1.21 or newer",1,true), "old version: bag gear unknown")
+  assert(PG():find("Saqu needs DadMode 1.21 or newer",1,true), "old version: bag gear unknown")
   for _,b in ipairs(bg) do fire("CHAT_MSG_ADDON","DADMODE",b,"PARTY",SAQ) end
   assert(DadMode_BagUpgrades==nil, "nothing counts better items any more")
   local function page() local out={}; for _,t in ipairs(QW.texts) do if t.txt and t.txt~="" then out[#out+1]=t.txt end end; return table.concat(out,"\n") end
   local function row(word) for i=1,QW.usedRows do local sp=QW.rows[i].spec; if sp and sp.title:find(word,1,true) then return QW.rows[i], sp, i end end end
-  local function chips(sp) local o={}; for _,c in ipairs(sp.chips) do o[#o+1]=(c.good and "G" or "R")..c.text end; return table.concat(o,",") end
+  local function chips(sp) local o={}; for _,c in ipairs(sp.chips) do o[#o+1]=((c.kind=="good" and "G") or (c.kind=="bad" and "R") or (c.kind=="gooddim" and "g") or (c.kind=="baddim" and "r") or "?")..c.text end; return table.concat(o,",") end
   local G=page()
   assert(G:find("In his bags",1,true) and not G:upper():find("BETTER",1,true) and not G:find("tell him to put it on",1,true), G)
   assert(QW.usedRows==4, "one row for each thing to wear: "..QW.usedRows)
@@ -738,7 +758,7 @@ do
   -- the guide bar no longer judges his bags
   clock=clock+1; TK(nil,0.1); assert(not (DadModeHelper.note.txt or ""):find("in his bags",1,true), DadModeHelper.note.txt)
   -- text after the rows is still there
-  assert(QW.text.txt:find("Average item level",1,true), "what he wears is above the rows")
+  assert(PG():find("Average item level",1,true), "what he wears is above the rows")
   -- nothing in bags
   fire("CHAT_MSG_ADDON","DADMODE","BGS:0","PARTY",SAQ); assert(page():find("Nothing to wear in his bags",1,true) and QW.usedRows==0 and not QW.rows[1].shown)
   for _,b in ipairs(bg) do fire("CHAT_MSG_ADDON","DADMODE",b,"PARTY",SAQ) end
@@ -762,6 +782,53 @@ do
     local _,sb,ib=row("Future Coif"); assert(sb.sub:find("needs level 45",1,true) and not sb.button and ib==2, sb.sub)
     C_Item.GetItemInfo=keep
     for _,b in ipairs(bg) do fire("CHAT_MSG_ADDON","DADMODE",b,"PARTY",SAQ) end
+  end
+  -- ===== the stats that count for him, and the sort switch =====
+  do
+    it[8204].stats={ITEM_MOD_STRENGTH_SHORT=6}; it[8201].stats={ITEM_MOD_STAMINA_SHORT=2}; ITEM_MOD_STRENGTH_SHORT="Strength"
+    DadModeDB.focus=nil; DadModeDB.gearSort=nil; DadMode_RenderQuests()
+    local _,sa,ia=row("|hMail Coif|h"); local _,sb,ib=row("Weak Mail Coif"); local _,sc,ic=row("Stone Mace")
+    assert(chips(sa)=="G+7 Stamina" and chips(sb)=="R-2 Stamina,G+6 Strength", chips(sa).." / "..chips(sb))
+    assert(ia<ib and ib<ic, "nothing picked: by slot, the higher item level first")
+    local T=PG()
+    assert(T:find("What counts for Saqu? Click his stats. ( )Stamina ( )Strength",1,true) and T:find("Sort (x)By slot ( )Item level",1,true) and not T:find("His stats",1,true), T)
+    assert(QW.usedBars==2 and QW.bars[1].shown and QW.bars[1].pills[2].label.txt=="Strength" and QW.bars[1].pills[2].on==false)
+    -- the guide says Strength counts for him
+    local p=PILL("Strength"); p.onOnClick(p)
+    assert(DadModeDB.focus.saqu.ITEM_MOD_STRENGTH_SHORT=="Strength" and DadModeDB.gearSort=="stats", "kept between sessions, and the list follows")
+    _,sa,ia=row("|hMail Coif|h"); _,sb,ib=row("Weak Mail Coif"); _,sc,ic=row("Stone Mace")
+    assert(ib<ia and ib<ic, "the item that gains his stat comes first")
+    assert(chips(sb)=="G+6 Strength,r-2 Stamina" and chips(sa)=="g+7 Stamina", "his stat bright and first, the rest dimmed: "..chips(sb).." / "..chips(sa))
+    T=PG(); assert(T:find("( )Stamina (x)Strength",1,true) and T:find("Sort ( )By slot ( )Item level (x)His stats",1,true), T)
+    assert(PILL("Strength").on==true)
+    -- an item that loses his stat sinks below the ones that do not touch it
+    it[8201].stats={ITEM_MOD_STAMINA_SHORT=2,ITEM_MOD_STRENGTH_SHORT=3}; it[8204].stats={ITEM_MOD_STRENGTH_SHORT=1}; DadMode_RenderQuests()
+    _,sb,ib=row("Weak Mail Coif"); _,sc,ic=row("Stone Mace"); _,sa,ia=row("|hMail Coif|h")
+    assert(ic<ib and ia>ib, "mace 0, weak coif -2, coif -3: "..ic.." "..ib.." "..ia)
+    it[8201].stats={ITEM_MOD_STAMINA_SHORT=2}; it[8204].stats={ITEM_MOD_STRENGTH_SHORT=6}
+    -- by item level: the biggest step up first, an empty slot counts in full
+    p=PILL("Item level"); p.onOnClick(p); assert(DadModeDB.gearSort=="level")
+    _,sa,ia=row("|hMail Coif|h"); _,sb,ib=row("Weak Mail Coif"); _,sc,ic=row("Stone Mace")
+    assert(ic<ia and ia<ib, "mace +40, coif +11, weak coif -5")
+    p=PILL("By slot"); p.onOnClick(p); _,sa,ia=row("|hMail Coif|h"); _,sc,ic=row("Stone Mace"); assert(ia<ic and DadModeDB.gearSort=="slot")
+    -- what he can not wear stays last in every order, with no stat boxes
+    local r4,s4,i4=row("Plate Helm"); assert(i4==4 and #s4.chips==0)
+    -- switching the stat off again
+    p=PILL("Strength"); p.onOnClick(p); assert(next(DadModeDB.focus.saqu)==nil and not PG():find("His stats",1,true))
+    DadModeDB.gearSort="stats"; DadMode_RenderQuests(); _,sa,ia=row("|hMail Coif|h"); assert(ia==1, "nothing picked: his stats falls back to by slot")
+    _,sb=row("Weak Mail Coif"); assert(chips(sb)=="R-2 Stamina,G+6 Strength", "nothing dimmed without a pick")
+    -- the header: who, class, level and zone, on every tab
+    local NS=DadModeNS; local keepBro=NS.questData.Bro; NS.questData.Bro=nil
+    fire("CHAT_MSG_ADDON","DADMODE","ST:z=Stranglethorn Vale","PARTY",SAQ)
+    assert(QW.title.txt=="|cffe8c36aSaqu|r  |cff9aa0a6Shaman, level 40, Stranglethorn Vale|r", QW.title.txt)
+    assert(not PG():find("|cffe8c36aSaqu|r\n",1,true), "one person: the name is in the header, not repeated on the page")
+    -- the overview is a grid of tiles
+    QW.SetView("overview")
+    assert(QW.usedGrids==1 and QW.grids[1].shown and QW.grids[1].tiles[1].label.txt=="Level" and QW.grids[1].tiles[1].value.txt:find("40",1,true), "tiles")
+    assert(QW.title.txt:find("Shaman, level 40",1,true) and QW.usedRows==0 and QW.usedBars==0 and not QW.bars[1].shown)
+    NS.questData.Bro=keepBro; DadMode_RenderQuests(); assert(QW.title.txt=="|cffe8c36aHow are they doing|r")
+    QW.SetView("gear")
+    DadModeDB.focus=nil; DadModeDB.gearSort=nil; it[8204].stats=nil; it[8201].stats=nil; DadMode_RenderQuests()
   end
   -- his side: the gold button
   DadMode_SetRole(false); DadModeDB.alerts=true
@@ -792,8 +859,8 @@ fire("CHAT_MSG_ADDON","DADMODE","HI:9.9.9:g","PARTY","Saqu Off-CAMWOW EU5 Realm 
 local vl=table.concat(DadMode_VersionLines(),"\n")
 assert(vl:find("You: guide, DadMode ",1,true) and vl:find("Bro: being guided, DadMode 1.0.2",1,true) and vl:find("older than yours",1,true), vl)
 assert(vl:find("Saqu: guide, DadMode 9.9.9",1,true) and vl:find("newer than yours",1,true), vl)
-QW.SetView("overview"); assert(QW.text.txt:find("DadMode in this party",1,true) and QW.text.txt:find("Saqu: guide, DadMode 9.9.9",1,true))
-QW.SetView("quests"); assert(not QW.text.txt:find("DadMode in this party",1,true))
+QW.SetView("overview"); assert(PG():find("DadMode in this party",1,true) and PG():find("Saqu: guide, DadMode 9.9.9",1,true))
+QW.SetView("quests"); assert(not PG():find("DadMode in this party",1,true))
 -- asking and answering
 clock=clock+60; m0=#sent; SlashCmdList.DADMODE("status")
 local askedWho,hi2=false,nil; for i=m0+1,#sent do if sent[i][2]=="HI?" then askedWho=true end; if sent[i][2]:sub(1,3)=="HI:" then hi2=sent[i][2] end end
@@ -876,16 +943,16 @@ do
   DadModeDB.guides={["bro bearfang"]={name="Bro Bearfang",state="yes"},["saqu off"]={name="Saqu Off",state="yes"}}
   DadMode_SetRole(true); clock=clock+100
   SlashCmdList.DADMODE("quests"); QW.SetView("overview")
-  fire("CHAT_MSG_ADDON","DADMODE","ST:lv=38~g=5","PARTY",BRO); assert(QW.text.txt:find("level 38",1,true))
-  fire("CHAT_MSG_ADDON","DADMODE","LOCKED:ask:somebodyelse","PARTY",BRO); assert(QW.text.txt:find("level 38",1,true), "an answer meant for another guide is not mine")
+  fire("CHAT_MSG_ADDON","DADMODE","ST:lv=38~g=5","PARTY",BRO); assert(PG():find("Level: 38",1,true))
+  fire("CHAT_MSG_ADDON","DADMODE","LOCKED:ask:somebodyelse","PARTY",BRO); assert(PG():find("Level: 38",1,true), "an answer meant for another guide is not mine")
   fire("CHAT_MSG_ADDON","DADMODE","LOCKED:ask:dad","PARTY",BRO)
-  assert(QW.text.txt:find("Bro|r has not approved you as a guide yet",1,true) and not QW.text.txt:find("level 38",1,true), QW.text.txt)
+  assert(PG():find("Bro|r has not approved you as a guide yet",1,true) and not PG():find("Level: 38",1,true), PG())
   fire("CHAT_MSG_ADDON","DADMODE","ST:lv=39","PARTY",BRO); fire("CHAT_MSG_ADDON","DADMODE","GR:1=8001:90","PARTY",BRO)
-  assert(not QW.text.txt:find("level 39",1,true) and QW.usedRows==0, "what I overhear from him is not shown")
+  assert(not PG():find("Level: 39",1,true) and QW.usedRows==0, "what I overhear from him is not shown")
   clock=clock+1; TK(nil,0.1); assert(not DadModeHelper.note.txt:find("Bro:",1,true), "no warnings about him either")
-  fire("CHAT_MSG_ADDON","DADMODE","LOCKED:no:dad","PARTY",BRO); assert(QW.text.txt:find("said no to you as a guide",1,true))
-  m1=#sent; fire("CHAT_MSG_ADDON","DADMODE","UNLOCK:dad","PARTY",BRO); assert(not QW.text.txt:find("said no",1,true) and sentSince(m1,"QREQ"), "approved: asks again by itself")
-  fire("CHAT_MSG_ADDON","DADMODE","ST:lv=39","PARTY",BRO); assert(QW.text.txt:find("level 39",1,true))
+  fire("CHAT_MSG_ADDON","DADMODE","LOCKED:no:dad","PARTY",BRO); assert(PG():find("said no to you as a guide",1,true))
+  m1=#sent; fire("CHAT_MSG_ADDON","DADMODE","UNLOCK:dad","PARTY",BRO); assert(not PG():find("said no",1,true) and sentSince(m1,"QREQ"), "approved: asks again by itself")
+  fire("CHAT_MSG_ADDON","DADMODE","ST:lv=39","PARTY",BRO); assert(PG():find("Level: 39",1,true))
   -- calling somebody who has not approved me, or who takes no calls
   clock=clock+100; DadModeHelper.callBtn.onOnClick(DadModeHelper.callBtn); fire("CHAT_MSG_ADDON","DADMODE","LOCKED:ask:dad","PARTY",BRO); TK(nil,0.1)
   assert(DadModeHelper.status.txt:find("Bro has not approved you",1,true), DadModeHelper.status.txt)
@@ -894,13 +961,13 @@ do
   assert(DadModeHelper.status.txt:find("Bro takes no calls from guides",1,true), DadModeHelper.status.txt)
   -- what he does not share, said plainly on each tab
   fire("CHAT_MSG_ADDON","DADMODE","PERM:status=0~gold=1~quests=0~gear=0~call=1~waypoint=1~wear=1","PARTY",BRO)
-  QW.SetView("overview"); assert(QW.text.txt:find("Bro does not share his status with guides",1,true))
-  QW.SetView("quests"); assert(QW.text.txt:find("Bro does not share his quests with guides",1,true))
-  QW.SetView("missing"); assert(QW.text.txt:find("does not share his quests",1,true))
-  QW.SetView("gear"); assert(QW.text.txt:find("Bro does not share his gear with guides",1,true))
+  QW.SetView("overview"); assert(PG():find("Bro does not share his status with guides",1,true))
+  QW.SetView("quests"); assert(PG():find("Bro does not share his quests with guides",1,true))
+  QW.SetView("missing"); assert(PG():find("does not share his quests",1,true))
+  QW.SetView("gear"); assert(PG():find("Bro does not share his gear with guides",1,true))
   fire("CHAT_MSG_ADDON","DADMODE","PERM:status=1~gold=1~quests=1~gear=1~call=1~waypoint=1~wear=1","PARTY",BRO)
   fire("CHAT_MSG_ADDON","DADMODE","ST:lv=39","PARTY",BRO)
-  QW.SetView("overview"); assert(QW.text.txt:find("level 39",1,true) and not QW.text.txt:find("does not share",1,true))
+  QW.SetView("overview"); assert(PG():find("Level: 39",1,true) and not PG():find("does not share",1,true))
   -- a guide never answers and never gets a box
   m1=#sent; fire("CHAT_MSG_ADDON","DADMODE","PING:x","PARTY",SAQ); fire("CHAT_MSG_ADDON","DADMODE","QREQ","PARTY",SAQ)
   assert(not (DadModeApprove and DadModeApprove.shown) and not sentSince(m1,"LOCKED"))

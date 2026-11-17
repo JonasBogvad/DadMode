@@ -93,6 +93,26 @@ C_ChatInfo={RegisterAddonMessagePrefix=noop, SendAddonMessage=function(p,t,c) se
 # load the files the way the game does: in the order of the .toc, each with (addon name, shared table)
 import os as _os
 _dir=_os.path.dirname(_os.path.abspath(sys.argv[1]))
+L.execute(r'''
+-- everything on the page of the "How is ... doing" window, as one piece of text
+function PG() local w=DadModeQuests; local out={}
+  for _,b in ipairs(rawget(w,"blocks") or {}) do
+    if type(b)=="string" then out[#out+1]=b
+    elseif b.row then
+      local l=((b.slot and b.slot~="") and ("["..b.slot.."] ") or "")..(b.title or "")
+      for _,ch in ipairs(b.chips or {}) do l=l.."  "..ch.text end
+      if b.button then l=l.."  <"..b.button.text..">" end
+      out[#out+1]=l
+      if b.sub and b.sub~="" then out[#out+1]="    "..(b.sub:gsub("\n","\n    ")) end
+    elseif b.bar then local l=(b.label or ""); for _,it in ipairs(b.items) do l=l.." "..(it.on and "(x)" or "( )")..it.text end; out[#out+1]=l
+    elseif b.tiles then for _,t in ipairs(b.tiles) do out[#out+1]=t.label..": "..t.value end end
+  end
+  return table.concat(out,"\n") end
+
+-- the row whose title holds a word, and the small button with that text on a bar
+function ROW(word) local w=DadModeQuests; for i=1,(rawget(w,"usedRows") or 0) do local r=w.rows[i]; local sp=rawget(r,"spec"); if sp and sp.title:find(word,1,true) then return r,sp,i end end end
+function PILL(text) local w=DadModeQuests; for i=1,(rawget(w,"usedBars") or 0) do local b=w.bars[i]; for j,it in ipairs(b.spec.items) do if it.text==text then return b.pills[j],it end end end end
+''')
 L.execute('DadModeNS={}')
 _load=L.eval('function(src,name) local f,e=(loadstring or load)(src,"@"..name); if not f then error(e) end; return f("DadMode", DadModeNS) end')
 _files=[l.strip() for l in open(_os.path.join(_dir,'DadMode.toc')) if l.strip().endswith('.lua')]
@@ -290,7 +310,7 @@ fire("CHAT_MSG_ADDON","DADMODE","WP:1434:0.5:0.5","PARTY","Stranger Danger-CAMWO
 DadModeDB.alerts=false; pin=nil
 -- quests: as a helper I ask, and a dad-role addon would answer. Here I play both ends.
 SlashCmdList.DADMODE("quests"); assert(DadModeQuests.shown and sent[#sent][2]=="QREQ")
-assert(DadModeQuests.text.txt:find("Asking"))
+assert(PG():find("Asking"))
 local n1=#sent
 fire("CHAT_MSG_ADDON","DADMODE","QREQ","PARTY","Bro Bearfang-CAMWOW EU5 Realm 4 PvP"); assert(#sent==n1,"helpers do not answer")
 DadModeDB.helper=false
@@ -302,23 +322,23 @@ assert(out[1]:sub(1,3)=="ST:" and out[2]:sub(1,3)=="ST:" and out[3]=="QS:3" and 
 for _,b in ipairs(out) do assert(#b<=255,"message too long") ; fire("CHAT_MSG_ADDON","DADMODE",b,"PARTY","Bro Bearfang-CAMWOW EU5 Realm 4 PvP") end
 DadModeDB.helper=true
 assert(DadModeQuests.view=="overview","opens on the overview")
-local ov=DadModeQuests.text.txt
-assert(ov:find("Quests|r  3",1,true) and ov:find("1 ready to hand in",1,true) and not ov:find("Stolen Shipment"),"overview: counts, not the list")
+local ov=PG()
+assert(ov:find("Quests: 3",1,true) and ov:find("Missing: none",1,true) and ov:find("1 ready to hand in",1,true) and not ov:find("Stolen Shipment"),"overview: counts, not the list")
 DadModeQuests.SetView("quests")
-local qt=ov..DadModeQuests.text.txt
+local qt=ov..PG()
 print((qt:gsub("|c%x%x%x%x%x%x%x%x",""):gsub("|r","")))
-assert(qt:find("level 37") and qt:find("62%% to 38") and qt:find("12g") and qt:find("in a fight") and qt:find("Stranglethorn Vale, Nesingwary") and qt:find("3 free") and qt:find("of 64") and qt:find("worst piece 0%%") and qt:find("1 broken") and qt:find("Food and drink: 12") and qt:find("Bandages: 4") and qt:find("Potions: 1") and qt:find("Hearthstone: Orgrimmar") and qt:find("DadMode 1.3.4"), "status card")
+assert(qt:find("Level: 37") and qt:find("62%% to 38") and qt:find("12g") and qt:find("in a fight") and qt:find("Stranglethorn Vale, Nesingwary") and qt:find("3 free") and qt:find("of 64") and qt:find("worst piece 0%%") and qt:find("1 broken") and qt:find("Food and drink: 12") and qt:find("Bandages: 4") and qt:find("Potions: 1") and qt:find("Hearthstone: Orgrimmar") and qt:find("DadMode 1.3.4"), "status card")
 assert(qt:find("Bro") and qt:find("Stolen Shipment") and qt:find("you have it too") and qt:find("ready to hand in") and qt:find("10/15 Bloodscalp Ear") and qt:find("20/20 Shrunken Head"), qt)
 assert(qt:find("Where's the Key") < qt:find("Stolen Shipment"),"ready quests first")
 -- gear view
 local TB=DadModeQuests.tabs; assert(TB.overview and TB.quests and TB.missing and TB.gear,"four tabs")
 TB.gear.onOnClick(TB.gear); assert(DadModeQuests.view=="gear")
-assert(DadModeQuests.text.txt:find("1x Lesser Healing Potion") and DadModeQuests.text.txt:find("12x Ice Cold Milk") and DadModeQuests.text.txt:find("4x Heavy Wool Bandage"),"which consumables")
-local gt=DadModeQuests.text.txt
+assert(PG():find("1x Lesser Healing Potion") and PG():find("12x Ice Cold Milk") and PG():find("4x Heavy Wool Bandage"),"which consumables")
+local gt=PG()
 print((gt:gsub("|c%x%x%x%x%x%x%x%x",""):gsub("|r","")))
 assert(gt:find("Silk Headband") and gt:find("item level 31") and gt:find("Chest:") and gt:find("BROKEN") and gt:find("Legs:") and gt:find("Shoulders:.-EMPTY") and gt:find("Main hand:.-loading") and gt:find("Average item level: 34") and not gt:find("Stolen Shipment") and not gt:find("Shirt"),"gear view")
 fire("GET_ITEM_INFO_RECEIVED",7016,true)
-TB.quests.onOnClick(TB.quests); assert(DadModeQuests.text.txt:find("Stolen Shipment"),"back to quests")
+TB.quests.onOnClick(TB.quests); assert(PG():find("Stolen Shipment"),"back to quests")
 assert(qt:find("hand in: Zimmix Sputterspark, Stranglethorn Vale") and select(2,qt:gsub("hand in:",""))==1,"hand-in shown only for the ready quest")
 assert(qt:find("then: Zimmix's Great Escape %[39%]") and select(2,qt:gsub("then:",""))==1,"follow-up quest shown once")
 -- I am a helper with calls off: someone calls me, they get MUTED back

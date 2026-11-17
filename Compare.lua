@@ -63,7 +63,7 @@ local function Difference(newLink, oldLink)
     for k in pairs(a) do if not seen[k] then seen[k] = true; keys[#keys + 1] = k end end
     for k in pairs(b) do if not seen[k] then seen[k] = true; keys[#keys + 1] = k end end
     table.sort(keys)
-    local gains, loses = {}, {}
+    local gains, loses, parts = {}, {}, {}
     for _, k in ipairs(keys) do
         local va, vb = a[k], b[k]
         if (va == nil or Usable(va, "number")) and (vb == nil or Usable(vb, "number")) then
@@ -71,19 +71,20 @@ local function Difference(newLink, oldLink)
             if diff ~= 0 and #gains + #loses < 8 then
                 local label = (type(_G[k]) == "string" and _G[k]) or tostring(k):gsub("^ITEM_MOD_", ""):gsub("_SHORT$", ""):gsub("_", " "):lower()
                 local size = ("%g"):format(math.floor(math.abs(diff) * 10 + 0.5) / 10)
-                if diff > 0 then gains[#gains + 1] = "+" .. size .. " " .. label
-                else loses[#loses + 1] = "-" .. size .. " " .. label end
+                local text = (diff > 0 and "+" or "-") .. size .. " " .. label
+                if diff > 0 then gains[#gains + 1] = text else loses[#loses + 1] = text end
+                parts[#parts + 1] = { key = k, label = label, diff = diff, text = text }
             end
         end
     end
-    return gains, loses
+    return gains, loses, parts
 end
 
 -- Compares one item against what one person wears.
 -- Returns nil when it is not something to wear, otherwise a table:
 --   cannot = text why he can not wear it, or
 --   worn = his item in that slot (nil = empty), wornLevel, level, gap (level minus wornLevel),
---   gains and loses (lists of text), same.
+--   gains and loses (lists of text), parts (each stat: key, label, diff, text), same.
 -- It only states facts. Whether the item is better for him depends on how he plays, and that
 -- is for the guide to judge.
 local function Compare(link, d)
@@ -127,10 +128,10 @@ local function Compare(link, d)
         local w = Info(res.worn)
         res.wornName, res.wornQuality, res.wornLevel = w and w.name, w and w.quality, w and w.level
         if res.level and res.wornLevel then res.gap = res.level - res.wornLevel end
-        if not res.same then res.gains, res.loses = Difference(link, res.worn) end
+        if not res.same then res.gains, res.loses, res.parts = Difference(link, res.worn) end
     else
         res.empty = true
-        res.gains, res.loses = Difference(link, nil)
+        res.gains, res.loses, res.parts = Difference(link, nil)
     end
     return res
 end
@@ -232,8 +233,42 @@ local function Link(item, name, quality)
     return "|cff" .. (QUALITY[quality or 1] or "ffffff") .. "|H" .. item .. "|h" .. (name or "loading...") .. "|h|r"
 end
 
+-- The stats a guide says count for one person: stat key -> its name. Kept between sessions.
+-- The addon does not know how he plays. The guide does, and says so here.
+local function Focus(name)
+    ns.db.focus = ns.db.focus or {}
+    local key = tostring(name):lower()
+    ns.db.focus[key] = ns.db.focus[key] or {}
+    return ns.db.focus[key]
+end
+
+function DadMode_ToggleFocus(name, key, label)
+    local focus = Focus(name)
+    if focus[key] then
+        focus[key] = nil
+    else
+        focus[key] = label
+        ns.db.gearSort = "stats"        -- picking a stat is asking for the list in that order
+    end
+    DadMode_RenderQuests()
+end
+
+function DadMode_SetGearSort(mode)
+    ns.db.gearSort = mode
+    DadMode_RenderQuests()
+end
+
+-- How much one item moves the stats that count for him: gains minus losses
+local function Score(res, focus)
+    local sum = 0
+    for _, part in ipairs(res.parts or {}) do
+        if focus[part.key] then sum = sum + part.diff end
+    end
+    return sum
+end
+
 -- One row of the "In his bags" list: the facts about one item, and a button when he can wear it
-local function BagRow(name, d, item, res)
+local function BagRow(name, d, item, res, focus)
     local row = { row = true, slot = SLOTS[res.slot] or "", chips = {} }
     row.title = Link(item, res.name, res.quality) .. (res.level and (GREY .. "  " .. res.level .. "|r") or "")
     local sub = {}
@@ -250,8 +285,18 @@ local function BagRow(name, d, item, res)
         end
         if res.lighter then sub[#sub + 1] = GREY .. "this is " .. res.lighter .. ", he can wear " .. res.most .. "|r" end
         if res.needs then sub[#sub + 1] = GREY .. "needs level " .. res.needs .. "|r" end
-        for _, text in ipairs(res.gains or {}) do row.chips[#row.chips + 1] = { text = text, good = true } end
-        for _, text in ipairs(res.loses or {}) do row.chips[#row.chips + 1] = { text = text, good = false } end
+        -- with stats picked for him, those are bright and come first; the rest is dimmed
+        local picked = next(focus) ~= nil
+        local function Add(want)
+            for _, part in ipairs(res.parts or {}) do
+                local counts = (not picked) or focus[part.key]
+                if (counts and true or false) == want then
+                    row.chips[#row.chips + 1] = { text = part.text, kind = (part.diff > 0 and "good" or "bad") .. (counts and "" or "dim") }
+                end
+            end
+        end
+        Add(true)
+        Add(false)
         if not res.needs then
             local state = WEAR_STATE[d.wearTold and d.wearTold[item] or ""]
             row.button = { text = state and state[1] or "Put it on", kind = state and state[2] or "action" }
@@ -264,7 +309,8 @@ local function BagRow(name, d, item, res)
     return row
 end
 
--- The "In his bags" part of the Gear tab: a heading, then one row for each thing he could wear
+-- The "In his bags" part of the Gear tab: a heading, the stats that count for him, how the list
+-- is sorted, then one row for each thing he could wear
 function DadMode_BagRows(name, d, lines)
     lines[#lines + 1] = "|cffe8c36aIn his bags|r  " .. GREY .. "what changes if he puts it on|r"
     if not d.bagGear then
@@ -275,23 +321,59 @@ function DadMode_BagRows(name, d, lines)
         lines[#lines + 1] = GREY .. "Nothing to wear in his bags.|r"
         return
     end
-    local list = {}
+    local focus = Focus(name)
+    local picked = next(focus) ~= nil
+    local mode = ns.db.gearSort or (picked and "stats" or "slot")
+    if mode == "stats" and not picked then mode = "slot" end
+
+    local list, stats = {}, {}
+    for key, label in pairs(focus) do stats[key] = label end
     for _, item in ipairs(d.bagGear) do
         local res = Compare(item, d)
         if res then
-            -- what he can put on right now comes first, then by slot, then the highest item level
+            -- what he can put on right now comes first; what he can not wear comes last
             local rank = (res.cannot and 3) or (res.same and 2) or (res.needs and 1) or 0
-            list[#list + 1] = { item = item, res = res, rank = rank, index = #list + 1 }
+            local entry = { item = item, res = res, rank = rank, index = #list + 1, score = 0, gap = -999 }
+            if rank <= 1 then
+                for _, part in ipairs(res.parts or {}) do stats[part.key] = part.label end
+                entry.score = Score(res, focus)
+                entry.gap = res.gap or (res.empty and (res.level or 0)) or -999
+            end
+            list[#list + 1] = entry
         end
     end
     table.sort(list, function(a, b)
         if a.rank ~= b.rank then return a.rank < b.rank end
+        if mode == "stats" and a.score ~= b.score then return a.score > b.score end
+        if mode == "level" and a.gap ~= b.gap then return a.gap > b.gap end
         if (a.res.slot or 0) ~= (b.res.slot or 0) then return (a.res.slot or 0) < (b.res.slot or 0) end
         if (a.res.level or 0) ~= (b.res.level or 0) then return (a.res.level or 0) > (b.res.level or 0) end
         return a.index < b.index
     end)
+
+    -- the stats to pick from: every stat that shows up in the list
+    local names = {}
+    for key, label in pairs(stats) do names[#names + 1] = { key = key, label = label } end
+    table.sort(names, function(a, b) return a.label < b.label end)
+    if #names > 0 then
+        local items = {}
+        for _, stat in ipairs(names) do
+            items[#items + 1] = { text = stat.label, on = focus[stat.key] and true or false,
+                onClick = function() DadMode_ToggleFocus(name, stat.key, stat.label) end }
+        end
+        lines[#lines + 1] = { bar = true, label = "What counts for " .. name .. "? Click his stats.", items = items }
+    end
+    if #list > 1 then
+        local items = {}
+        for _, def in ipairs({ { "slot", "By slot" }, { "level", "Item level" }, { "stats", "His stats" } }) do
+            if def[1] ~= "stats" or picked then
+                items[#items + 1] = { text = def[2], on = (mode == def[1]), onClick = function() DadMode_SetGearSort(def[1]) end }
+            end
+        end
+        lines[#lines + 1] = { bar = true, label = "Sort", items = items }
+    end
     for _, entry in ipairs(list) do
-        lines[#lines + 1] = BagRow(name, d, entry.item, entry.res)
+        lines[#lines + 1] = BagRow(name, d, entry.item, entry.res, focus)
     end
 end
 

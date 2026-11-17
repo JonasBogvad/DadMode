@@ -1,5 +1,14 @@
 # DadMode changes
 
+## 1.27.0
+
+- **Tell the addon what counts for him.** On the Gear tab, above the items in his bags, click the stats that matter for how he plays (Strength, Agility, Spell Power and so on). Items that gain those stats come first, and their chips are bright while the rest is dimmed. It is remembered for each person.
+- **Sort the bag list** by slot, by item level, or by his stats.
+- **The whole window is rows and boxes now, not pages of text.** Overview is a grid of small boxes. Quests, Missing and Dungeon have one row for each quest, with small coloured boxes for its state. Dungeons open with a button.
+- **The top line says who it is about** on every tab: name, class, level and zone.
+- The Gear tab starts with what is in his bags, since that is where there is something to do.
+- The window has the game's own look: a gold edge, dark red buttons with gold text, and the game's green and red.
+
 ## 1.26.0
 
 - **Gear is now shown as facts, with no verdict.** DadMode no longer says an item is BETTER. It only knew the item level, not how he plays. You see what he gains (green) and what he loses (red), and you decide. This goes for the Gear tab, item tooltips and the chat line on drops.

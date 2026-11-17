@@ -12,51 +12,40 @@ end
 
 local GOOD, WARN, BAD, GREY = "|cff6fcf97", "|cffe8c36a", "|cffeb7a7a", "|cff9aa0a6"
 
--- The card at the top: how he is doing right now
-function DadMode_StatusLines(name, st, lines)
-    local head = "|cffe8c36a" .. name .. "|r"
-    if st.lv then
-        head = head .. "   level " .. st.lv .. (st.xp and (GREY .. " (" .. st.xp .. "% to " .. (st.lv + 1) .. ")|r") or "")
+-- The tiles at the top of the Overview: how he is doing right now
+function DadMode_StatusTiles(st)
+    local tiles = {}
+    local function Add(label, value, kind, wide)
+        tiles[#tiles + 1] = { label = label, value = tostring(value), kind = kind, wide = wide }
     end
-    if st.g then head = head .. "   " .. DadMode_Coins(st.g) end
-    lines[#lines + 1] = head
+    if st.lv then Add("Level", st.lv .. (st.xp and (GREY .. "  " .. st.xp .. "% to " .. (st.lv + 1) .. "|r") or "")) end
+    if st.g then Add("Gold", DadMode_Coins(st.g)) end
 
     local state = {}
-    if st.dead == 1 then state[#state + 1] = BAD .. "DEAD|r" end
-    if st.cb == 1 then state[#state + 1] = WARN .. "in a fight|r" end
-    if st.afk == 1 then state[#state + 1] = WARN .. "away from keyboard|r" end
-    if #state > 0 then lines[#lines + 1] = table.concat(state, "   ") end
+    if st.dead == 1 then state[#state + 1] = "DEAD" end
+    if st.cb == 1 then state[#state + 1] = "in a fight" end
+    if st.afk == 1 then state[#state + 1] = "away from keyboard" end
+    if #state > 0 then Add("Right now", table.concat(state, ", "), st.dead == 1 and "bad" or "warn", true) end
 
-    if st.z then
-        lines[#lines + 1] = "Where: " .. st.z .. ((st.sz and st.sz ~= st.z) and (", " .. st.sz) or "")
-    end
-    if st.tg then lines[#lines + 1] = "Looking at: " .. st.tg end
-
-    local row = {}
+    if st.z then Add("Where", st.z .. ((st.sz and st.sz ~= st.z) and (", " .. st.sz) or ""), nil, true) end
+    if st.tg then Add("Looking at", st.tg, nil, true) end
     if st.bf and st.bt then
-        local col = (st.bf <= 2 and BAD) or (st.bf <= 6 and WARN) or GOOD
-        row[#row + 1] = "Bags: " .. col .. (st.bf == 0 and "FULL" or (st.bf .. " free")) .. "|r" .. GREY .. " of " .. st.bt .. "|r"
+        Add("Bags", (st.bf == 0 and "FULL" or (st.bf .. " free")) .. GREY .. " of " .. st.bt .. "|r",
+            (st.bf <= 2 and "bad") or (st.bf <= 6 and "warn") or "good")
     end
     if st.dur then
-        local col = ((st.brk or 0) > 0 or st.dur <= 20) and BAD or (st.dur <= 40 and WARN) or GOOD
-        row[#row + 1] = "Gear: " .. col .. "worst piece " .. st.dur .. "%|r"
-            .. ((st.brk or 0) > 0 and (BAD .. ", " .. st.brk .. " broken, needs repair|r") or "")
+        local broken = (st.brk or 0) > 0
+        Add("Gear", "worst piece " .. st.dur .. "%" .. (broken and (", " .. st.brk .. " broken, needs repair") or ""),
+            (broken or st.dur <= 20) and "bad" or (st.dur <= 40 and "warn") or "good", broken)
     end
-    if #row > 0 then lines[#lines + 1] = table.concat(row, "     ") end
-
-    row = {}
-    if st.fd then row[#row + 1] = "Food and drink: " .. (st.fd == 0 and (BAD .. "0|r") or st.fd) end
-    if st.bd then row[#row + 1] = "Bandages: " .. (st.bd == 0 and (WARN .. "0|r") or st.bd) end
-    if st.pot then row[#row + 1] = "Potions: " .. st.pot end
-    if #row > 0 then lines[#lines + 1] = table.concat(row, "    ") end
-
-    row = {}
+    if st.fd then Add("Food and drink", st.fd, st.fd == 0 and "bad" or nil) end
+    if st.bd then Add("Bandages", st.bd, st.bd == 0 and "warn" or nil) end
+    if st.pot then Add("Potions", st.pot) end
     if st.hs then
-        row[#row + 1] = "Hearthstone: " .. st.hs
-            .. (st.hcd and (st.hcd == 0 and (GOOD .. ", ready|r") or (GREY .. ", ready in " .. st.hcd .. " min|r")) or "")
+        Add("Hearthstone", st.hs .. (st.hcd and (st.hcd == 0 and (GOOD .. ", ready|r") or (GREY .. ", ready in " .. st.hcd .. " min|r")) or ""), nil, true)
     end
-    if st.tp and st.tp > 0 then row[#row + 1] = WARN .. "Unspent talent points: " .. st.tp .. "|r" end
-    if #row > 0 then lines[#lines + 1] = table.concat(row, "     ") end
+    if st.tp and st.tp > 0 then Add("Talent points", st.tp .. " unspent", "warn") end
+    return tiles
 end
 
 -- The quest that comes after this one, if the Questie addon is installed on THIS computer.
@@ -112,17 +101,17 @@ local STAT_ROWS = {
     { { "sp", "Spell power" }, { "heal", "Healing" }, { "scr", "Spell crit", true }, { "ap", "Attack power" }, { "mcr", "Melee crit", true } },
 }
 
-function DadMode_StatLines(stats, lines)
+function DadMode_StatTiles(stats)
+    local tiles = {}
     for _, row in ipairs(STAT_ROWS) do
-        local parts = {}
         for _, def in ipairs(row) do
             local v = stats[def[1]]
             if v then
-                parts[#parts + 1] = GREY .. def[2] .. "|r " .. (def[3] and (("%.1f%%"):format(v / 10)) or v)
+                tiles[#tiles + 1] = { label = def[2], value = def[3] and (("%.1f%%"):format(v / 10)) or tostring(v) }
             end
         end
-        if #parts > 0 then lines[#lines + 1] = table.concat(parts, "    ") end
     end
+    return tiles
 end
 
 function DadMode_GearLines(gear, lines)
@@ -267,6 +256,21 @@ end
 
 DadMode_AskDone = function(name) return AskDone(name) end
 
+-- One quest as a row: its level on the left, the name, small boxes for where it stands, and
+-- the smaller lines under it
+local function QuestRow(q, chips, sub)
+    return { row = true, slot = (q.level and q.level > 0) and tostring(q.level) or "", title = q.title,
+        chips = chips, chipsTop = true, sub = table.concat(sub or {}, "\n") }
+end
+ns.QuestRow = QuestRow
+
+local function ClassName(token)
+    if type(LOCALIZED_CLASS_NAMES_MALE) == "table" and ns.Usable(LOCALIZED_CLASS_NAMES_MALE[token], "string") then
+        return LOCALIZED_CLASS_NAMES_MALE[token]
+    end
+    return token:sub(1, 1) .. token:sub(2):lower()
+end
+
 local STALE = 25        -- seconds without the end of a quest list before what arrived is shown as it is
 
 local function RenderQuests()
@@ -274,16 +278,23 @@ local function RenderQuests()
     local filter = ns.questWin.filter
     local view = ns.questWin.view
     local myQuests = MyQuests()
-    do  -- the title names the one it is about, when it is about one person
-        local only, count = nil, 0
-        for name in pairs(ns.questData) do only, count = name, count + 1 end
-        ns.questWin.title:SetText("|cffe8c36a" .. ((count == 1) and ("How is " .. only .. " doing") or "How are they doing") .. "|r")
+    local people = 0
+    do  -- the header: who it is about, with class, level and where he is. The same on every tab.
+        local only
+        for name in pairs(ns.questData) do only, people = name, people + 1 end
+        if people == 1 then
+            local st = ns.questData[only].st or {}
+            local about = {}
+            if type(st.cl) == "string" then about[#about + 1] = ClassName(st.cl) end
+            if st.lv then about[#about + 1] = "level " .. st.lv end
+            if st.z then about[#about + 1] = st.z end
+            ns.questWin.title:SetText("|cffe8c36a" .. only .. "|r" .. (#about > 0 and ("  " .. GREY .. table.concat(about, ", ") .. "|r") or ""))
+        else
+            ns.questWin.title:SetText("|cffe8c36aHow are they doing|r")
+        end
     end
     local now = GetTime()
     local lines, any = {}, false
-    local function QuestLine(q)
-        return (q.level > 0 and ("|cff9aa0a6[" .. q.level .. "]|r ") or "") .. q.title
-    end
     for name, d in pairs(ns.questData) do
         any = true
         -- an old DadMode on his side can lose the end of a long list: show what did arrive
@@ -324,40 +335,39 @@ local function RenderQuests()
             lines[#lines + 1] = " "
         elseif view == "overview" then
             local age = math.floor(now - (d.at or now))
+            if people > 1 then lines[#lines + 1] = "|cffe8c36a" .. name .. "|r" end
+            local tiles = (d.st and next(d.st)) and DadMode_StatusTiles(d.st) or {}
+            tiles[#tiles + 1] = { label = "Quests", wide = true,
+                value = #list .. (ready > 0 and (GOOD .. ", " .. ready .. " ready to hand in|r") or "") .. progress }
+            if d.done then
+                tiles[#tiles + 1] = { label = "Missing", wide = true, kind = (#missing > 0) and "bad" or "good",
+                    value = (#missing > 0) and (#missing .. " of your quests are not in his log") or "none, he has every quest you have" }
+            end
+            lines[#lines + 1] = { tiles = tiles }
             if d.st and next(d.st) then
-                DadMode_StatusLines(name, d.st, lines)
                 lines[#lines + 1] = GREY .. "updated " .. (age < 5 and "just now" or (age .. " seconds ago"))
                     .. (d.st.v and ("   DadMode " .. d.st.v) or "") .. "|r"
-            else
-                lines[#lines + 1] = "|cffe8c36a" .. name .. "|r"
-            end
-            lines[#lines + 1] = " "
-            lines[#lines + 1] = "|cffe8c36aQuests|r  " .. #list .. (ready > 0 and ("   " .. GOOD .. ready .. " ready to hand in|r") or "") .. progress
-            if d.done then
-                lines[#lines + 1] = (#missing > 0)
-                    and ("|cffe8c36aMissing|r  " .. BAD .. #missing .. "|r" .. GREY .. " of your quests are not in his log. See the Missing tab.|r")
-                    or ("|cffe8c36aMissing|r  " .. GOOD .. "none|r" .. GREY .. ". He has every quest you have.|r")
             end
             lines[#lines + 1] = " "
 
         elseif view == "gear" then
-            lines[#lines + 1] = "|cffe8c36a" .. name .. "|r"
-            if d.stats and next(d.stats) then
-                lines[#lines + 1] = "|cffe8c36aStats|r"
-                DadMode_StatLines(d.stats, lines)
+            if people > 1 then lines[#lines + 1] = "|cffe8c36a" .. name .. "|r" end
+            -- first what can be acted on: the things in his bags
+            if DadMode_BagRows then
+                DadMode_BagRows(name, d, lines)
                 lines[#lines + 1] = " "
             end
-            lines[#lines + 1] = "|cffe8c36aGear|r  " .. GREY .. "hold the mouse over an item to see its stats|r"
+            if d.stats and next(d.stats) then
+                lines[#lines + 1] = "|cffe8c36aStats|r"
+                lines[#lines + 1] = { tiles = DadMode_StatTiles(d.stats) }
+            end
+            lines[#lines + 1] = "|cffe8c36aWearing|r  " .. GREY .. "hold the mouse over an item to see its stats|r"
             if d.gear then
                 DadMode_GearLines(d.gear, lines)
             else
                 lines[#lines + 1] = GREY .. "No gear information. " .. name .. " needs DadMode 1.8 or newer.|r"
             end
             lines[#lines + 1] = " "
-            if DadMode_BagRows then
-                DadMode_BagRows(name, d, lines)
-                lines[#lines + 1] = " "
-            end
             if d.cons then
                 DadMode_ConsumableLines(d.cons, lines)
                 lines[#lines + 1] = " "
@@ -383,12 +393,12 @@ local function RenderQuests()
                 local waited = now - (d.checkAsked or now)
                 for _, q in ipairs(shown) do
                     local state = d.check and d.check[q.id]
-                    local note
-                    if state == true then note = GOOD .. "already done|r"
-                    elseif state == false then note = BAD .. "not picked up|r"
-                    elseif waited > 4 then note = GREY .. "unknown. " .. name .. " needs DadMode 1.16 or newer|r"
-                    else note = GREY .. "checking...|r" end
-                    lines[#lines + 1] = QuestLine(q) .. "  " .. note
+                    local chip
+                    if state == true then chip = { text = "already done", kind = "good" }
+                    elseif state == false then chip = { text = "not picked up", kind = "bad" }
+                    elseif waited > 4 then chip = { text = "unknown, " .. name .. " needs DadMode 1.16 or newer", kind = "dim" }
+                    else chip = { text = "checking...", kind = "dim" } end
+                    lines[#lines + 1] = QuestRow(q, { chip })
                 end
             end
             lines[#lines + 1] = " "
@@ -413,29 +423,29 @@ local function RenderQuests()
             end)
             for _, q in ipairs(shown) do
                 local mine = myQuests[q.id]
-                lines[#lines + 1] = " "
-                lines[#lines + 1] = QuestLine(q)
-                    .. (q.done and "  |cff6fcf97ready to hand in|r" or "")
-                    .. (mine and "  |cff6fb1e8you have it too|r" or ("  |cff9aa0a6only " .. name .. "|r"))
+                local chips, sub = {}, {}
+                if q.done then chips[#chips + 1] = { text = "ready to hand in", kind = "good" } end
+                chips[#chips + 1] = mine and { text = "you have it too", kind = "plain" } or { text = "only " .. name, kind = "dim" }
                 for _, o in ipairs(q.objs) do
                     local finished = o:sub(1, 1) == "+"
-                    lines[#lines + 1] = "    " .. (finished and "|cff6fcf97" or "|cff9aa0a6") .. o:sub(2) .. "|r"
+                    sub[#sub + 1] = (finished and "|cff6fcf97" or "|cff9aa0a6") .. o:sub(2) .. "|r"
                 end
                 if mine then
                     local parts = {}
                     for _, o in ipairs(mine.objs) do parts[#parts + 1] = o:sub(2) end
-                    lines[#lines + 1] = "    |cff6fb1e8you: " .. (mine.done and "ready to hand in" or (#parts > 0 and table.concat(parts, ", ") or "not done")) .. "|r"
+                    sub[#sub + 1] = "|cff6fb1e8you: " .. (mine.done and "ready to hand in" or (#parts > 0 and table.concat(parts, ", ") or "not done")) .. "|r"
                 end
                 if q.done then
                     local who, zone = DadMode_TurnIn(q.id)
                     if who then
-                        lines[#lines + 1] = "    |cffe8c36ahand in: " .. who .. (zone and (", " .. zone) or "") .. "|r"
+                        sub[#sub + 1] = "|cffe8c36ahand in: " .. who .. (zone and (", " .. zone) or "") .. "|r"
                     end
                 end
                 local nextName, nextLevel = DadMode_NextInChain(q.id)
                 if nextName then
-                    lines[#lines + 1] = "    |cff6fb1e8then: " .. nextName .. (nextLevel and (" [" .. nextLevel .. "]") or "") .. "|r"
+                    sub[#sub + 1] = "|cff6fb1e8then: " .. nextName .. (nextLevel and (" [" .. nextLevel .. "]") or "") .. "|r"
                 end
+                lines[#lines + 1] = QuestRow(q, chips, sub)
             end
             lines[#lines + 1] = " "
         end
@@ -585,6 +595,15 @@ function DadMode_ReceiveQuestData(sender, text)
     RenderQuests()
 end
 
+-- Opens one dungeon on the Dungeon tab. 0 or nil goes back to the list of dungeons.
+function DadMode_OpenDungeon(id)
+    ns.questWin.dungeon = (id and id > 0) and id or false
+    if ns.questWin.dungeon and ns.db.helper then
+        for name in pairs(ns.questData) do pcall(DadMode_AskDone, name) end
+    end
+    ns.questWin.SetView("dungeon")
+end
+
 -- Makes the links inside a frame work: the mouse over an item shows the game's tooltip, a click
 -- on a dungeon name opens it. The frame still drags the window.
 function ns.EnableLinks(c)
@@ -603,13 +622,7 @@ function ns.EnableLinks(c)
         c:SetScript("OnHyperlinkLeave", function() if GameTooltip then GameTooltip:Hide() end end)
         c:SetScript("OnHyperlinkClick", function(self, link, text, button)
             if type(link) == "string" and link:sub(1, 16) == "dadmode:dungeon:" then
-                -- a dungeon name on the Dungeon tab was clicked (0 = back to the list)
-                local id = tonumber(link:sub(17))
-                ns.questWin.dungeon = (id and id > 0) and id or false
-                if ns.questWin.dungeon and ns.db.helper then
-                    for name in pairs(ns.questData) do pcall(DadMode_AskDone, name) end
-                end
-                ns.questWin.SetView("dungeon")
+                DadMode_OpenDungeon(tonumber(link:sub(17)))
             elseif type(SetItemRef) == "function" then
                 pcall(SetItemRef, link, text, button)
             end
@@ -629,9 +642,20 @@ function DadMode_CreateQuestWindow()
     ns.questWin:RegisterForDrag("LeftButton")
     ns.questWin:SetScript("OnDragStart", ns.questWin.StartMoving)
     ns.questWin:SetScript("OnDragStop", ns.questWin.StopMovingOrSizing)
-    ns.Tex(ns.questWin, "BACKGROUND", 0.07, 0.08, 0.10, 0.97):SetAllPoints()
+    ns.Tex(ns.questWin, "BACKGROUND", 0.06, 0.05, 0.04, 0.97):SetAllPoints()
+    -- the gold edge the game's own tooltips and windows have
+    pcall(function()
+        local edge = CreateFrame("Frame", nil, ns.questWin, "BackdropTemplate")
+        edge:SetPoint("TOPLEFT", -4, 4)
+        edge:SetPoint("BOTTOMRIGHT", 4, -4)
+        edge:SetBackdrop({ edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border", edgeSize = 16 })
+        edge:SetBackdropBorderColor(0.80, 0.65, 0.30, 1)
+        ns.questWin.edge = edge
+    end)
     local title = ns.questWin:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     title:SetPoint("TOPLEFT", 12, -10)
+    title:SetJustifyH("LEFT")
+    pcall(function() title:SetWordWrap(false) end)
     title:SetText("|cffe8c36aHow are they doing|r")
     ns.questWin.title = title
 
@@ -641,12 +665,15 @@ function DadMode_CreateQuestWindow()
     local again = ns.BigButton(ns.questWin, 70, 22, function() AskQuests() end)
     again:SetPoint("RIGHT", close, "LEFT", -6, 0)
     again.label:SetText("Refresh")
-    ns.questWin.texts, ns.questWin.rows, ns.questWin.usedRows = {}, {}, 0
+    ns.questWin.texts, ns.questWin.rows, ns.questWin.bars, ns.questWin.grids = {}, {}, {}, {}
+    ns.questWin.usedRows, ns.questWin.usedBars, ns.questWin.usedGrids = 0, 0, 0
     ns.questWin.view = "overview"
     ns.questWin.filter = ""
     ns.questWin.dungeon = false          -- the dungeon picked on the Dungeon tab
+    title:SetPoint("RIGHT", again, "LEFT", -8, 0)        -- a long header is cut off, it does not run under the buttons
     for _, b in ipairs({ close, again }) do
         ns.FontSize(b.label, 12)
+        b.bg:SetColorTexture(0.15, 0.14, 0.12, 1)
     end
 
     -- Tabs: one thing at a time
@@ -656,7 +683,7 @@ function DadMode_CreateQuestWindow()
         ns.questWin.view = view
         for key, tab in pairs(ns.questWin.tabs) do
             local on = (key == view)
-            tab.bg:SetColorTexture(on and 0.40 or 0.16, on and 0.33 or 0.18, on and 0.14 or 0.22, 1)
+            tab.bg:SetColorTexture(on and 0.42 or 0.15, on and 0.08 or 0.14, on and 0.06 or 0.12, 1)
         end
         -- the search box belongs to the two quest lists
         local searching = (view == "quests" or view == "missing" or (view == "dungeon" and ns.questWin.dungeon and true or false))
