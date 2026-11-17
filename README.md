@@ -9,7 +9,7 @@ Version 1.25.0. Game interface 16001 (WoW Forever 1.60).
 
 ## Install
 
-1. Unzip. You get a folder called `DadMode`. Inside are `DadMode.toc`, 25 `.lua` files, `Arrow.tga`, `Logo.tga` and `README.md`.
+1. Unzip. You get a folder called `DadMode`. Inside are `DadMode.toc`, 26 `.lua` files, `Arrow.tga`, `Logo.tga` and `README.md`.
    - **Downloaded from GitHub with Code, Download ZIP?** Then the folder is called `DadMode-main`. Rename it to `DadMode`, or the game will not load it. The zip under Releases has the right name already.
    - **Downloaded from GitHub with Code, Download ZIP?** Then the folder is called `DadMode-main`. Rename it to `DadMode`, or the game will not load it.
 2. Put the folder in `World of Warcraft\_forever_\Interface\AddOns\`.
@@ -56,6 +56,7 @@ Until you answer, nothing of yours is sent to that person. Their window says you
 | Call me | Calls from guides do not show |
 | Set waypoints for me | Waypoints are not taken |
 | Tell me to put on gear | The gold button never appears |
+| See my talents and point at one | The Talents tab says he does not share them, and nobody can point at a talent |
 
 The switches are the same for all your guides. The same page lists everyone you approved or refused, with **Remove** and **Forget**. A removed or forgotten person is asked about again next time.
 
@@ -282,6 +283,18 @@ To record an exact spot, a guide stands on the dock and types `/dadmode stop NAM
 
 Limits: the arrow cannot point up, so climbing the tower is text only. An addon cannot see which zeppelin is docked or when it leaves. Which side of the tower is taken from the classic game; if Forever differs, go by the zeppelin master's name.
 
+### His talents
+
+The **Talents** tab draws his talent trees the way his own talent window shows them: every talent is a picture in the same row and column, with its rank under it (**3/5**). Taken talents are bright, the rest are dimmed. The name of each tree has its points next to it, so **Enhancement 31** tells you his build at a glance, and with that which stats to click under **What counts for him** on the Gear tab.
+
+- The line at the top says how many points he has to spend.
+- Hold the mouse over a talent for its name, rank and where it sits.
+- **Click a talent to point at it.** On his screen a call sounds and the big text says **Anna says: put your talent point in Flurry**, with the tree and the row, counted from the top. Your tab says **Told him**, then **He sees it**. He spends the point himself; the game does not let anybody do that for him.
+
+Nothing is written per class. His addon reads whatever trees his character has and sends them, so it works for every class and keeps working when the game changes its talents.
+
+His talents are only asked for when you open this tab, and again with Refresh. He needs DadMode 1.31 or newer. If his game version does not let an addon read talents, the tab says so.
+
 ### When he is not in your party
 
 You can still see how he is doing. Your addon remembers everybody you have guided: that happens by itself the first time you open the window in a party with them. After that, opening the window when he is not in your party asks him by whisper. Nothing shows in chat on either side.
@@ -292,7 +305,7 @@ You can still see how he is doing. Your addon remembers everybody you have guide
 | **Olaf is not online.** | The game said so. He is not asked again for two minutes |
 | **Olaf does not answer.** | He is online but his addon stays quiet: he has DadMode older than 1.28, or he has not approved you |
 
-- **Put it on** works outside the party too.
+- **Put it on**, and his talents with pointing at one, work outside the party too.
 - Arrows, distance, the far-away warning, calls and waypoints need a party. The game only tells positions inside one.
 - He needs DadMode 1.28 or newer, and so do you.
 - `/dadmode forget olaf` takes somebody off your list.
@@ -301,7 +314,7 @@ You can still see how he is doing. Your addon remembers everybody you have guide
 
 The top line says who it is about: **Olaf  Shaman, level 40, Stranglethorn Vale**. It is the same on every tab. With more than one person to guide it says **How are they doing** and each name is on the page.
 
-The window has five tabs:
+The window has six tabs:
 
 | Tab | Shows |
 |---|---|
@@ -310,6 +323,7 @@ The window has five tabs:
 | **Missing** | Your quests that are not in his log: not picked up, or already done. With search |
 | **Dungeon** | Every quest for one dungeon, and where he stands on each. See below |
 | **Gear** | What is in his bags against what he wears, his total stats, what he wears, and his potions, food and bandages |
+| **Talents** | His talent trees, drawn like his own talent window. See below |
 
 Every list is built the same way: one row for each thing, a label on the left, the name, small coloured boxes for the state (green is good or done, red is missing or lost, grey is a plain fact), and a button on the right when there is something to do. The colours and the gold edge are the game's own, and every DadMode window and button has them: the guide bar, the window to pick people, the Yes / No box, the follow button.
 
@@ -478,6 +492,7 @@ A guide outside his party can ask too, but only one he has already said yes to. 
   | `Extras.lua` | Version check, warnings on the guide bar, polling |
   | `Private.lua` | The guide's safety net for whispers |
   | `Remote.lua` | Guiding somebody who is not in the party, by whisper |
+  | `Talents.lua` | His talents: reading them, sending them, pointing at one |
 
 - **How the files share things.** The game gives every file of an addon the same table (`local ADDON, ns = ...`). A function or table that other files need stays a normal `local` in its own file and is copied into the table at the bottom of that file ("used by other files"). Other files read it as `ns.<name>`. Anything that changes while playing (saved settings `ns.db`, the windows, a few counters) lives in the table only, so every file sees the same value. Some features also offer global functions named `DadMode_<Name>`.
 - **Events.** A file may add to `ns.handlers`. All events in that table are registered when DadMode's own `ADDON_LOADED` arrives, which is after every file has loaded.

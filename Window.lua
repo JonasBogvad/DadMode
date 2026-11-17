@@ -338,6 +338,7 @@ local function RenderQuests()
         local hidden = (view == "overview" and perm.status == false and "status")
             or ((view == "quests" or view == "missing" or view == "dungeon") and perm.quests == false and "quests")
             or (view == "gear" and perm.gear == false and "gear")
+            or (view == "talents" and perm.talents == false and "talents")
         if hidden then
             lines[#lines + 1] = "|cffe8c36a" .. name .. "|r"
             lines[#lines + 1] = GREY .. name .. " does not share his " .. hidden .. " with guides.|r"
@@ -381,6 +382,11 @@ local function RenderQuests()
                 DadMode_ConsumableLines(d.cons, lines)
                 lines[#lines + 1] = " "
             end
+
+        elseif view == "talents" then
+            if people > 1 then lines[#lines + 1] = "|cffe8c36a" .. name .. "|r" end
+            DadMode_TalentBlocks(name, d, lines, now)
+            lines[#lines + 1] = " "
 
         elseif view == "missing" then
             -- quests I am on that he is not: did he never pick them up, or is he already done?
@@ -515,6 +521,7 @@ local function AskQuests()
     end
     -- and the people I guide who are not in my party, by whisper
     pcall(DadMode_AskRemote, false)
+    if ns.questWin and ns.questWin.view == "talents" then pcall(DadMode_AskTalents, true) end
     RenderQuests()
     if C_Timer and C_Timer.After then C_Timer.After(4.2, RenderQuests) end
 end
@@ -680,7 +687,7 @@ function DadMode_CreateQuestWindow()
     local again = ns.BigButton(ns.questWin, 70, 22, function() AskQuests() end)
     again:SetPoint("RIGHT", close, "LEFT", -6, 0)
     again.label:SetText("Refresh")
-    ns.questWin.texts, ns.questWin.rows, ns.questWin.bars, ns.questWin.grids = {}, {}, {}, {}
+    ns.questWin.texts, ns.questWin.rows, ns.questWin.bars, ns.questWin.grids, ns.questWin.forests = {}, {}, {}, {}, {}
     ns.questWin.usedRows, ns.questWin.usedBars, ns.questWin.usedGrids = 0, 0, 0
     ns.questWin.view = "overview"
     ns.questWin.filter = ""
@@ -692,7 +699,7 @@ function DadMode_CreateQuestWindow()
     end
 
     -- Tabs: one thing at a time
-    local TABS = { { "overview", "Overview" }, { "quests", "Quests" }, { "missing", "Missing" }, { "dungeon", "Dungeon" }, { "gear", "Gear" } }
+    local TABS = { { "overview", "Overview" }, { "quests", "Quests" }, { "missing", "Missing" }, { "dungeon", "Dungeon" }, { "gear", "Gear" }, { "talents", "Talents" } }
     ns.questWin.tabs = {}
     local function SetView(view)
         ns.questWin.view = view
@@ -712,12 +719,17 @@ function DadMode_CreateQuestWindow()
             ns.questWin.scroll:SetPoint("BOTTOMRIGHT", -12, 12)
             ns.questWin.scroll:SetVerticalScroll(0)
         end
+        -- his talents are only asked for when somebody looks at them
+        if view == "talents" then
+            pcall(DadMode_AskTalents, false)
+            if C_Timer and C_Timer.After then C_Timer.After(6.5, function() DadMode_RenderQuests() end) end
+        end
         DadMode_RenderQuests()
     end
     ns.questWin.SetView = SetView
     for i, def in ipairs(TABS) do
-        local tab = ns.BigButton(ns.questWin, 70, 22, function() SetView(def[1]) end)
-        tab:SetPoint("TOPLEFT", 12 + (i - 1) * 74, -36)
+        local tab = ns.BigButton(ns.questWin, 68, 22, function() SetView(def[1]) end)
+        tab:SetPoint("TOPLEFT", 12 + (i - 1) * 72, -36)
         tab.label:SetText(def[2])
         ns.FontSize(tab.label, 12)
         ns.questWin.tabs[def[1]] = tab
@@ -793,10 +805,11 @@ function DadMode_CreateQuestWindow()
     end
     pcall(function()
         ns.questWin:SetResizable(true)
-        if ns.questWin.SetResizeBounds then ns.questWin:SetResizeBounds(400, 240, 1000, 1100)
-        elseif ns.questWin.SetMinResize then ns.questWin:SetMinResize(400, 240) end
+        -- not narrower than the six tabs
+        if ns.questWin.SetResizeBounds then ns.questWin:SetResizeBounds(456, 240, 1000, 1100)
+        elseif ns.questWin.SetMinResize then ns.questWin:SetMinResize(456, 240) end
     end)
-    if ns.db.questSize then ns.questWin:SetSize(ns.db.questSize[1], ns.db.questSize[2]) end
+    if ns.db.questSize then ns.questWin:SetSize(math.max(ns.db.questSize[1], 456), ns.db.questSize[2]) end
     local grip = ns.MakeGrip(ns.questWin)
     ns.questWin.grip = grip
     grip:SetScript("OnMouseDown", function() grip.sizing = true; ns.questWin:StartSizing("BOTTOMRIGHT") end)

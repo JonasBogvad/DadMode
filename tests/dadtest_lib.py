@@ -109,7 +109,8 @@ function PG() local w=DadModeQuests; local out={}
       out[#out+1]=l
       if b.sub and b.sub~="" then out[#out+1]="    "..(b.sub:gsub("\n","\n    ")) end
     elseif b.bar then local l=(b.label or ""); for _,it in ipairs(b.items) do l=l.." "..(it.on and "(x)" or "( )")..it.text end; out[#out+1]=l
-    elseif b.tiles then for _,t in ipairs(b.tiles) do out[#out+1]=t.label..": "..t.value end end
+    elseif b.tiles then for _,t in ipairs(b.tiles) do out[#out+1]=t.label..": "..t.value end
+    elseif b.trees then for _,tr in ipairs(b.trees) do out[#out+1]="Tree: "..tr.name.." "..tr.points; for _,t in ipairs(tr.list) do out[#out+1]="  "..t.name.." "..t.rank.."/"..t.most.." @"..t.tier.."."..t.col end end end
   end
   return table.concat(out,"\n") end
 
@@ -320,7 +321,7 @@ DadModeDB.helper=false
 fire("CHAT_MSG_ADDON","DADMODE","QREQ","PARTY","Bro Bearfang-CAMWOW EU5 Realm 4 PvP")
 for i=1,30 do clock=clock+2; DadMode_PumpOutbox() end
 local out={}; for i=n1+1,#sent do out[#out+1]=sent[i][2] end
-assert(out[1]=="PERM:status=1~gold=1~quests=1~gear=1~call=1~waypoint=1~wear=1","first what he shares"); table.remove(out,1)
+assert(out[1]=="PERM:status=1~gold=1~quests=1~gear=1~call=1~waypoint=1~wear=1~talents=1","first what he shares"); table.remove(out,1)
 assert(out[1]:sub(1,3)=="ST:" and out[2]:sub(1,3)=="ST:" and out[3]=="QS:3" and out[4]:sub(1,2)=="Q:" and out[5]=="QE" and out[6]:sub(1,3)=="GR:" and out[#out-1]=="CN:1:5=12~2:7=4~3:1=1" and out[#out]=="BGS:0", table.concat(out," || "))
 for _,b in ipairs(out) do assert(#b<=255,"message too long") ; fire("CHAT_MSG_ADDON","DADMODE",b,"PARTY","Bro Bearfang-CAMWOW EU5 Realm 4 PvP") end
 DadModeDB.helper=true

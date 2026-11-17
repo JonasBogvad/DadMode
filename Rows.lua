@@ -3,6 +3,7 @@
 --   row    a label on the left, the facts in the middle with small coloured chips, a button on the right
 --   bar    a line of small buttons to switch things on and off
 --   tiles  a grid of small boxes, each with a label and a value
+--   trees  talent trees, drawn the way the game's own talent window draws them
 
 local ADDON, ns = ...
 
@@ -12,6 +13,9 @@ local BTN_W = 96          -- the column on the right of a row
 local CHIP_H = 18
 local PILL_H = 22
 local TILE_H = 46
+local CELL = 32           -- one talent in a tree: the picture and the space around it
+local ICON = 26
+local TREE_COLS = 4
 local GAP = 4
 
 -- Colours in the style of the game's own windows: dark red buttons with gold text, gold labels,
@@ -298,6 +302,103 @@ local function PlaceTiles(g, spec, y, width)
     return h + 4
 end
 
+-- Talent trees side by side. Each talent sits in the row and column the game gives it, so
+-- the picture matches what he sees in his own talent window.
+local function Forest(i)
+    local forests = ns.questWin.forests
+    if forests[i] then return forests[i] end
+    local f = CreateFrame("Frame", nil, ns.questWin.content)
+    f.heads, f.cells = {}, {}
+    forests[i] = f
+    return f
+end
+
+local function Head(f, i)
+    if f.heads[i] then return f.heads[i] end
+    local fs = f:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    fs:SetJustifyH("LEFT")
+    f.heads[i] = fs
+    return fs
+end
+
+local function Cell(f, i)
+    if f.cells[i] then return f.cells[i] end
+    local c = CreateFrame("Button", nil, f)
+    c:SetSize(ICON, ICON)
+    c.back = ns.Tex(c, "BACKGROUND", 0.80, 0.65, 0.30, 0.9)       -- a thin gold frame around the picture
+    c.back:SetPoint("TOPLEFT", -1, 1)
+    c.back:SetPoint("BOTTOMRIGHT", 1, -1)
+    c.icon = c:CreateTexture(nil, "ARTWORK")
+    c.icon:SetAllPoints()
+    c.rank = c:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    c.rank:SetPoint("BOTTOMRIGHT", 3, -4)
+    c.onClick = false
+    c:SetScript("OnClick", function(self) if self.onClick then self.onClick() end end)
+    c:SetScript("OnEnter", function(self)
+        local t = self.talent
+        if not (t and GameTooltip) then return end
+        GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+        GameTooltip:AddLine(t.name, 1, 1, 1)
+        GameTooltip:AddLine("Rank " .. t.rank .. " of " .. t.most, 1, 0.82, 0)
+        GameTooltip:AddLine(self.tree .. ", row " .. t.tier .. " from the top", 0.7, 0.7, 0.7)
+        GameTooltip:AddLine("Click to point at it for him", 0.1, 1, 0.1)
+        GameTooltip:Show()
+    end)
+    c:SetScript("OnLeave", function() if GameTooltip then GameTooltip:Hide() end end)
+    f.cells[i] = c
+    return c
+end
+
+local function PlaceTrees(f, spec, y, width)
+    f:ClearAllPoints()
+    f:SetPoint("TOPLEFT", 4, -y)
+    f:SetWidth(width - 8)
+    local treeW = TREE_COLS * CELL + 10
+    local perLine = math.max(1, math.floor((width - 8) / treeW))
+    local n, top, lineH = 0, 0, 0
+    for ti, tree in ipairs(spec.trees or {}) do
+        local col = (ti - 1) % perLine
+        if col == 0 and ti > 1 then top, lineH = top + lineH + 12, 0 end
+        local left = col * treeW
+        local head = Head(f, ti)
+        head:ClearAllPoints()
+        head:SetPoint("TOPLEFT", left, -top)
+        head:SetWidth(treeW - 6)
+        head:SetText(tree.name .. "  |cffffffff" .. tree.points .. "|r")
+        head:Show()
+        local rows = 0
+        for _, t in ipairs(tree.list) do
+            n = n + 1
+            local c = Cell(f, n)
+            c:ClearAllPoints()
+            c:SetPoint("TOPLEFT", left + (t.col - 1) * CELL + 2, -(top + 20 + (t.tier - 1) * CELL))
+            c.icon:SetTexture(t.icon or "Interface\\Icons\\INV_Misc_QuestionMark")
+            local taken = t.rank > 0
+            pcall(function() c.icon:SetDesaturated(not taken) end)
+            c.icon:SetAlpha(taken and 1 or 0.45)
+            local pointed = spec.pointed and spec.pointed.tab == t.tab and spec.pointed.index == t.index
+            c.back:SetColorTexture(pointed and 0.10 or 0.80, pointed and 1.00 or 0.65, pointed and 0.10 or 0.30, (taken or pointed) and 0.9 or 0.25)
+            c.rank:SetText(t.rank .. "/" .. t.most)
+            if t.rank >= t.most then c.rank:SetTextColor(1, 0.82, 0)
+            elseif taken then c.rank:SetTextColor(0.1, 1, 0.1)
+            else c.rank:SetTextColor(0.6, 0.6, 0.6) end
+            c.talent, c.tree = t, tree.name
+            c.onClick = tree.onClick and function() tree.onClick(t) end or false
+            c:Show()
+            if t.tier > rows then rows = t.tier end
+        end
+        local h = 20 + rows * CELL
+        if h > lineH then lineH = h end
+    end
+    for i = #(spec.trees or {}) + 1, #f.heads do f.heads[i]:Hide() end
+    for i = n + 1, #f.cells do f.cells[i]:Hide() end
+    local h = top + lineH
+    f.spec = spec
+    f:SetHeight(math.max(h, 1))
+    f:Show()
+    return h + 8
+end
+
 ---------------------------------------------------------------------------
 -- The page
 ---------------------------------------------------------------------------
@@ -308,14 +409,17 @@ end
 --     button = { text = "Put it on", kind = "action", onClick = function } }
 --   { bar = true, label = "Sort", items = { { text = "By slot", on = true, onClick = function } } }
 --   { tiles = { { label = "Bags", value = "12 free", kind = "good", wide = false } } }
+--   { trees = { { name = "Enhancement", points = 31, onClick = function(talent),
+--                 list = { { name, tier, col, rank, most, icon, tab, index } } } }, pointed = { tab, index } }
 function DadMode_LayoutBlocks(blocks)
     local win = ns.questWin
     if not win then return end
     win.texts, win.rows, win.bars, win.grids = win.texts or {}, win.rows or {}, win.bars or {}, win.grids or {}
+    win.forests = win.forests or {}
     local width = win.content:GetWidth()
     if type(width) ~= "number" or width < 200 then width = 436 end
     local y = 4
-    local used = { texts = 0, rows = 0, bars = 0, grids = 0 }
+    local used = { texts = 0, rows = 0, bars = 0, grids = 0, forests = 0 }
     local buffer = {}
     local function Flush()
         if #buffer == 0 then return end
@@ -343,6 +447,9 @@ function DadMode_LayoutBlocks(blocks)
             elseif block.tiles then
                 used.grids = used.grids + 1
                 y = y + PlaceTiles(Tiles(used.grids), block, y, width)
+            elseif block.trees then
+                used.forests = used.forests + 1
+                y = y + PlaceTrees(Forest(used.forests), block, y, width)
             end
         end
     end
@@ -352,12 +459,12 @@ function DadMode_LayoutBlocks(blocks)
         win.texts[i]:SetText("")
         win.texts[i]:Hide()
     end
-    for _, kind in ipairs({ "rows", "bars", "grids" }) do
+    for _, kind in ipairs({ "rows", "bars", "grids", "forests" }) do
         for i = used[kind] + 1, #win[kind] do
             win[kind][i].spec = false
             win[kind][i]:Hide()
         end
     end
-    win.usedRows, win.usedBars, win.usedGrids, win.blocks = used.rows, used.bars, used.grids, blocks
+    win.usedRows, win.usedBars, win.usedGrids, win.usedForests, win.blocks = used.rows, used.bars, used.grids, used.forests, blocks
     win.content:SetHeight(y + 16)
 end

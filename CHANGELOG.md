@@ -1,5 +1,13 @@
 # DadMode changes
 
+## 1.31.0
+
+- **A Talents tab.** His talent trees are drawn like his own talent window: every talent in its row and column, with its rank. Taken ones are bright, the rest dimmed. Each tree shows its points, so you see his build at a glance.
+- **Click a talent to point at it.** His screen says which talent to put his point in, with the tree and the row. He spends the point himself.
+- It works for every class. His addon reads whatever trees his character has.
+- A new switch under My guides: **See my talents and point at one**.
+- Both of you need 1.31.0.
+
 ## 1.30.0
 
 - **The bottom of the guide bar is a status strip now.** One line says who you guide, his level, his zone and how far away he is. The next says what needs attention: DEAD, bags full, broken gear, no food, unspent talent points, an older DadMode. Or "all good".

@@ -16,6 +16,7 @@ local PERMS = {
     { "call",     "Call me" },
     { "waypoint", "Set waypoints for me" },
     { "wear",     "Tell me to put on gear" },
+    { "talents",  "See my talents and point at one" },
 }
 local lock = {}             -- guide side: name -> "ask" or "no" (he has not approved me)
 local permOf = {}           -- guide side: name -> what he shares
@@ -185,6 +186,8 @@ function DadMode_FilterReply(msgs)
             keep = Allowed("quests")
         elseif head3 == "GR:" or head3 == "GL:" or head3 == "SS:" or head3 == "BG:" or body:sub(1, 4) == "BGS:" then
             keep = Allowed("gear")
+        elseif head3 == "TT:" or head3 == "TL:" or head3 == "TE:" then
+            keep = Allowed("talents")
         end
         if keep then out[#out + 1] = body end
     end
@@ -228,6 +231,8 @@ function DadMode_Gate(text, sender)
             Print("|cffeb7a7a" .. m.name .. " does not take waypoints from guides.|r")
         elseif a == "wear" then
             Print("|cffeb7a7a" .. m.name .. " does not take \"put it on\" from guides.|r")
+        elseif a == "talents" then
+            Print("|cffeb7a7a" .. m.name .. " does not share his talents with guides.|r")
         end
         return true
     end
@@ -238,6 +243,7 @@ function DadMode_Gate(text, sender)
             permOf[m.name] = t
             -- so the window has a place to say "does not share", even when no data follows
             questData[m.name] = questData[m.name] or { list = {}, done = false }
+            if ns.questWin and ns.questWin:IsShown() then DadMode_RenderQuests() end      -- it may be all that arrives
         end
         return true
     end
@@ -257,11 +263,12 @@ function DadMode_Gate(text, sender)
     if text:sub(1, 5) == "PING:" or text == "CLEAR" then what = "call"
     elseif h3 == "WP:" or text == "WPC" or h3 == "TS:" then what = "waypoint"
     elseif text:sub(1, 5) == "WEAR:" then what = "wear"
+    elseif text:sub(1, 6) == "TPICK:" then what = "talents"
     else
         -- requests for his data. Letters after "QREQ:" : a = asked by the addon itself, not by a
         -- click; p = answer on the party channel, because whispers did not arrive.
         qflags = text:match("^QREQ:(%a+)$")
-        if text == "QREQ" or qflags or text == "SREQ" or text == "SREQ:p" or h3 == "QC:" then what = "data"
+        if text == "QREQ" or qflags or text == "SREQ" or text == "SREQ:p" or h3 == "QC:" or text == "TREQ" then what = "data"
         else return false end
     end
     if not m then return true end

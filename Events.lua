@@ -124,6 +124,7 @@ handlers.CHAT_MSG_ADDON = function(prefix, text, channel, sender)
     if DadMode_Gate and DadMode_Gate(text, sender) then return end
     if DadMode_ExtraMessage and DadMode_ExtraMessage(text, sender) then return end
     if DadMode_WearMessage and DadMode_WearMessage(text, sender) then return end
+    if DadMode_TalentMessage and DadMode_TalentMessage(text, sender) then return end
     local body = text:match("^PING:(.*)$")
     if body then
         ns.ReceivePing(sender, body)

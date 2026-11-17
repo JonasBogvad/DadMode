@@ -114,7 +114,8 @@ function PG() local w=DadModeQuests; local out={}
       out[#out+1]=l
       if b.sub and b.sub~="" then out[#out+1]="    "..(b.sub:gsub("\n","\n    ")) end
     elseif b.bar then local l=(b.label or ""); for _,it in ipairs(b.items) do l=l.." "..(it.on and "(x)" or "( )")..it.text end; out[#out+1]=l
-    elseif b.tiles then for _,t in ipairs(b.tiles) do out[#out+1]=t.label..": "..t.value end end
+    elseif b.tiles then for _,t in ipairs(b.tiles) do out[#out+1]=t.label..": "..t.value end
+    elseif b.trees then for _,tr in ipairs(b.trees) do out[#out+1]="Tree: "..tr.name.." "..tr.points; for _,t in ipairs(tr.list) do out[#out+1]="  "..t.name.." "..t.rank.."/"..t.most.." @"..t.tier.."."..t.col end end end
   end
   return table.concat(out,"\n") end
 
@@ -959,7 +960,7 @@ do
   opened=nil; SlashCmdList.DADMODE("guides"); local GP=DadModeGuides; assert(GP, "page exists"); DadMode_RefreshGuides()
   assert(GP.people[1].text.txt:find("Saqu Off",1,true) and GP.people[1].text.txt:find("approved",1,true) and GP.people[1].button.label.txt=="Remove")
   assert(GP.people[2].text.txt:find("Bro Bearfang",1,true) and GP.people[2].text.txt:find("refused",1,true) and GP.people[2].button.label.txt=="Forget" and not GP.people[3].button.shown)
-  assert(#GP.perms==7 and GP.perms[2].key=="gold" and GP.perms[2].button.label.txt:find("Yes",1,true))
+  assert(#GP.perms==8 and GP.perms[8].key=="talents" and GP.perms[2].key=="gold" and GP.perms[2].button.label.txt:find("Yes",1,true))
   GP.perms[2].button.onOnClick(GP.perms[2].button); assert(DadModeDB.perm.gold==false and GP.perms[2].button.label.txt:find("No",1,true))
   GP.perms[2].button.onOnClick(GP.perms[2].button); assert(DadModeDB.perm.gold==true and GP.perms[2].button.label.txt:find("Yes",1,true))
   GP.people[2].button.onOnClick(GP.people[2].button); assert(DadModeDB.guides["bro bearfang"]==nil and GP.people[2].button.shown==false, "forgotten: he is asked again next time")
@@ -1212,6 +1213,92 @@ do
   local B="Bro Bearfang-CAMWOW EU5 Realm 4 PvP"
   fire("CHAT_MSG_ADDON","DADMODE","ST:lv=40","WHISPER",B)
   local t=table.concat(DadMode_VersionLines(),"\n"); assert(t:find("answers by whisper",1,true), t)
+end
+-- ===== his talents, drawn as trees =====
+do
+  local function since(n) local t={}; for i=n+1,#sent do t[#t+1]=sent[i] end; return t end
+  local function drain() for i=1,60 do clock=clock+2; DadMode_PumpOutbox() end end
+  local B="Bro Bearfang-CAMWOW EU5 Realm 4 PvP"
+  local W=DadModeQuests
+  local AL3; for _,f in ipairs(frames) do if rawget(f,"text") and rawget(f,"hint") and rawget(f,"onOnMouseDown") then AL3=f end end
+  local tal={ [1]={ {"Convection","Interface\\Icons\\Spell_Nature_WispSplode",1,2,0,5} },
+              [2]={ {"Thundering Strikes","Interface\\Icons\\Ability_ThunderBolt",1,2,5,5}, {"Shield Specialization",134952,1,3,2,5}, {"Flurry",132152,3,2,0,5} },
+              [3]={} }
+  GetNumTalentTabs=function() return 3 end
+  GetTalentTabInfo=function(t) return ({"Elemental","Enhancement","Restoration"})[t] end
+  GetNumTalents=function(t) return #tal[t] end
+  GetTalentInfo=function(t,i) local x=tal[t][i]; if not x then return nil end; return x[1],x[2],x[3],x[4],x[5],x[6] end
+  local keepPts=UnitCharacterPoints; UnitCharacterPoints=function() return 1 end
+  -- his side: whatever trees his character has, nothing written per class
+  DadMode_SetRole(false); DadModeDB.guides=DadModeDB.guides or {}; DadModeDB.guides["bro bearfang"]={name="Bro Bearfang",state="yes"}; DadModeDB.perm={}
+  local msgs=DadMode_ReadTalents()
+  assert(msgs[1]=="TT:1=Elemental~2=Enhancement~3=Restoration", msgs[1])
+  assert(msgs[2]=="TL:1~1~1~2~0~5~Spell_Nature_WispSplode~Convection^2~1~1~2~5~5~Ability_ThunderBolt~Thundering Strikes^2~2~1~3~2~5~134952~Shield Specialization^2~3~3~2~0~5~132152~Flurry", msgs[2])
+  assert(msgs[#msgs]=="TE:1" and #msgs==3); for _,b in ipairs(msgs) do assert(#b<=255) end
+  -- a newer game version names the tree in the second value
+  GetTalentTabInfo=function(t) return 100+t, ({"Elemental","Enhancement","Restoration"})[t] end
+  assert(DadMode_ReadTalents()[1]=="TT:1=Elemental~2=Enhancement~3=Restoration")
+  -- many talents: several messages, none too long
+  local keepTal=tal[3]; tal[3]={}; for i=1,30 do tal[3][i]={"A Rather Long Talent Name Number "..i,"Interface\\Icons\\Spell_Holy_Something_Long",math.ceil(i/4),(i-1)%4+1,0,5} end
+  local big=DadMode_ReadTalents(); assert(#big>6); for _,b in ipairs(big) do assert(#b<=255, #b) end; tal[3]=keepTal
+  -- a guide asks: whispered to him alone, with what is shared first
+  clock=clock+400; local n=#sent; fire("CHAT_MSG_ADDON","DADMODE","TREQ","PARTY",B); drain()
+  local got=since(n); assert(#got==4 and got[1][2]:find("talents=1",1,true) and got[2][2]==msgs[1] and got[4][2]=="TE:1", #got.." "..got[1][2])
+  for _,m in ipairs(got) do assert(m[3]=="WHISPER" and m[4]==B) end
+  -- he does not share his talents
+  DadModeDB.perm.talents=false; clock=clock+400; n=#sent; fire("CHAT_MSG_ADDON","DADMODE","TREQ","PARTY",B); drain()
+  got=since(n); assert(#got==1 and got[1][2]:find("talents=0",1,true), "only the line that says what is shared")
+  AL3.text:SetText("x"); clock=clock+100; n=#sent; fire("CHAT_MSG_ADDON","DADMODE","TPICK:2:3","PARTY",B)
+  assert(AL3.text.txt=="x" and sent[#sent][2]=="DENY:talents:bro", "pointing is refused too")
+  DadModeDB.perm={}
+  -- a guide points at a talent
+  clock=clock+100; local s0=sounds; fire("CHAT_MSG_ADDON","DADMODE","TPICK:2:3","PARTY",B)
+  assert(AL3.text.txt:find("Bro|r says: put your talent point in",1,true) and AL3.text.txt:find("Flurry",1,true) and AL3.text.txt:find("Enhancement, row 3 from the top",1,true), AL3.text.txt)
+  assert(sounds==s0+1 and sent[#sent][2]=="TPOK:2:3")
+  -- a game version that does not tell
+  local k=GetNumTalentTabs; GetNumTalentTabs=nil; assert(DadMode_ReadTalents()[1]=="TE:none"); GetNumTalentTabs=k
+
+  -- the guide's side
+  DadMode_SetRole(true); clock=clock+400
+  SlashCmdList.DADMODE("quests"); n=#sent; assert(W.tabs.talents, "sixth tab"); W.SetView("talents")
+  local asked=false; for _,m in ipairs(since(n)) do if m[2]:sub(-4)=="TREQ" then asked=true end end; assert(asked, "opening the tab asks")
+  n=#sent; W.SetView("talents"); for _,m in ipairs(since(n)) do assert(m[2]:sub(-4)~="TREQ", "not asked again right away") end
+  assert(PG():find("Asking for his talents",1,true), PG())
+  for _,b in ipairs(msgs) do fire("CHAT_MSG_ADDON","DADMODE",b,"WHISPER",B) end
+  local T=PG()
+  assert(T:find("1 talent point to spend",1,true) and T:find("Click a talent to point at it",1,true), T)
+  assert(T:find("Tree: Elemental 0",1,true) and T:find("Tree: Enhancement 7",1,true) and T:find("Tree: Restoration 0",1,true), T)
+  assert(T:find("Thundering Strikes 5/5 @1.2",1,true) and T:find("Shield Specialization 2/5 @1.3",1,true) and T:find("Flurry 0/5 @3.2",1,true), T)
+  -- drawn: every talent a picture in its own row and column
+  local F; for i=1,W.usedForests do local f=W.forests[i]; if f.spec.trees[2] and f.spec.trees[2].points==7 then F=f end end
+  assert(F and F.shown and F.heads[2].txt:find("Enhancement",1,true), "the trees are drawn")
+  local function cell(name) for _,c in ipairs(F.cells) do if c.shown and c.talent.name==name then return c end end end
+  local c1,c2,c3=cell("Thundering Strikes"),cell("Shield Specialization"),cell("Flurry")
+  assert(c1.rank.txt=="5/5" and c1.icon.alpha==1 and c1.talent.icon=="Interface\\Icons\\Ability_ThunderBolt", "taken: bright")
+  assert(c2.rank.txt=="2/5" and c2.talent.icon==134952)
+  assert(c3.rank.txt=="0/5" and c3.icon.alpha==0.45, "not taken: dimmed")
+  -- click one: he is told
+  clock=clock+10; n=#sent; c3.onOnClick(c3)
+  assert(sent[#sent][2]:find("TPICK:2:3",1,true) and PG():find("Told him: Flurry",1,true), sent[#sent][2])
+  n=#sent; c1.onOnClick(c1); assert(#sent==n, "not twice within a moment")
+  fire("CHAT_MSG_ADDON","DADMODE","TPOK:2:3","PARTY",B); assert(PG():find("He sees it: Flurry",1,true))
+  -- a fresh answer swaps in when it is complete, and keeps what was pointed at
+  tal[2][3][5]=1
+  local again=nil; DadMode_SetRole(false); again=DadMode_ReadTalents(); DadMode_SetRole(true)
+  fire("CHAT_MSG_ADDON","DADMODE",again[1],"WHISPER",B); assert(PG():find("Flurry 0/5",1,true), "the old picture stays while the new one loads")
+  fire("CHAT_MSG_ADDON","DADMODE",again[2],"WHISPER",B); fire("CHAT_MSG_ADDON","DADMODE",again[3],"WHISPER",B)
+  assert(PG():find("Flurry 1/5 @3.2",1,true) and PG():find("Tree: Enhancement 8",1,true) and PG():find("He sees it: Flurry",1,true), PG())
+  -- other tabs do not show trees
+  W.SetView("overview"); assert(W.usedForests==0 and not F.shown); W.SetView("talents")
+  -- his game does not tell, or he does not share
+  fire("CHAT_MSG_ADDON","DADMODE","TE:none","WHISPER",B); assert(PG():find("does not let an addon read talents",1,true))
+  fire("CHAT_MSG_ADDON","DADMODE","PERM:status=1~gold=1~quests=1~gear=1~call=1~waypoint=1~wear=1~talents=0","WHISPER",B)
+  assert(PG():find("Bro does not share his talents with guides",1,true), PG())
+  fire("CHAT_MSG_ADDON","DADMODE","PERM:status=1~gold=1~quests=1~gear=1~call=1~waypoint=1~wear=1~talents=1","WHISPER",B)
+  -- no answer at all
+  DadModeNS.questData.Bro.talents=nil; clock=clock+400; DadMode_RenderQuests(); assert(PG():find("Bro needs DadMode 1.31 or newer to show his talents",1,true), PG())
+  W.SetView("overview")
+  UnitCharacterPoints=keepPts; GetNumTalentTabs,GetTalentTabInfo,GetNumTalents,GetTalentInfo=nil,nil,nil,nil
 end
 print("OPTIONS_TESTS_PASSED")
 ''')
